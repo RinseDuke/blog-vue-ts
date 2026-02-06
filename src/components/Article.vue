@@ -1,5 +1,6 @@
 <template>
   <div class="article-container">
+    <!-- 状态处理 -->
     <div v-if="loading" class="status-message">
       加载中...
     </div>
@@ -70,6 +71,7 @@ onMounted(async()=>{
   }
   catch(e){
     error.value='加载文章时出错'
+    console.error(e)
   }
   finally{
     loading.value=false
@@ -89,7 +91,7 @@ function formatDate(dateString:string){
 
 
 <style scoped lang="less">
-@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&display=swap');
+// @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&display=swap');
 
 .article-container {
   max-width: 720px;
@@ -175,7 +177,7 @@ function formatDate(dateString:string){
   font-size: 1.1rem;
 
   //首行缩进
-  &>p:first-of-type {
+  &>p:first-of-type::first-letter {
     float: left;
     font-size: 1.2rem;
     line-height: 1.8;

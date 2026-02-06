@@ -1,14 +1,12 @@
 <script setup>
-
+import Article from '@/components/Article.vue'
 
 </script>
 
 <template>
-    <div class="article">
-
-    </div>
-
-    
+    <main>
+        <Article />
+    </main>
 </template>
 
 <style>

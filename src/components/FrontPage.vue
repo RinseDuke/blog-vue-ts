@@ -19,10 +19,10 @@
 		</header> -->
 
 		<section class="feed" aria-live="polite">
-			<header class="feed__head">
+			<!-- <header class="feed__head">
 				<h2>最新文章</h2>
 			
-            <!-- 布局切换按钮 -->
+            布局切换按钮
                 <button
                     type="button"
                     class="view-toggle"
@@ -51,37 +51,48 @@
                     />
                 </svg>
                 </button>
-            </header>
-            <!--  -->
+            
+            
+            </header> -->
 			<div v-if="loading" class="feed__state">加载中...</div>
 			<div v-else-if="error" class="feed__state feed__state--error">{{ error }}</div>
+            
+			<div v-else >
+                <div class="list-wrapper">
+                <header class="feed__head">
+                    <h2>文章列表</h2>
+                </header>
+                <div class="feed__grid feed__grid--list">
+				<article v-for="post in latestPosts" :key="post.id" class="post-card post-card--list">
+                    <router-link :to="`/article/${post.slug}`" class="card-link-wrapper">
+					    <img v-if="post.coverImage" :src="post.coverImage" :alt="post.title" class="post-card__cover" />
 
-			<div v-else :class="['feed__grid',layoutMode==='list'?'feed__grid--list':'']">
-				<article v-for="post in latestPosts" :key="post.id" :class="['post-card',layoutMode==='list'?'post-card--list':'']">
-					<img v-if="post.coverImage" :src="post.coverImage" :alt="post.title" class="post-card__cover" />
+					    <div class="post-card__body">
+						    <div class="post-card__meta">
+							    <span class="post-card__date">{{ formatDate(post.publishedAt) }}</span>
+							    <span class="post-card__dot" aria-hidden="true">•</span>
+							    <span>{{ post.readMinutes }} 分钟读完</span>
+						    </div>
+						    <h3>{{ post.title }}</h3>
+						    <p class="post-card__excerpt">{{ post.excerpt }}</p>
 
-					<div class="post-card__body">
-						<div class="post-card__meta">
-							<span class="post-card__date">{{ formatDate(post.publishedAt) }}</span>
-							<span class="post-card__dot" aria-hidden="true">•</span>
-							<span>{{ post.readMinutes }} 分钟读完</span>
-						</div>
-						<h3>{{ post.title }}</h3>
-						<p class="post-card__excerpt">{{ post.excerpt }}</p>
+						    <div class="post-card__footer">
+							    <div class="author">
+								    <img v-if="post.author.avatarUrl" :src="post.author.avatarUrl" :alt="post.author.name" />
+								    <span>{{ post.author.name }}</span>
+							    </div>
 
-						<div class="post-card__footer">
-							<div class="author">
-								<img v-if="post.author.avatarUrl" :src="post.author.avatarUrl" :alt="post.author.name" />
-								<span>{{ post.author.name }}</span>
-							</div>
-
-							<div class="tags">
-								<span v-for="tag in post.tags" :key="tag" class="tag">#{{ tag }}</span>
-							</div>
-						</div>
-					</div>
+							    <div class="tags">
+								    <span v-for="tag in post.tags" :key="tag" class="tag">#{{ tag }}</span>
+							    </div>
+						    </div>
+					    </div>
+                    </router-link>
 				</article>
+                </div>
+            </div>
 			</div>
+            
 		</section>
 	</section>
 </template>
@@ -147,12 +158,16 @@ function formatDate(dateIso: string) {
 <style scoped lang="less">
 .front {
     width: 100%;
-    padding: 100px 20px 40px 20px;
+    padding: 60px 20px 40px 20px;
 
 
 }
 
-
+.list-wrapper {
+    max-width: 900px;
+    width: 50%;
+    margin: 0 auto;
+}
 
 .normal {
     display: grid;
@@ -241,6 +256,12 @@ function formatDate(dateIso: string) {
     }
 }
 
+.card-link-wrapper {
+    text-decoration: none;
+    color: inherit;
+    display: contents;
+}
+
 .feed {
     display: flex;
     flex-direction: column;
@@ -249,10 +270,11 @@ function formatDate(dateIso: string) {
 
     &__head {
         display: flex;
-        align-items: center;
+        align-items: left;
         justify-content: space-between;
         flex-direction: row;
         gap: 1rem;
+
 
         h2 {
             margin: 0;
@@ -305,7 +327,7 @@ function formatDate(dateIso: string) {
 
     &__grid {
         display: grid;
-        grid-template-columns: repeat(3, minmax(350px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
         gap: 2rem;
 
         &--list {
@@ -349,9 +371,10 @@ function formatDate(dateIso: string) {
             box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
         }
 
-        &--list {
+        &.post-card--list {
             flex-direction: row;
             align-items: stretch;
+
 
             .post-card__cover {
                 width: 350px;
