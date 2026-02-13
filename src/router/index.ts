@@ -21,6 +21,11 @@ const router = createRouter({
       component:()=>import('../views/Write.vue')
     },
     {
+      path: '/article',
+      name: 'article-list',
+      component: () => import('../views/ArticlePage.vue'),
+    },
+    {
       path: '/article/:slug',
       name: 'article-detail',
       

@@ -58,6 +58,7 @@ const recentActivity = [
 
 <template>
   <section class="about-page">
+    <div class="about-page__inner">
     <header class="hero">
       <div class="hero__profile">
         <div class="avatar" aria-hidden="true">{{ profile.avatarInitial }}</div>
@@ -133,6 +134,7 @@ const recentActivity = [
         </div>
       </article>
     </section>
+    </div>
   </section>
 </template>
 
@@ -155,6 +157,11 @@ const recentActivity = [
   color: var(--ink);
   min-height: 100%;
   font-family: 'Space Grotesk', 'ZCOOL KuaiLe', sans-serif;
+}
+
+.about-page__inner {
+  width: clamp(320px, 50vw, 980px);
+  margin: 0 auto;
 }
 
 .hero {
