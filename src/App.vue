@@ -202,7 +202,6 @@ onUnmounted(()=>{
             <div class="top-dropdown__section">
               <div class="top-dropdown__header">
                 <span>推荐阅读</span>
-                <span class="top-dropdown__hint">随机挑选高阅读量文章</span>
               </div>
               <ol class="top-hot-list">
                 <li v-for="(post, index) in recommendedPosts" :key="post.id">
@@ -346,6 +345,7 @@ onUnmounted(()=>{
   align-items: center;
 }
 
+// 搜索建议下拉框
 .top-search__dropdown {
   position: absolute;
   top: calc(100% + 0.5rem);

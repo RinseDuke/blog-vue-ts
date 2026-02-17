@@ -1,38 +1,30 @@
 <template>
-  <div class="write-container">
-    <!-- 顶部工具栏 -->
-    <div class="toolbar-wrapper">
-      <Toolbar
-        style="border-bottom: 1px solid #e1e1e1"
-        :editor="editorRef"
-        :defaultConfig="toolbarConfig"
-        :mode="mode"
-      />
-    </div>
+  <div class="write-page">
+    <div class="background-glow"></div>
+    <div class="background-grid"></div>
 
-    <!-- 主体滚动区域-->
-    <div class="main-content">
-      <!-- 白纸区域 -->
-      <div class="paper-area">
-        
-        <!-- 标题输入-->
-        <input 
-          v-model="title" 
-          class="paper-title" 
-          type="text" 
+    <div class="editor-shell">
+      <div class="shell-header">
+        <div class="header-label">写作空间</div>
+        <div class="header-stat">字数 {{ textLength }}</div>
+      </div>
+
+      <div class="title-area">
+        <input
+          v-model="title"
+          class="paper-title"
+          type="text"
           placeholder="请输入标题..."
           maxlength="100"
-        >
-        
-        <!-- 分割线 -->
+        />
         <div class="divider"></div>
+      </div>
 
-        <!-- 正文编辑器 -->
+      <div class="editor-body">
         <div id="vditor"></div>
       </div>
     </div>
 
-    <!-- 底部发布栏  -->
     <div class="bottom-bar">
       <div class="actions">
         <button class="btn-publish" @click="handlePublish">发布</button>
@@ -42,145 +34,188 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, shallowRef, computed } from 'vue'
-// import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import Vditor from 'vditor'
 import 'vditor/dist/index.css'
 
-// 编辑器实例
-const editorRef = shallowRef()
-const vditor = ref<Vditor|null>(null)
+const vditor = ref<Vditor | null>(null)
 const title = ref('')
-const valueHtml = ref('')
-const mode = 'default' 
+const textLength = ref(0)
 
-const toolbarConfig = {
+const updateTextLength = () => {
+  const content = vditor.value?.getValue() ?? ''
+  textLength.value = content.replace(/\s+/g, '').length
 }
-
-// 编辑器配置
-const editorConfig = { 
-  placeholder: '请输入正文内容...',
-  MENU_CONF: {}
-}
-
-
-const textLength = computed(() => {
-  return editorRef.value ? editorRef.value.getText().replace(/\n|\r/mg, '').length : 0
-})
 
 onMounted(() => {
   vditor.value = new Vditor('vditor', {
-    height: '70vh',
-    mode: 'ir', 
+    height: 'calc(100vh - 270px)',
+    minHeight: 520,
+    mode: 'ir',
     placeholder: '开始记录你的想法...',
-    outline: { enable: true, position: 'right' }, // 开启大纲
+    outline: { enable: true, position: 'right' },
     cache: { enable: false },
     toolbarConfig: { hide: false },
-    // 自定义工具栏
+    input: updateTextLength,
+    after: updateTextLength,
     toolbar: [
-      'emoji', 'headings', 'bold', 'italic', 'strike', '|',
-      'line', 'quote', 'list', 'ordered-list', 'check', '|',
-      'code', 'inline-code', '|',
-      'upload', 'link', 'table', '|',
-      'undo', 'redo', 'fullscreen', 'edit-mode'
+      'emoji',
+      'headings',
+      'bold',
+      'italic',
+      'strike',
+      '|',
+      'line',
+      'quote',
+      'list',
+      'ordered-list',
+      'check',
+      '|',
+      'code',
+      'inline-code',
+      '|',
+      'upload',
+      'link',
+      'table',
+      '|',
+      'undo',
+      'redo',
+      'fullscreen',
+      'edit-mode'
     ]
   })
 })
 
 onBeforeUnmount(() => {
-    const editor = editorRef.value
-    if (editor == null) return
-    editor.destroy()
+  vditor.value?.destroy()
+  vditor.value = null
 })
 
-const handleCreated = (editor: any) => {
-    editorRef.value = editor
-}
-
 const handlePublish = () => {
-  const content = vditor.value?.getValue() // 获取的是 Markdown 文本
+  const content = vditor.value?.getValue()
   console.log('标题:', title.value)
   console.log('Markdown内容:', content)
 }
 </script>
 
 <style scoped>
-.write-container {
+.write-page {
+  position: relative;
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background-color: #f4f5f5;
-  /* 整体背景灰 */
+  overflow: hidden;
+  background: radial-gradient(circle at 10% 0%, #eef4ff 0%, #f7f9fd 45%, #f3f5f9 100%);
 }
 
-/* 工具栏固定在顶部 */
-.toolbar-wrapper {
-  background-color: #fff;
-  z-index: 100;
+.background-glow {
+  position: absolute;
+  top: -180px;
+  right: -120px;
+  width: 420px;
+  height: 420px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(67, 133, 255, 0.24) 0%, rgba(67, 133, 255, 0) 70%);
+  pointer-events: none;
 }
 
-/* 中间滚动区域 */
-.main-content {
+.background-grid {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(rgba(38, 66, 128, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(38, 66, 128, 0.05) 1px, transparent 1px);
+  background-size: 34px 34px;
+  mask-image: radial-gradient(circle at center, black 35%, transparent 95%);
+  pointer-events: none;
+}
+
+.editor-shell {
+  position: relative;
+  z-index: 1;
   flex: 1;
-  overflow-y: auto;
-  /* 允许垂直滚动 */
-  display: flex;
-  justify-content: center;
-  /* 水平居中 */
-  padding: 20px 0;
-}
-
-/* 模拟白纸 */
-.paper-area {
-  width: 800px;
-  /* 限制宽度，像A4纸或知乎文章页 */
-  max-width: 95%;
-  background-color: #fff;
-  min-height: 800px;
-  /* 最小高度 */
-  padding: 40px 50px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  width: min(1500px, calc(100vw - 56px));
+  margin: 22px auto 0;
+  border-radius: 20px 20px 0 0;
+  border: 1px solid rgba(190, 205, 235, 0.9);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 26px 50px rgba(31, 59, 119, 0.1);
+  backdrop-filter: blur(8px);
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
-/* 标题样式 */
-.paper-title {
-  font-size: 32px;
+.shell-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 24px;
+  border-bottom: 1px solid #e6ebf5;
+  background: linear-gradient(90deg, #fbfcff 0%, #f5f8ff 100%);
+}
+
+.header-label {
+  color: #39538a;
+  letter-spacing: 0.08em;
+  font-size: 12px;
   font-weight: 600;
+  text-transform: uppercase;
+}
+
+.header-stat {
+  color: #5f6f8d;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.title-area {
+  padding: 28px 46px 14px;
+}
+
+.paper-title {
+  width: 100%;
   border: none;
   outline: none;
-  width: 100%;
-  line-height: 1.5;
-  color: #333;
-  margin-bottom: 10px;
+  font-size: clamp(30px, 3.2vw, 42px);
+  line-height: 1.3;
+  color: #24324d;
+  margin-bottom: 16px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  background: transparent;
+}
+
+.paper-title:focus {
+  color: #1b2840;
 }
 
 .paper-title::placeholder {
-  color: #ccc;
+  color: #b4bfd5;
   font-weight: 400;
 }
 
 .divider {
   height: 1px;
-  background-color: #e8e8e8;
-  margin-bottom: 20px;
+  background: linear-gradient(90deg, #dce4f3 0%, #eef2f9 60%, #f5f7fb 100%);
 }
 
-.editor-wrapper {
+.editor-body {
   flex: 1;
-  /* 占满剩余空间 */
+  min-height: 0;
+  padding: 0 20px 22px;
 }
 
-/* 底部栏 */
 .bottom-bar {
+  position: relative;
+  z-index: 2;
   height: 60px;
-  background-color: #fff;
-  border-top: 1px solid #e1e1e1;
+  background: rgba(255, 255, 255, 0.92);
+  border-top: 1px solid #dbe4f4;
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  padding: 0 40px;
+  padding: 0 30px;
+  backdrop-filter: blur(6px);
 }
 
 .actions {
@@ -189,30 +224,80 @@ const handlePublish = () => {
 }
 
 .btn-publish {
-  background-color: #1e80ff;
-  color: white;
+  background: linear-gradient(135deg, #2f75ff 0%, #4f8dff 100%);
+  color: #fff;
   border: none;
-  padding: 8px 24px;
-  border-radius: 4px;
+  padding: 9px 24px;
+  border-radius: 999px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
   cursor: pointer;
+  box-shadow: 0 10px 20px rgba(49, 109, 235, 0.28);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 
-.btn-draft {
-  background-color: transparent;
-  color: #666;
-  border: 1px solid #ddd;
-  padding: 8px 20px;
-  border-radius: 4px;
-  cursor: pointer;
+.btn-publish:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 24px rgba(49, 109, 235, 0.33);
 }
 
-/* 隐藏 Vditor 的边框以获得沉浸式“纸张”感 */
 :deep(.vditor) {
-  border: none !important;
+  border: none;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 10px 30px rgba(21, 47, 97, 0.05);
 }
 
 :deep(.vditor-toolbar) {
-  border-bottom: 1px solid #eee !important;
-  background-color: transparent !important;
+  border-bottom: 1px solid #ecf1fa;
+  padding: 8px 10px;
+  background: #fafcff;
+}
+
+:deep(.vditor-ir pre.vditor-reset) {
+  padding: 26px 28px 34px;
+  font-size: 16px;
+  line-height: 1.9;
+}
+
+@media (max-width: 900px) {
+  .write-page {
+    background: #f5f7fc;
+  }
+
+  .background-glow,
+  .background-grid {
+    display: none;
+  }
+
+  .editor-shell {
+    width: 100%;
+    margin: 0;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .shell-header {
+    padding: 12px 16px;
+  }
+
+  .title-area {
+    padding: 20px 18px 10px;
+  }
+
+  .editor-body {
+    padding: 0 10px 14px;
+  }
+
+  .bottom-bar {
+    padding: 0 16px;
+  }
+
+  :deep(.vditor-ir pre.vditor-reset) {
+    padding: 18px 16px 24px;
+    font-size: 15px;
+  }
 }
 </style>
