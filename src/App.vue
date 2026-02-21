@@ -176,91 +176,97 @@ onUnmounted(()=>{
 <template>
   <div class="layout">
     <header class="topbar" :class="{'hidden': isNavHidden}">
-      <RouterLink to="/" class="brand">
-        <img src="@/assets/logo.svg" alt="Blog Logo" />
-        <span>Sign</span>
-      </RouterLink>
-      <div class="search-box">
-        <div class="search-input-wrapper">
-          <input 
-            v-model="searchQuery"
-            ref="navInputEl"
-            type="text" 
-            placeholder="搜索文章..." 
-            autocomplete="off"
-            @keyup.enter="handleSearch"
-            @focus="openDropdown"
-            @input="openDropdown"
-          />
-          <button class="search-btn" @click="handleSearch">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="11" cy="11" r="8"></circle>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
-          </button>
-          <div v-show="showDropdown" ref="navDropdownEl" class="top-search__dropdown" role="listbox">
-            <div class="top-dropdown__section">
-              <div class="top-dropdown__header">
-                <span>推荐阅读</span>
+      <div class="topbar__inner">
+        <RouterLink to="/" class="brand">
+          <img src="@/assets/logo.svg" alt="Blog Logo" />
+          <span class="brand__text">
+            <strong>Sign</strong>
+            <em>Blog Lab</em>
+          </span>
+        </RouterLink>
+        <div class="search-box">
+          <div class="search-input-wrapper">
+            <input
+              v-model="searchQuery"
+              ref="navInputEl"
+              type="text"
+              placeholder="搜索文章..."
+              autocomplete="off"
+              @keyup.enter="handleSearch"
+              @focus="openDropdown"
+              @input="openDropdown"
+            />
+            <button class="search-btn" @click="handleSearch">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+            </button>
+            <div v-show="showDropdown" ref="navDropdownEl" class="top-search__dropdown" role="listbox">
+              <div class="top-dropdown__section">
+                <div class="top-dropdown__header">
+                  <span>推荐阅读</span>
+                  <span class="top-dropdown__hint">随机挑选高阅读量文章</span>
+                </div>
+                <ol class="top-hot-list">
+                  <li v-for="(post, index) in recommendedPosts" :key="post.id">
+                    <button type="button" class="top-hot-list__item" @click="selectSuggestion(post.title)">
+                      <span class="top-hot-list__rank" :data-top="index < 3">{{ index + 1 }}</span>
+                      <div class="top-hot-list__text">
+                        <span class="top-hot-list__title">{{ post.title }}</span>
+                        <span class="top-hot-list__meta">{{ post.readMinutes }} 分钟读完</span>
+                      </div>
+                    </button>
+                  </li>
+                </ol>
               </div>
-              <ol class="top-hot-list">
-                <li v-for="(post, index) in recommendedPosts" :key="post.id">
-                  <button type="button" class="top-hot-list__item" @click="selectSuggestion(post.title)">
-                    <span class="top-hot-list__rank" :data-top="index < 3">{{ index + 1 }}</span>
-                    <div class="top-hot-list__text">
-                      <span class="top-hot-list__title">{{ post.title }}</span>
-                      <span class="top-hot-list__meta">{{ post.readMinutes }} 分钟读完</span>
-                    </div>
+
+              <div v-if="searchHistory.length" class="top-dropdown__section">
+                <div class="top-dropdown__header">
+                  <span>搜索历史</span>
+                  <button type="button" class="top-link-btn" @click="clearHistory">清空</button>
+                </div>
+                <div class="top-history-list">
+                  <button
+                    v-for="item in searchHistory"
+                    :key="item"
+                    type="button"
+                    class="top-chip"
+                    @click="selectSuggestion(item)"
+                  >
+                    {{ item }}
                   </button>
-                </li>
-              </ol>
-            </div>
-
-            <div v-if="searchHistory.length" class="top-dropdown__section">
-              <div class="top-dropdown__header">
-                <span>搜索历史</span>
-                <button type="button" class="top-link-btn" @click="clearHistory">清空</button>
+                </div>
               </div>
-              <div class="top-history-list">
-                <button
-                  v-for="item in searchHistory"
-                  :key="item"
-                  type="button"
-                  class="top-chip"
-                  @click="selectSuggestion(item)"
-                >
-                  {{ item }}
-                </button>
-              </div>
-            </div>
 
-            <div v-if="normalizedQuery && suggestionPosts.length" class="top-dropdown__section">
-              <div class="top-dropdown__header">
-                <span>匹配结果</span>
-                <span class="top-dropdown__hint">按相关度排序</span>
+              <div v-if="normalizedQuery && suggestionPosts.length" class="top-dropdown__section">
+                <div class="top-dropdown__header">
+                  <span>匹配结果</span>
+                  <span class="top-dropdown__hint">按相关度排序</span>
+                </div>
+                <ul class="top-suggestion-list">
+                  <li v-for="post in suggestionPosts" :key="post.id">
+                    <button type="button" class="top-suggestion" @click="selectSuggestion(post.title)">
+                      <span class="top-suggestion__title">{{ post.title }}</span>
+                      <span class="top-suggestion__meta">{{ post.author.name }} · {{ new Date(post.publishedAt).toLocaleDateString('zh-CN') }}</span>
+                    </button>
+                  </li>
+                </ul>
               </div>
-              <ul class="top-suggestion-list">
-                <li v-for="post in suggestionPosts" :key="post.id">
-                  <button type="button" class="top-suggestion" @click="selectSuggestion(post.title)">
-                    <span class="top-suggestion__title">{{ post.title }}</span>
-                    <span class="top-suggestion__meta">{{ post.author.name }} · {{ new Date(post.publishedAt).toLocaleDateString('zh-CN') }}</span>
-                  </button>
-                </li>
-              </ul>
-            </div>
 
-            <div v-else-if="normalizedQuery" class="top-dropdown__section top-dropdown__section--empty">
-              <span>暂无匹配项，换个关键词试试</span>
+              <div v-else-if="normalizedQuery" class="top-dropdown__section top-dropdown__section--empty">
+                <span>暂无匹配项，换个关键词试试</span>
+              </div>
             </div>
           </div>
         </div>
+        <nav class="navigation">
+          <RouterLink to="/">首页</RouterLink>
+          <RouterLink to="/article">文章</RouterLink>
+          <RouterLink to="/write">写作</RouterLink>
+          <RouterLink to="/about">关于</RouterLink>
+        </nav>
       </div>
-      <nav class="navigation">
-        <RouterLink to="/">首页</RouterLink>
-        <RouterLink to="/article">文章</RouterLink>
-        <RouterLink to="/write">写作</RouterLink>
-        <RouterLink to="/about">关于</RouterLink>
-      </nav>
     </header>
 
     <main class="page">
@@ -268,7 +274,7 @@ onUnmounted(()=>{
     </main>
 
     <footer class="footer">
-      <p>{{ new Date().getFullYear() }}</p>
+      <p>© {{ new Date().getFullYear() }} Sign Blog</p>
     </footer>
   </div>
 </template>
@@ -308,6 +314,14 @@ onUnmounted(()=>{
   transition: transform 0.3s ease-in-out;
 }
 
+.topbar__inner {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  min-width: 0;
+}
+
 /*隐藏导航栏 */
 .topbar.hidden {
   transform: translateY(-100px);
@@ -322,6 +336,7 @@ onUnmounted(()=>{
   text-decoration: none;
   font-weight: 700;
   font-size: 1.1rem;
+  flex-shrink: 0;
 
   img {
     width: 42px;
@@ -335,12 +350,13 @@ onUnmounted(()=>{
   display: flex;
   justify-content: center;
   padding: 0 2rem;
+  min-width: 0;
 }
 
 .search-input-wrapper {
   position: relative;
   width: 100%;
-  max-width: 400px;
+  max-width: 540px;
   display: flex;
   align-items: center;
 }
@@ -564,6 +580,7 @@ onUnmounted(()=>{
 .navigation {
   display: flex;
   gap: 1.5rem;
+  flex-shrink: 0;
 
   a {
     color: #cbd5f5;
@@ -598,20 +615,37 @@ onUnmounted(()=>{
 
 @media (max-width: 768px) {
   .topbar {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+  }
+
+  .topbar__inner {
+    flex-wrap: wrap;
+    gap: 0.75rem;
   }
 
   .search-box {
     padding: 0;
     width: 100%;
-    order: 3;
+    flex: 1 1 100%;
+    order: 2;
+  }
+
+  .search-input-wrapper {
+    max-width: 100%;
   }
 
   .navigation {
     width: 100%;
-    justify-content: space-around;
+    justify-content: flex-start;
+    gap: 1.25rem;
+    order: 3;
+    overflow-x: auto;
+    white-space: nowrap;
   }
 }
 </style>

@@ -4,20 +4,17 @@
   width: 100%;
   margin: 0;
   padding: 0;
-  font-weight: normal;
   min-height: 100vh;
 }
 
-a,
-.green {
+a {
   text-decoration: none;
-  color: hsla(160, 100%, 37%, 1);
-  transition: 0.4s;
-  padding: 3px;
+  color: inherit;
+  transition: color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 @media (hover: hover) {
   a:hover {
-    background-color: hsla(160, 3%, 41%, 0.2);
+    color: var(--brand-500);
   }
 }

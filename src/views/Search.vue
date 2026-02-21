@@ -16,7 +16,13 @@
                     @focus="openDropdown"
                     @input="openDropdown"
 				/>
-				<button type="button" @click="applySearch">搜索</button>
+				<button type="button" class="search__submit" aria-label="搜索" @click="applySearch">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path
+                            d="M15.5 14h-.79l-.28-.27A6.5 6.5 0 1 0 14 15.5l.27.28v.79L20 22l2-2-6.5-6zM10 15.5A5.5 5.5 0 1 1 10 4a5.5 5.5 0 0 1 0 11.5z"
+                        />
+                    </svg>
+                </button>
 			</div>
 
             <div v-show="showDropdown" ref="dropdownEl" class="search__dropdown" role="listbox">
@@ -26,11 +32,10 @@
                         <span class="dropdown__hint">随机挑选高阅读量文章</span>
                     </div>
                        <ol class="hot-list">
-                           <li v-for="(post, index) in recommendedPosts" :key="post.id">
+                           <li v-for="(post, index) in hotPosts" :key="post.id">
                                <button type="button" class="hot-list__item" @click="selectSuggestion(post.title)">
                                    <span class="hot-list__rank" :data-top="index < 3">{{ index + 1 }}</span>
                                    <span class="hot-list__text">{{ post.title }}</span>
-                                   <span class="hot-list__meta">{{ post.readMinutes }} 分钟读完</span>
                                </button>
                            </li>
                        </ol>
@@ -164,6 +169,7 @@ const filteredPosts = computed(() => {
     return rankedByRelevance.value.map((item) => item.post)
 })
 
+const hotPosts = computed(() => recommendedPosts.value.slice(0, 10))
 const suggestionPosts = computed(() => rankedByRelevance.value.slice(0, 5).map((item) => item.post))
 
 onMounted(async () => {
@@ -239,10 +245,8 @@ function relevanceScore(post: Post, query: string) {
 }
 
 function refreshRecommendations() {
-    const sortedByRead = posts.value.slice().sort((a, b) => b.readMinutes - a.readMinutes)
-    const topPool = sortedByRead.slice(0, Math.max(6, Math.min(12, sortedByRead.length)))
-    const shuffled = topPool.sort(() => Math.random() - 0.5)
-    recommendedPosts.value = shuffled.slice(0, Math.min(6, shuffled.length))
+    const sortedByRead = posts.value.slice().sort((a, b) => b.readMinutes - a.readMinutes || sortByDateDesc(a, b))
+    recommendedPosts.value = sortedByRead.slice(0, 10)
 }
 
 function loadHistory() {
@@ -295,7 +299,7 @@ function handleOutsideClick(event: MouseEvent) {
 }
 
 .search__hero {
-    max-width: 960px;
+    max-width: 1080px;
     margin: 0 auto;
     text-align: center;
     display: flex;
@@ -330,7 +334,7 @@ function handleOutsideClick(event: MouseEvent) {
     transform: translateX(-50%);
     top: calc(100% + 0.5rem);
     width: 100%;
-    max-width: 720px;
+    max-width: 840px;
     background: #fff;
     border: 1px solid #e2e8f0;
     border-radius: 16px;
@@ -372,7 +376,7 @@ function handleOutsideClick(event: MouseEvent) {
     margin: 0;
     padding: 0;
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.6rem;
 }
 
@@ -380,11 +384,11 @@ function handleOutsideClick(event: MouseEvent) {
     width: 100%;
     display: flex;
     align-items: center;
-    gap: 0.6rem;
+    gap: 0.75rem;
     padding: 0.65rem 0.75rem;
     border-radius: 12px;
     border: 1px solid #e2e8f0;
-    background: linear-gradient(135deg, #f8fbff 0%, #ffffff 100%);
+    background: #fff;
     cursor: pointer;
     transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
     text-align: left;
@@ -417,11 +421,9 @@ function handleOutsideClick(event: MouseEvent) {
     flex: 1;
     color: #0f172a;
     font-weight: 600;
-}
-
-.hot-list__meta {
-    color: #94a3b8;
-    font-size: 0.9rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .badge {
@@ -507,39 +509,51 @@ function handleOutsideClick(event: MouseEvent) {
 .search__bar {
     margin: 0.5rem auto 0;
     width: 100%;
-    max-width: 620px;
+    max-width: 840px;
+    position: relative;
     display: flex;
-    gap: 0.75rem;
 
     input {
         flex: 1;
-        padding: 0.85rem 1rem;
-        border-radius: 12px;
-        border: 1px solid #cbd5f5;
+        padding: 1rem 3.25rem 1rem 1.25rem;
+        border-radius: 18px;
+        border: 3px solid #f472b6;
         background: #fff;
-        font-size: 1rem;
+        font-size: 1.05rem;
         transition: border-color 0.2s ease, box-shadow 0.2s ease;
 
         &:focus {
             outline: none;
-            border-color: #2563eb;
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.16);
+            border-color: #ec4899;
+            box-shadow: 0 0 0 4px rgba(236, 72, 153, 0.14);
         }
     }
 
-    button {
-        padding: 0 1.4rem;
+    .search__submit {
+        position: absolute;
+        right: 0.8rem;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 2.2rem;
+        height: 2.2rem;
         border: none;
-        border-radius: 12px;
-        background: #2563eb;
-        color: #fff;
-        font-weight: 600;
+        border-radius: 50%;
+        background: transparent;
+        color: #ec4899;
         cursor: pointer;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: background-color 0.2s ease;
 
         &:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 10px 24px rgba(37, 99, 235, 0.24);
+            background: rgba(244, 114, 182, 0.16);
+        }
+
+        svg {
+            width: 1.3rem;
+            height: 1.3rem;
+            fill: currentColor;
         }
     }
 }
@@ -674,6 +688,10 @@ function handleOutsideClick(event: MouseEvent) {
 }
 
 @media (max-width: 900px) {
+    .hot-list {
+        grid-template-columns: 1fr;
+    }
+
     .post-card {
         flex-direction: column;
 
@@ -684,11 +702,7 @@ function handleOutsideClick(event: MouseEvent) {
     }
 
     .search__bar {
-        flex-direction: column;
-
-        button {
-            width: 100%;
-        }
+        max-width: 100%;
     }
 }
 </style>
