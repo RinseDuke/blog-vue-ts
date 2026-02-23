@@ -23,13 +23,12 @@ const router = createRouter({
     {
       path: '/article',
       name: 'article-list',
-      component: () => import('../views/ArticlePage.vue'),
+      component: () => import('../views/ArticleListView.vue'),
     },
     {
       path: '/article/:slug',
       name: 'article-detail',
-      
-      component: () => import('../views/ArticlePage.vue'),
+      component: () => import('../views/ArticleDetailView.vue'),
     },
     {
       path: '/search',

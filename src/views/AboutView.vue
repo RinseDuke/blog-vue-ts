@@ -3,416 +3,460 @@ import { RouterLink } from 'vue-router'
 
 const profile = {
   displayName: 'Sign',
-  title: '前端作者 · 产品体验爱好者',
-  bio: '记录技术、设计与写作方法，把复杂的事情讲清楚。',
-  location: '杭州',
+  title: 'Frontend Engineer - Product Experience Enthusiast',
+  bio: 'I focus on frontend engineering, interface design, and writing workflows to turn complex work into clear execution steps.',
+  location: 'Hangzhou',
   joinedAt: '2024-05-12',
-  lastActive: '今天',
+  lastActive: 'Today',
   avatarInitial: 'S',
 }
 
 const stats = [
-  { label: '发布文章', value: '36', helper: '近 30 天 +4' },
-  { label: '累计阅读', value: '128k', helper: '平均 3.5k/篇' },
-  { label: '关注者', value: '1,208', helper: '本周 +22' },
-  { label: '收藏', value: '412', helper: '被收藏 3.9k 次' },
+  { label: 'Published', value: '36', helper: 'Last 30 days +4' },
+  { label: 'Total Reads', value: '128k', helper: 'Avg 3.5k / post' },
+  { label: 'Followers', value: '1,208', helper: 'This week +22' },
+  { label: 'Bookmarks', value: '412', helper: 'Saved 3.9k times' },
 ]
 
 const quickActions = [
-  { label: '写新文章', to: '/write' },
-  { label: '管理文章', to: '/' },
-  { label: '查看搜索', to: '/search' },
+  { label: 'Write New Post', to: '/write' },
+  { label: 'Manage Posts', to: '/article' },
+  { label: 'Search Posts', to: '/search' },
 ]
 
-const focusCards = [
-  {
-    title: '创作节奏',
-    value: '12 天连续写作',
-    desc: '本周已完成 3 篇草稿，保持稳定输出。',
-  },
-  {
-    title: '内容方向',
-    value: '前端工程 · 体验设计',
-    desc: '读者最关注：架构实践、性能优化、写作方法。',
-  },
-  {
-    title: '成长目标',
-    value: '下月发布 8 篇',
-    desc: '平均每 4 天完成一篇，主打深度长文。',
-  },
+const highlights = [
+  { label: 'Writing Rhythm', value: '12-Day Consistency', detail: '3 drafts completed this week with stable output.' },
+  { label: 'Content Focus', value: 'Engineering - UX Design', detail: 'Most readers follow architecture and performance topics.' },
+  { label: 'Next Goal', value: '8 Posts Next Month', detail: 'Target: one deep article every 4 days.' },
 ]
 
 const drafts = [
-  { title: '从零搭建高可用博客系统', updatedAt: '2 小时前', progress: '70%' },
-  { title: 'Vue 3 复杂表单最佳实践', updatedAt: '昨天', progress: '45%' },
-  { title: '设计系统的颜色语义', updatedAt: '3 天前', progress: '20%' },
+  { title: 'Build a Maintainable Blog from Scratch', updatedAt: '2 hours ago', progress: '70%' },
+  { title: 'Vue 3 Complex Form Best Practices', updatedAt: 'Yesterday', progress: '45%' },
+  { title: 'Color Semantics in Design Systems', updatedAt: '3 days ago', progress: '20%' },
 ]
 
 const recentActivity = [
-  { label: '发布《前端项目结构复盘》', time: '今天 09:30' },
-  { label: '更新《Vue Router 高级技巧》', time: '昨天 20:10' },
-  { label: '回复评论 12 条', time: '昨天 16:40' },
-  { label: '新增粉丝 22 人', time: '2 天前' },
+  { label: 'Published "Frontend Structure Review"', time: 'Today 09:30' },
+  { label: 'Updated "Vue Router Advanced Patterns"', time: 'Yesterday 20:10' },
+  { label: 'Replied to 12 comments', time: 'Yesterday 16:40' },
+  { label: 'Gained 22 new followers', time: '2 days ago' },
 ]
 </script>
 
 <template>
-  <section class="about-page">
-    <div class="about-page__inner">
-    <header class="hero">
-      <div class="hero__profile">
-        <div class="avatar" aria-hidden="true">{{ profile.avatarInitial }}</div>
-        <div class="hero__meta">
-          <p class="eyebrow">个人用户中心</p>
-          <h1>{{ profile.displayName }}</h1>
-          <p class="title">{{ profile.title }}</p>
-          <p class="bio">{{ profile.bio }}</p>
-          <div class="meta-line">
-            <span>{{ profile.location }}</span>
-            <span class="dot">•</span>
-            <span>加入于 {{ profile.joinedAt }}</span>
-            <span class="dot">•</span>
-            <span>活跃：{{ profile.lastActive }}</span>
-          </div>
-        </div>
-      </div>
-      <div class="hero__actions">
-        <RouterLink
-          v-for="item in quickActions"
-          :key="item.label"
-          class="action-btn"
-          :to="item.to"
-        >
-          {{ item.label }}
-        </RouterLink>
-      </div>
-    </header>
-
-    <section class="stats">
-      <article v-for="item in stats" :key="item.label" class="stat-card">
-        <p class="stat-label">{{ item.label }}</p>
-        <p class="stat-value">{{ item.value }}</p>
-        <p class="stat-helper">{{ item.helper }}</p>
-      </article>
-    </section>
-
-    <section class="grid">
-      <article v-for="card in focusCards" :key="card.title" class="card">
-        <h3>{{ card.title }}</h3>
-        <p class="card-value">{{ card.value }}</p>
-        <p class="card-desc">{{ card.desc }}</p>
-      </article>
-    </section>
-
-    <section class="split">
-      <article class="panel">
-        <header class="panel__head">
-          <h3>草稿进度</h3>
-          <span class="panel__badge">3 篇进行中</span>
-        </header>
-        <div class="panel__body">
-          <div v-for="draft in drafts" :key="draft.title" class="draft-row">
-            <div class="draft-info">
-              <p class="draft-title">{{ draft.title }}</p>
-              <p class="draft-meta">更新于 {{ draft.updatedAt }}</p>
+  <section class="profile-page">
+    <div class="profile-page__shape" aria-hidden="true"></div>
+    <div class="profile-page__inner">
+      <header class="hero panel panel--hero">
+        <div class="hero__left">
+          <div class="avatar" aria-hidden="true">{{ profile.avatarInitial }}</div>
+          <div class="hero__meta">
+            <p class="hero__eyebrow">Profile Center</p>
+            <h1>{{ profile.displayName }}</h1>
+            <p class="hero__title">{{ profile.title }}</p>
+            <p class="hero__bio">{{ profile.bio }}</p>
+            <div class="hero__line">
+              <span>{{ profile.location }}</span>
+              <span class="hero__dot">|</span>
+              <span>Joined {{ profile.joinedAt }}</span>
+              <span class="hero__dot">|</span>
+              <span>Active {{ profile.lastActive }}</span>
             </div>
-            <span class="draft-progress">{{ draft.progress }}</span>
           </div>
         </div>
-      </article>
 
-      <article class="panel">
-        <header class="panel__head">
-          <h3>最近动态</h3>
-          <span class="panel__badge panel__badge--accent">本周高峰</span>
-        </header>
-        <div class="panel__body">
-          <div v-for="item in recentActivity" :key="item.label" class="activity-row">
-            <p class="activity-label">{{ item.label }}</p>
-            <span class="activity-time">{{ item.time }}</span>
-          </div>
+        <div class="hero__actions">
+          <RouterLink v-for="action in quickActions" :key="action.label" class="action-btn" :to="action.to">
+            {{ action.label }}
+          </RouterLink>
         </div>
-      </article>
-    </section>
+      </header>
+
+      <section class="stats">
+        <article v-for="item in stats" :key="item.label" class="panel stat-card">
+          <p class="stat-card__label">{{ item.label }}</p>
+          <p class="stat-card__value">{{ item.value }}</p>
+          <p class="stat-card__helper">{{ item.helper }}</p>
+        </article>
+      </section>
+
+      <section class="highlights">
+        <article v-for="item in highlights" :key="item.label" class="panel highlight-card">
+          <p class="highlight-card__label">{{ item.label }}</p>
+          <h3>{{ item.value }}</h3>
+          <p class="highlight-card__detail">{{ item.detail }}</p>
+        </article>
+      </section>
+
+      <section class="content-grid">
+        <article class="panel content-panel">
+          <header class="content-panel__head">
+            <h3>Draft Progress</h3>
+            <span class="pill">3 In Progress</span>
+          </header>
+          <div class="content-panel__list">
+            <div v-for="draft in drafts" :key="draft.title" class="list-row">
+              <div>
+                <p class="list-row__title">{{ draft.title }}</p>
+                <p class="list-row__meta">Updated {{ draft.updatedAt }}</p>
+              </div>
+              <span class="list-row__value">{{ draft.progress }}</span>
+            </div>
+          </div>
+        </article>
+
+        <article class="panel content-panel">
+          <header class="content-panel__head">
+            <h3>Recent Activity</h3>
+            <span class="pill pill--accent">High This Week</span>
+          </header>
+          <div class="content-panel__list">
+            <div v-for="item in recentActivity" :key="item.label" class="list-row">
+              <p class="list-row__title">{{ item.label }}</p>
+              <span class="list-row__meta">{{ item.time }}</span>
+            </div>
+          </div>
+        </article>
+      </section>
     </div>
   </section>
 </template>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=ZCOOL+KuaiLe&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap');
 
-.about-page {
-  --ink: #0f172a;
-  --muted: #64748b;
-  --accent: #e76f51;
-  --accent-2: #2a9d8f;
-  --accent-3: #f4a261;
-  --card: #ffffff;
-  --surface: rgba(255, 255, 255, 0.78);
-  background:
-    radial-gradient(circle at 12% 8%, #ffe9d6 0%, transparent 40%),
-    radial-gradient(circle at 85% 15%, #e0f2f1 0%, transparent 45%),
-    linear-gradient(180deg, #faf7f2 0%, #f6f7fb 100%);
-  padding: 80px 24px 120px;
-  color: var(--ink);
+.profile-page {
+  --ink: #1d1d1f;
+  --muted: #6e6e73;
+  --line: rgba(0, 0, 0, 0.08);
+  --card: rgba(255, 255, 255, 0.82);
+  --accent: #0071e3;
+  --accent-soft: rgba(0, 113, 227, 0.12);
+  position: relative;
+  overflow: hidden;
   min-height: 100%;
-  font-family: 'Space Grotesk', 'ZCOOL KuaiLe', sans-serif;
+  padding: 44px 24px 96px;
+  color: var(--ink);
+  background: linear-gradient(180deg, #ffffff 0%, #f7f7f9 100%);
+  font-family: 'Manrope', sans-serif;
 }
 
-.about-page__inner {
-  width: clamp(320px, 50vw, 980px);
+.profile-page__shape {
+  display: none;
+}
+
+.profile-page__inner {
+  width: min(1040px, 100%);
   margin: 0 auto;
+  position: relative;
+  z-index: 1;
 }
 
-.hero {
+.panel {
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--card);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+}
+
+.panel--hero {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  gap: 2rem;
-  align-items: center;
+  gap: 1.6rem;
   flex-wrap: wrap;
-  margin-bottom: 2.5rem;
+  padding: 1.6rem 1.8rem;
+  animation: rise-in 0.55s ease both;
 }
 
-.hero__profile {
+.hero__left {
   display: flex;
-  gap: 1.5rem;
   align-items: center;
+  gap: 1rem;
+  min-width: 260px;
   flex: 1;
-  min-width: 280px;
 }
 
 .avatar {
-  width: 86px;
-  height: 86px;
-  border-radius: 26px;
-  background: linear-gradient(140deg, #f4a261, #e76f51);
+  width: 78px;
+  height: 78px;
+  border-radius: 24px;
+  display: grid;
+  place-items: center;
+  font-size: 2rem;
+  font-weight: 800;
   color: #fff;
-  font-size: 2.4rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 18px 40px rgba(231, 111, 81, 0.28);
-  font-family: 'ZCOOL KuaiLe', 'Space Grotesk', sans-serif;
+  background: linear-gradient(145deg, #2f8fff 0%, #0071e3 100%);
+  box-shadow: 0 10px 20px rgba(0, 113, 227, 0.28);
 }
 
 .hero__meta h1 {
-  font-size: clamp(2rem, 3.2vw, 2.8rem);
-  margin: 0.2rem 0 0.2rem;
+  margin: 0.1rem 0;
+  font-size: clamp(2rem, 4vw, 2.7rem);
+  line-height: 1.1;
 }
 
-.eyebrow {
-  text-transform: uppercase;
-  letter-spacing: 0.16em;
-  font-size: 0.78rem;
-  color: var(--accent-2);
-  font-weight: 700;
+.hero__eyebrow {
   margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
 }
 
-.title {
+.hero__title {
   margin: 0;
   color: var(--muted);
   font-weight: 600;
 }
 
-.bio {
-  margin: 0.6rem 0 0.75rem;
-  max-width: 520px;
-  color: #1f2937;
-  line-height: 1.7;
+.hero__bio {
+  margin: 0.55rem 0 0.75rem;
+  line-height: 1.68;
+  max-width: 560px;
 }
 
-.meta-line {
+.hero__line {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
   gap: 0.5rem;
   color: var(--muted);
   font-size: 0.9rem;
 }
 
-.dot {
-  opacity: 0.4;
+.hero__dot {
+  opacity: 0.45;
 }
 
 .hero__actions {
   display: flex;
-  gap: 0.8rem;
   flex-wrap: wrap;
+  gap: 0.7rem;
 }
 
 .action-btn {
-  padding: 0.7rem 1.4rem;
+  border: 1px solid var(--line);
   border-radius: 999px;
-  background: var(--card);
-  color: var(--ink);
-  border: 1px solid rgba(15, 23, 42, 0.12);
+  padding: 0.62rem 1.25rem;
   text-decoration: none;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.88);
   font-weight: 600;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
 }
 
 .action-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.12);
+  transform: translateY(-1px);
+  border-color: rgba(31, 122, 99, 0.45);
+  background: #fff;
 }
 
 .stats {
+  margin-top: 1rem;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 1rem;
-  margin-bottom: 2.4rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.85rem;
 }
 
 .stat-card {
-  background: var(--surface);
-  border-radius: 18px;
-  padding: 1.1rem 1.4rem;
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  backdrop-filter: blur(10px);
+  padding: 1rem 1.1rem;
+  animation: rise-in 0.55s ease both;
 }
 
-.stat-label {
+.stat-card:nth-child(1) {
+  animation-delay: 0.08s;
+}
+
+.stat-card:nth-child(2) {
+  animation-delay: 0.12s;
+}
+
+.stat-card:nth-child(3) {
+  animation-delay: 0.16s;
+}
+
+.stat-card:nth-child(4) {
+  animation-delay: 0.2s;
+}
+
+.stat-card__label {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--muted);
+}
+
+.stat-card__value {
+  margin: 0.4rem 0 0.2rem;
+  font-size: 1.6rem;
+  line-height: 1;
+  font-weight: 800;
+}
+
+.stat-card__helper {
+  margin: 0;
+  color: var(--accent);
+  font-size: 0.83rem;
+  font-weight: 600;
+}
+
+.highlights {
+  margin-top: 0.95rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.highlight-card {
+  padding: 1.15rem 1.15rem 1.1rem;
+  animation: rise-in 0.55s ease both;
+}
+
+.highlight-card:nth-child(1) {
+  animation-delay: 0.24s;
+}
+
+.highlight-card:nth-child(2) {
+  animation-delay: 0.28s;
+}
+
+.highlight-card:nth-child(3) {
+  animation-delay: 0.32s;
+}
+
+.highlight-card__label {
   margin: 0;
   color: var(--muted);
-  font-size: 0.9rem;
+  font-size: 0.86rem;
 }
 
-.stat-value {
-  margin: 0.5rem 0 0.3rem;
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: var(--ink);
+.highlight-card h3 {
+  margin: 0.45rem 0 0.35rem;
+  font-size: 1.3rem;
 }
 
-.stat-helper {
-  margin: 0;
-  color: var(--accent-2);
-  font-weight: 600;
-  font-size: 0.85rem;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 1.2rem;
-  margin-bottom: 2.4rem;
-}
-
-.card {
-  background: var(--card);
-  border-radius: 20px;
-  padding: 1.4rem;
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
-}
-
-.card h3 {
-  margin: 0;
-  font-size: 1.1rem;
-}
-
-.card-value {
-  margin: 0.7rem 0 0.5rem;
-  font-size: 1.6rem;
-  font-weight: 700;
-  color: var(--accent);
-}
-
-.card-desc {
+.highlight-card__detail {
   margin: 0;
   color: var(--muted);
   line-height: 1.6;
 }
 
-.split {
+.content-grid {
+  margin-top: 1rem;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1.4rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
 }
 
-.panel {
-  background: var(--card);
-  border-radius: 22px;
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  padding: 1.5rem;
-  box-shadow: 0 18px 36px rgba(15, 23, 42, 0.08);
+.content-panel {
+  padding: 1.2rem;
+  animation: rise-in 0.55s ease both;
 }
 
-.panel__head {
+.content-panel:nth-child(1) {
+  animation-delay: 0.36s;
+}
+
+.content-panel:nth-child(2) {
+  animation-delay: 0.4s;
+}
+
+.content-panel__head {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
+  justify-content: space-between;
+  margin-bottom: 0.85rem;
 }
 
-.panel__head h3 {
+.content-panel__head h3 {
   margin: 0;
-  font-size: 1.15rem;
+  font-size: 1.08rem;
 }
 
-.panel__badge {
-  padding: 0.25rem 0.75rem;
+.pill {
+  padding: 0.24rem 0.66rem;
   border-radius: 999px;
-  background: rgba(42, 157, 143, 0.12);
-  color: var(--accent-2);
-  font-weight: 600;
-  font-size: 0.8rem;
-}
-
-.panel__badge--accent {
-  background: rgba(244, 162, 97, 0.18);
-  color: #b45309;
-}
-
-.panel__body {
-  display: flex;
-  flex-direction: column;
-  gap: 0.8rem;
-}
-
-.draft-row,
-.activity-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.75rem 0.9rem;
-  border-radius: 14px;
-  background: #f8fafc;
-}
-
-.draft-title {
-  margin: 0;
-  font-weight: 600;
-  color: var(--ink);
-}
-
-.draft-meta {
-  margin: 0.25rem 0 0;
-  color: var(--muted);
-  font-size: 0.85rem;
-}
-
-.draft-progress {
+  font-size: 0.78rem;
   font-weight: 700;
-  color: var(--accent-2);
+  color: var(--accent);
+  background: var(--accent-soft);
 }
 
-.activity-label {
+.pill--accent {
+  color: #694e10;
+  background: rgba(226, 183, 98, 0.26);
+}
+
+.content-panel__list {
+  display: grid;
+  gap: 0.62rem;
+}
+
+.list-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.72rem 0.82rem;
+  border-radius: 12px;
+  border: 1px solid rgba(23, 33, 45, 0.08);
+  background: #f9fbfa;
+}
+
+.list-row__title {
   margin: 0;
-  color: var(--ink);
+  font-size: 0.95rem;
   font-weight: 600;
+  color: var(--ink);
 }
 
-.activity-time {
-  font-size: 0.85rem;
+.list-row__meta {
+  margin: 0.2rem 0 0;
   color: var(--muted);
+  font-size: 0.84rem;
 }
 
-@media (max-width: 820px) {
-  .hero {
-    align-items: flex-start;
+.list-row__value {
+  font-size: 0.9rem;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 980px) {
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .highlights {
+    grid-template-columns: 1fr;
+  }
+
+  .content-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .profile-page {
+    padding: 30px 16px 72px;
+  }
+
+  .panel--hero {
+    padding: 1.2rem;
   }
 
   .hero__actions {
@@ -422,6 +466,25 @@ const recentActivity = [
   .action-btn {
     flex: 1;
     text-align: center;
+  }
+}
+
+@media (max-width: 520px) {
+  .stats {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel--hero,
+  .stat-card,
+  .highlight-card,
+  .content-panel {
+    animation: none;
+  }
+
+  .action-btn {
+    transition: none;
   }
 }
 </style>
