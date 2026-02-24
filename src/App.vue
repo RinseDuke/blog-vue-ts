@@ -1,10 +1,8 @@
 <script setup lang="ts">
 import { useRoute, useRouter, RouterView } from 'vue-router'
 import { ref, computed, onMounted, watch, onUnmounted } from 'vue'
-import type { Post } from '@/types/post'
-import { fetchPosts } from '@/services/postService'
-import { buildRecommendedPosts } from '@/features/post/utils/post'
-import { usePostSearch } from '@/features/search/composables/usePostSearch'
+import { usePostsStore } from '@/features/post/composables/usePostsStore'
+import { usePostSearchBundle } from '@/features/search/composables/usePostSearchBundle'
 import { useSearchHistory } from '@/features/search/composables/useSearchHistory'
 import TopBrand from '@/components/navigation/TopBrand.vue'
 import TopFooter from '@/components/navigation/TopFooter.vue'
@@ -16,14 +14,22 @@ const route = useRoute()
 const router = useRouter()
 const searchQuery = ref<string>((route.query.q as string) ?? '')
 const isNavHidden = ref(false)
-const posts = ref<Post[]>([])
-const recommendedPosts = ref<Post[]>([])
 
 const isWritePage = computed(() => route.name === 'write')
 let lastScrollTop = 0
 
+const { posts, ensurePosts } = usePostsStore()
 const { searchHistory, loadHistory, persistHistory, clearHistory } = useSearchHistory()
-const { normalizedQuery, rankedByRelevance } = usePostSearch(posts, searchQuery)
+const { normalizedQuery, suggestionPosts, recommendedPosts } = usePostSearchBundle(posts, searchQuery, {
+  suggestionLimit: 5,
+  includeAllWhenQueryEmpty: false,
+  recommendation: {
+    poolMin: 6,
+    poolMax: 12,
+    take: 6,
+    randomize: true,
+  },
+})
 
 watch(
   () => route.fullPath,
@@ -32,11 +38,6 @@ watch(
     lastScrollTop = 0
   }
 )
-
-const suggestionPosts = computed(() => {
-  if (!normalizedQuery.value) return recommendedPosts.value.slice(0, 5)
-  return rankedByRelevance.value.slice(0, 5).map((item) => item.post)
-})
 
 watch(
   () => route.query.q,
@@ -69,22 +70,12 @@ const handleScroll = (event: Event) => {
   lastScrollTop = scrollTop
 }
 
-function refreshRecommendations() {
-  recommendedPosts.value = buildRecommendedPosts(posts.value, {
-    poolMin: 6,
-    poolMax: 12,
-    take: 6,
-    randomize: true,
-  })
-}
-
 onMounted(async () => {
   window.addEventListener('scroll', handleScroll, true)
   loadHistory()
 
   try {
-    posts.value = await fetchPosts()
-    refreshRecommendations()
+    await ensurePosts()
   } catch (err) {
     console.warn('Unable to load recommended posts', err)
   }

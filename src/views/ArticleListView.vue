@@ -2,20 +2,22 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import type { Post } from '@/types/post'
-import { fetchPosts } from '@/services/postService'
+import { usePostsStore } from '@/features/post/composables/usePostsStore'
+import {
+  type DatePreset,
+  type SortMode,
+  parseArticleListQueryState,
+  buildArticleListQuery,
+  isSameQuery,
+} from '@/features/post/utils/articleListQuery'
 import { sortPostsByDateDesc } from '@/features/post/utils/post'
 import PostList from '@/components/post/PostList.vue'
 import ArticleFilters from '@/components/post/ArticleFilters.vue'
 
-type DatePreset = 'all' | '7d' | '30d' | '90d' | '365d' | 'custom'
-type SortMode = 'newest' | 'oldest' | 'readDesc' | 'readAsc' | 'titleAsc'
-
 const route = useRoute()
 const router = useRouter()
 
-const loading = ref(true)
-const error = ref<string | null>(null)
-const posts = ref<Post[]>([])
+const { posts, loading, error, ensurePosts } = usePostsStore()
 
 const selectedTag = ref<string>('all')
 const datePreset = ref<DatePreset>('all')
@@ -169,20 +171,10 @@ watch(
   }
 )
 
-async function loadPosts() {
-  loading.value = true
-  error.value = null
-  try {
-    posts.value = await fetchPosts()
-  } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Failed to load posts'
-  } finally {
-    loading.value = false
-  }
-}
-
 onMounted(() => {
-  void loadPosts()
+  void ensurePosts().catch((err) => {
+    console.warn('Failed to preload posts for article list', err)
+  })
 })
 
 function sortByMode(a: Post, b: Post) {
@@ -209,79 +201,28 @@ function goToPage(page: number) {
 }
 
 function applyQueryState(query: Record<string, unknown>) {
-  const tag = toQueryString(query.tag)
-  selectedTag.value = tag || 'all'
-
-  const date = toQueryString(query.date)
-  if (isDatePreset(date)) {
-    datePreset.value = date
-  } else {
-    datePreset.value = 'all'
-  }
-
-  customStartDate.value = datePreset.value === 'custom' ? toQueryString(query.start) : ''
-  customEndDate.value = datePreset.value === 'custom' ? toQueryString(query.end) : ''
-
-  keyword.value = toQueryString(query.q)
-
-  const sort = toQueryString(query.sort)
-  sortMode.value = isSortMode(sort) ? sort : 'newest'
-
-  const size = Number.parseInt(toQueryString(query.size), 10)
-  pageSize.value = pageSizeOptions.includes(size) ? size : 6
-
-  const page = Number.parseInt(toQueryString(query.page), 10)
-  currentPage.value = Number.isFinite(page) && page > 0 ? page : 1
+  const nextState = parseArticleListQueryState(query, { pageSizeOptions })
+  selectedTag.value = nextState.selectedTag
+  datePreset.value = nextState.datePreset
+  customStartDate.value = nextState.customStartDate
+  customEndDate.value = nextState.customEndDate
+  keyword.value = nextState.keyword
+  sortMode.value = nextState.sortMode
+  pageSize.value = nextState.pageSize
+  currentPage.value = nextState.currentPage
 }
 
 function buildQueryFromState() {
-  const query: Record<string, string> = {}
-
-  if (selectedTag.value !== 'all') query.tag = selectedTag.value
-  if (datePreset.value !== 'all') query.date = datePreset.value
-  if (datePreset.value === 'custom') {
-    if (customStartDate.value) query.start = customStartDate.value
-    if (customEndDate.value) query.end = customEndDate.value
-  }
-  if (normalizedKeyword.value) query.q = normalizedKeyword.value
-  if (sortMode.value !== 'newest') query.sort = sortMode.value
-  if (pageSize.value !== 6) query.size = String(pageSize.value)
-  if (currentPage.value > 1) query.page = String(currentPage.value)
-
-  return query
-}
-
-function isSameQuery(current: Record<string, unknown>, next: Record<string, string>) {
-  const currentNormalized: Record<string, string> = {}
-
-  for (const [key, value] of Object.entries(current)) {
-    const normalized = toQueryString(value)
-    if (normalized) currentNormalized[key] = normalized
-  }
-
-  const currentKeys = Object.keys(currentNormalized).sort()
-  const nextKeys = Object.keys(next).sort()
-
-  if (currentKeys.length !== nextKeys.length) return false
-
-  for (const key of nextKeys) {
-    if (currentNormalized[key] !== next[key]) return false
-  }
-
-  return true
-}
-
-function toQueryString(value: unknown) {
-  if (Array.isArray(value)) return typeof value[0] === 'string' ? value[0] : ''
-  return typeof value === 'string' ? value : ''
-}
-
-function isDatePreset(value: string): value is DatePreset {
-  return ['all', '7d', '30d', '90d', '365d', 'custom'].includes(value)
-}
-
-function isSortMode(value: string): value is SortMode {
-  return ['newest', 'oldest', 'readDesc', 'readAsc', 'titleAsc'].includes(value)
+  return buildArticleListQuery({
+    selectedTag: selectedTag.value,
+    datePreset: datePreset.value,
+    customStartDate: customStartDate.value,
+    customEndDate: customEndDate.value,
+    keyword: keyword.value,
+    sortMode: sortMode.value,
+    pageSize: pageSize.value,
+    currentPage: currentPage.value,
+  })
 }
 
 function isPostInDateRange(publishedAt: string) {

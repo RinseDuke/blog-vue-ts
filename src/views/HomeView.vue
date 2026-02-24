@@ -1,29 +1,24 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
-import type { Post } from '@/types/post'
-import { fetchPosts } from '@/services/postService'
-import { sortPostsByDateDesc } from '@/features/post/utils/post'
+import { usePostsStore } from '@/features/post/composables/usePostsStore'
 import PostList from '@/components/post/PostList.vue'
 
 const HOME_POST_LIMIT = 12
 
-const loading = ref(true)
-const error = ref<string | null>(null)
-const latestPosts = ref<Post[]>([])
+const { sortedPosts, loading, error, ensurePosts, refreshPosts } = usePostsStore()
+const latestPosts = computed(() => sortedPosts.value.slice(0, HOME_POST_LIMIT))
 
-async function loadHomePosts() {
-  loading.value = true
-  error.value = null
-
+async function loadHomePosts(force = false) {
   try {
-    const posts = await fetchPosts({ limit: HOME_POST_LIMIT })
-    // Sort once after loading instead of sorting on each reactive update.
-    latestPosts.value = posts.slice().sort(sortPostsByDateDesc)
+    if (force) {
+      await refreshPosts()
+      return
+    }
+
+    await ensurePosts()
   } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Failed to load posts'
-  } finally {
-    loading.value = false
+    console.warn('Failed to load home posts', err)
   }
 }
 
@@ -51,7 +46,7 @@ onMounted(() => {
       <div v-if="loading" class="feed__state">Loading posts...</div>
       <div v-else-if="error" class="feed__state feed__state--error">
         <p>{{ error }}</p>
-        <button type="button" class="feed__retry" @click="loadHomePosts">Retry</button>
+        <button type="button" class="feed__retry" @click="loadHomePosts(true)">Retry</button>
       </div>
 
       <div v-else class="list-wrapper">
