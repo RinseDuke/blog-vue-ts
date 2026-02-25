@@ -55,3 +55,9 @@
 ## Tests
 - `src/features/post/utils/post.test.ts`：文章工具函数单测
 - `src/features/post/utils/articleListQuery.test.ts`：列表页 query state 单测
+
+## Architecture Notes
+- 代码库总览与模块职责见 `docs/CODEBASE_MAP.md`
+
+## Build Output
+执行 `npm run build` 后产物输出到 `dist/`。
