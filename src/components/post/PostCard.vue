@@ -1,8 +1,6 @@
 <template>
   <article class="post-card post-card--list">
     <RouterLink :to="`/article/${post.slug}`" class="card-link-wrapper">
-      <img v-if="post.coverImage" :src="post.coverImage" :alt="post.title" class="post-card__cover" />
-
       <div class="post-card__body">
         <div class="post-card__meta">
           <span class="post-card__date">{{ formatPostDate(post.publishedAt) }}</span>
@@ -13,14 +11,14 @@
         <h3>{{ post.title }}</h3>
         <p class="post-card__excerpt">{{ post.excerpt }}</p>
 
+        <div class="tags post-card__tags">
+          <span v-for="tag in post.tags" :key="tag" class="tag">#{{ tag }}</span>
+        </div>
+
         <div class="post-card__footer">
           <div class="author">
             <img v-if="post.author.avatarUrl" :src="post.author.avatarUrl" :alt="post.author.name" />
             <span>{{ post.author.name }}</span>
-          </div>
-
-          <div class="tags">
-            <span v-for="tag in post.tags" :key="tag" class="tag">#{{ tag }}</span>
           </div>
         </div>
       </div>
@@ -48,32 +46,24 @@ defineProps<{
 .post-card {
   display: flex;
   flex-direction: row;
-  background: rgba(255, 255, 255, 0.92);
-  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.92));
+  border-radius: 22px;
   border: 1px solid var(--line-soft);
   overflow: hidden;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
   transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
 
   &:hover {
     transform: translateY(-5px);
     border-color: rgba(0, 113, 227, 0.26);
-    box-shadow: var(--shadow-md);
-  }
-
-  &__cover {
-    width: 320px;
-    height: auto;
-    flex-shrink: 0;
-    object-fit: cover;
-    background: #e8eaee;
+    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
   }
 
   &__body {
     display: flex;
     flex-direction: column;
-    gap: 0.85rem;
-    padding: 1.35rem 1.4rem;
+    gap: 0.7rem;
+    padding: 1.25rem 1.4rem 1.2rem;
     flex: 1;
   }
 
@@ -96,14 +86,21 @@ defineProps<{
     color: var(--ink-strong);
     line-height: 1.3;
     letter-spacing: -0.01em;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 
   &__excerpt {
     margin: 0;
     color: var(--ink-main);
     line-height: 1.55;
-    flex-grow: 1;
     font-size: 0.93rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 
   &__footer {
@@ -111,7 +108,14 @@ defineProps<{
     justify-content: space-between;
     align-items: center;
     gap: 1rem;
+    padding-top: 0.7rem;
+    border-top: 1px solid var(--line-soft);
+    margin-top: auto;
   }
+}
+
+.post-card__tags {
+  margin-top: 0.15rem;
 }
 
 .author {
@@ -140,7 +144,7 @@ defineProps<{
     padding: 0.26rem 0.62rem;
     border-radius: 999px;
     border: 1px solid var(--line-soft);
-    background: rgba(255, 255, 255, 0.8);
+    background: rgba(248, 250, 252, 0.9);
     color: var(--ink-muted);
     font-size: 0.78rem;
     font-weight: 600;
@@ -149,13 +153,7 @@ defineProps<{
 
 @media (max-width: 900px) {
   .post-card {
-    flex-direction: column;
     border-radius: 20px;
-
-    &__cover {
-      width: 100%;
-      height: 210px;
-    }
   }
 
   .post-card__footer {

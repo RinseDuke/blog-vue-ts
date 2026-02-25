@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
-import { RouterLink } from 'vue-router'
 import { usePostsStore } from '@/features/post/composables/usePostsStore'
 import PostList from '@/components/post/PostList.vue'
 
@@ -29,19 +28,6 @@ onMounted(() => {
 
 <template>
   <section class="front">
-    <header class="front__hero">
-      <p class="front__eyebrow">SIGN BLOG</p>
-      <h1>Thoughtful writing, engineered clarity.</h1>
-      <p class="front__lead">
-        Insights on frontend architecture, product thinking, and practical workflows for building better digital
-        experiences.
-      </p>
-      <div class="front__actions">
-        <RouterLink to="/article" class="hero-btn hero-btn--primary">Browse Articles</RouterLink>
-        <RouterLink to="/write" class="hero-btn">Start Writing</RouterLink>
-      </div>
-    </header>
-
     <section class="feed" aria-live="polite">
       <div v-if="loading" class="feed__state">Loading posts...</div>
       <div v-else-if="error" class="feed__state feed__state--error">
@@ -65,69 +51,6 @@ onMounted(() => {
   padding: 70px 20px 40px;
 }
 
-.front__hero {
-  width: min(100%, 980px);
-  margin: 0 auto 2.5rem;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-
-  h1 {
-    margin: 0;
-    font-size: clamp(2.2rem, 5vw, 3.7rem);
-    line-height: 1.08;
-    letter-spacing: -0.03em;
-    color: var(--ink-strong);
-  }
-}
-
-.front__eyebrow {
-  margin: 0;
-  font-size: 0.76rem;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: var(--brand-500);
-  font-weight: 700;
-}
-
-.front__lead {
-  margin: 0;
-  color: var(--ink-muted);
-  font-size: clamp(1rem, 2vw, 1.18rem);
-}
-
-.front__actions {
-  margin-top: 0.55rem;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.65rem;
-}
-
-.hero-btn {
-  border: 1px solid var(--line-soft);
-  border-radius: 999px;
-  padding: 0.62rem 1.18rem;
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: var(--ink-main);
-  background: rgba(255, 255, 255, 0.8);
-  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
-
-  &:hover {
-    transform: translateY(-1px);
-    border-color: rgba(0, 113, 227, 0.35);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-  }
-}
-
-.hero-btn--primary {
-  color: #fff;
-  border-color: #0071e3;
-  background: linear-gradient(180deg, #2d91ff 0%, #0071e3 100%);
-  box-shadow: 0 12px 24px rgba(0, 113, 227, 0.28);
-}
 
 .list-wrapper {
   width: min(100%, 900px);
@@ -197,14 +120,4 @@ onMounted(() => {
   }
 }
 
-@media (max-width: 680px) {
-  .front__actions {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .hero-btn {
-    text-align: center;
-  }
-}
 </style>
