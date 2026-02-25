@@ -45,5 +45,8 @@ Mock 数据位于 `src/mocks/posts.ts`，服务层在 `src/services/postService.
 - `src/mocks/` Mock 数据
 - `src/types/` 类型定义
 
+## Architecture Notes
+- 代码库总览与模块职责见 `docs/CODEBASE_MAP.md`
+
 ## Build Output
 执行 `npm run build` 后产物输出到 `dist/`。
