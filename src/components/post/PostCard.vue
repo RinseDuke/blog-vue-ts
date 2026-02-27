@@ -14,12 +14,12 @@
         <div class="tags post-card__tags">
           <span v-for="tag in post.tags" :key="tag" class="tag">#{{ tag }}</span>
         </div>
+      </div>
 
-        <div class="post-card__footer">
-          <div class="author">
-            <img v-if="post.author.avatarUrl" :src="post.author.avatarUrl" :alt="post.author.name" />
-            <span>{{ post.author.name }}</span>
-          </div>
+      <div class="post-card__footer">
+        <div class="author">
+          <img v-if="post.author.avatarUrl" :src="post.author.avatarUrl" :alt="post.author.name" />
+          <span>{{ post.author.name }}</span>
         </div>
       </div>
     </RouterLink>
@@ -40,7 +40,10 @@ defineProps<{
 .card-link-wrapper {
   text-decoration: none;
   color: inherit;
-  display: block;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
 }
 
 .post-card {
@@ -63,7 +66,7 @@ defineProps<{
     display: flex;
     flex-direction: column;
     gap: 0.7rem;
-    padding: 1.25rem 1.4rem 1.2rem;
+    padding: 1.25rem 1.4rem 1rem;
     flex: 1;
   }
 
@@ -103,15 +106,15 @@ defineProps<{
     overflow: hidden;
   }
 
-  &__footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 1rem;
-    padding-top: 0.7rem;
-    border-top: 1px solid var(--line-soft);
-    margin-top: auto;
-  }
+}
+
+.post-card__footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.7rem 1.4rem 1rem;
+  border-top: 1px solid var(--line-soft);
 }
 
 .post-card__tags {

@@ -47,18 +47,22 @@ const sortOptions: { label: string; value: SortMode }[] = [
 
 const pageSizeOptions = [6, 9, 12, 18]
 const isApplyingRouteState = ref(false)
+const FIXED_TAGS = [
+  '开发经验',
+  '前端开发',
+  'Vue',
+  'TypeScript',
+  '工程化',
+  '性能优化',
+  '调试排错',
+  '项目复盘',
+]
 
 const tagOptions = computed(() => {
-  const counter = new Map<string, number>()
-  for (const post of posts.value) {
-    for (const tag of post.tags) {
-      counter.set(tag, (counter.get(tag) ?? 0) + 1)
-    }
-  }
-
-  return [...counter.entries()]
-    .map(([name, count]) => ({ name, count }))
-    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name))
+  return FIXED_TAGS.map((tagName) => ({
+    name: tagName,
+    count: posts.value.filter((post) => post.tags.includes(tagName)).length,
+  }))
 })
 
 const isCustomDateInvalid = computed(() => {
@@ -202,7 +206,9 @@ function goToPage(page: number) {
 
 function applyQueryState(query: Record<string, unknown>) {
   const nextState = parseArticleListQueryState(query, { pageSizeOptions })
-  selectedTag.value = nextState.selectedTag
+  selectedTag.value = nextState.selectedTag === 'all' || FIXED_TAGS.includes(nextState.selectedTag)
+    ? nextState.selectedTag
+    : 'all'
   datePreset.value = nextState.datePreset
   customStartDate.value = nextState.customStartDate
   customEndDate.value = nextState.customEndDate

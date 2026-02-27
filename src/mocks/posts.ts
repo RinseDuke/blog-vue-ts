@@ -8,7 +8,7 @@ export const mockPosts: Post[] = [
     excerpt:
       '从零开始了解 Composition API 的核心概念，带你写出更具可维护性的组件。',
     coverImage: 'https://images.unsplash.com/photo-1523475472560-d2df97ec485c?auto=format&fit=crop&w=1400&q=80',
-    tags: ['Vue', 'Composition API', '初学者'],
+    tags: ['开发经验'],
     author: {
       id: 'author-1',
       name: '前端小白',
@@ -26,7 +26,7 @@ export const mockPosts: Post[] = [
     title: '如何像高手一样组织你的 Vue 项目结构',
     excerpt: '总结项目分层、命名、代码复用的实战经验，让你的项目清爽又好维护。',
     coverImage: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1400&q=80',
-    tags: ['Vue', '项目架构'],
+    tags: ['开发经验'],
     author: {
       id: 'author-1',
       name: '前端小白',
@@ -42,7 +42,7 @@ export const mockPosts: Post[] = [
     title: '掌握 Vite 插件，提升 Vue 项目开发效率',
     excerpt: '带你挑选和配置常用 Vite 插件，让开发体验更上一层楼。',
     coverImage: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1400&q=80',
-    tags: ['Vite', '构建工具'],
+    tags: ['开发经验'],
     author: {
       id: 'author-2',
       name: 'Vue Explorer',
@@ -57,7 +57,7 @@ export const mockPosts: Post[] = [
     title: '深入 Vue Router：高级路由技巧',
     excerpt: '探索 Vue Router 的命名视图、导航守卫和动态路由，让你的单页应用导航如虎添翼。',
     coverImage: 'https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?ixlib=rb-4.0.3&q=85&fm=jpg&crop=entropy&cs=srgb&w=1200',
-    tags: ['Vue', 'Vue Router', '前端'],
+    tags: ['开发经验'],
     author: {
       id: '1',
       name: '前端小白',
@@ -73,7 +73,7 @@ export const mockPosts: Post[] = [
     title: 'Pinia 完全指南：Vue 官方状态管理库',
     excerpt: '从基础使用到高级技巧，全面掌握 Pinia，为你的 Vue 3 应用提供类型安全、可预测的状态管理。',
     coverImage: 'https://images.unsplash.com/photo-1587620962725-abab7fe55159?ixlib=rb-4.0.3&q=85&fm=jpg&crop=entropy&cs=srgb&w=1200',
-    tags: ['Vue', 'Pinia', '状态管理'],
+    tags: ['开发经验'],
     author: {
       id: '2',
       name: 'Vue Explorer',
@@ -89,7 +89,7 @@ export const mockPosts: Post[] = [
     title: '使用 Vitest 和 Vue Test Utils 进行单元测试',
     excerpt: '学习如何为你的 Vue 组件编写快速、可靠的单元测试，确保代码质量和可维护性。',
     coverImage: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?ixlib=rb-4.0.3&q=85&fm=jpg&crop=entropy&cs=srgb&w=1200',
-    tags: ['Vue', '测试', 'Vitest'],
+    tags: ['开发经验'],
     author: {
       id: '1',
       name: '前端小白',

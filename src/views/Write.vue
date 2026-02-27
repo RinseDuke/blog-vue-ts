@@ -14,10 +14,11 @@
           <span>{{ wordCount }} 字</span>
           <span>{{ lineCount }} 行</span>
           <span>{{ saveLabel }}</span>
+          <span>当前：{{ currentModeLabel }}</span>
         </div>
       </header>
 
-      <div :id="EDITOR_ID" class="vditor-host"></div>
+      <div :id="EDITOR_ID" :class="['vditor-host', { 'vditor-host--read': viewMode === 'read' }]"></div>
     </div>
 
     <footer class="action-bar">
@@ -39,14 +40,18 @@ interface DraftPayload {
   updatedAt: string
 }
 
+type ViewMode = 'read' | 'source' | 'live'
+
 const EDITOR_ID = 'write-vditor-editor'
 const DRAFT_KEY = 'blog_write_draft_v1'
+const VIEW_MODE_KEY = 'blog_write_view_mode_v1'
 const AUTOSAVE_DELAY = 500
 
 const title = ref('')
 const markdown = ref('')
 const lastSavedAt = ref<string | null>(null)
 const isDirty = ref(false)
+const viewMode = ref<ViewMode>(readViewMode())
 
 let editor: Vditor | null = null
 let autosaveTimer: ReturnType<typeof setTimeout> | null = null
@@ -69,68 +74,19 @@ const saveLabel = computed(() => {
   return `已保存 ${dt.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`
 })
 
+const currentModeLabel = computed(() => {
+  if (viewMode.value === 'read') return '阅读视图'
+  if (viewMode.value === 'source') return '源码模式'
+  return '实时阅览'
+})
+
 onMounted(() => {
   const restoredDraft = readDraft()
   title.value = restoredDraft?.title ?? ''
   markdown.value = restoredDraft?.markdown ?? ''
   lastSavedAt.value = restoredDraft?.updatedAt ?? null
 
-  editor = new Vditor(EDITOR_ID, {
-    mode: 'ir',
-    height: '72vh',
-    lang: 'zh_CN',
-    placeholder: '开始写作，支持 Markdown。Ctrl/Cmd + Enter 可快速发布',
-    value: markdown.value,
-    cache: { enable: false },
-    counter: { enable: true, type: 'text' },
-    outline: { enable: true, position: 'right' },
-    preview: {
-      mode: 'editor',
-      markdown: {
-        toc: true,
-        autoSpace: true,
-        sanitize: true,
-      },
-    },
-    toolbar: [
-      'emoji',
-      'headings',
-      'bold',
-      'italic',
-      'strike',
-      '|',
-      'line',
-      'quote',
-      'list',
-      'ordered-list',
-      'check',
-      '|',
-      'code',
-      'inline-code',
-      'table',
-      'link',
-      '|',
-      'both',
-      'outline',
-      'fullscreen',
-      'edit-mode',
-      'export',
-      '|',
-      'undo',
-      'redo',
-    ],
-    input(value: string) {
-      markdown.value = value
-      markDirtyAndAutosave()
-    },
-    ctrlEnter() {
-      handlePublish()
-    },
-    after() {
-      if (!editor) return
-      markdown.value = editor.getValue()
-    },
-  })
+  mountEditor(markdown.value)
 
   window.addEventListener('beforeunload', handleBeforeUnload)
 })
@@ -186,6 +142,139 @@ function readDraft(): DraftPayload | null {
   } catch {
     return null
   }
+}
+
+function readViewMode(): ViewMode {
+  const raw = localStorage.getItem(VIEW_MODE_KEY)
+  if (raw === 'read' || raw === 'source' || raw === 'live') return raw
+  if (raw === 'mixed') return 'read'
+  return 'live'
+}
+
+function getEditorDisplayConfig(mode: ViewMode) {
+  if (mode === 'read') {
+    return { editorMode: 'sv' as const, previewMode: 'both' as const }
+  }
+  if (mode === 'source') {
+    return { editorMode: 'sv' as const, previewMode: 'editor' as const }
+  }
+  return { editorMode: 'ir' as const, previewMode: 'editor' as const }
+}
+
+function getViewSwitchIcon() {
+  return `<span class="write-view-trigger" aria-hidden="true">
+    <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8">
+      <path d="M3 6.5a2.5 2.5 0 0 1 2.5-2.5h6.5v16H5.5A2.5 2.5 0 0 1 3 17.5v-11z"></path>
+      <path d="M21 6.5a2.5 2.5 0 0 0-2.5-2.5H12v16h6.5a2.5 2.5 0 0 0 2.5-2.5v-11z"></path>
+    </svg>
+  </span>`
+}
+
+function getViewMenuOptionIcon(targetMode: ViewMode, label: string, symbol: string) {
+  const checked = viewMode.value === targetMode
+  return `<span class="write-view-option">
+    <span class="write-view-option__icon">${symbol}</span>
+    <span class="write-view-option__text">${label}</span>
+    <span class="write-view-option__check">${checked ? "✓" : ""}</span>
+  </span>`
+}
+
+function createViewModeMenuItem() {
+  return {
+    name: 'view-mode-switch',
+    icon: getViewSwitchIcon(),
+    tip: '视图模式',
+    toolbar: [
+      {
+        name: 'view-mode-read',
+        icon: getViewMenuOptionIcon('read', '阅读视图', '📖'),
+        tip: '阅读视图',
+        click: () => switchViewMode('read'),
+      },
+      {
+        name: 'view-mode-source',
+        icon: getViewMenuOptionIcon('source', '源码模式', '&lt;/&gt;'),
+        tip: '源码模式',
+        click: () => switchViewMode('source'),
+      },
+      {
+        name: 'view-mode-live',
+        icon: getViewMenuOptionIcon('live', '实时阅览', '✎'),
+        tip: '实时阅览',
+        click: () => switchViewMode('live'),
+      },
+    ],
+  }
+}
+
+function mountEditor(initialValue: string) {
+  editor?.destroy()
+  editor = null
+
+  const { editorMode, previewMode } = getEditorDisplayConfig(viewMode.value)
+  editor = new Vditor(EDITOR_ID, {
+    mode: editorMode,
+    height: '72vh',
+    lang: 'zh_CN',
+    placeholder: '开始写作，支持 Markdown。Ctrl/Cmd + Enter 可快速发布',
+    value: initialValue,
+    cache: { enable: false },
+    counter: { enable: true, type: 'text' },
+    outline: { enable: true, position: 'right' },
+    preview: {
+      mode: previewMode,
+      markdown: {
+        toc: true,
+        autoSpace: true,
+        sanitize: true,
+      },
+    },
+    toolbar: [
+      'emoji',
+      'headings',
+      'bold',
+      'italic',
+      'strike',
+      '|',
+      'line',
+      'quote',
+      'list',
+      'ordered-list',
+      'check',
+      '|',
+      'code',
+      'inline-code',
+      'table',
+      'link',
+      '|',
+      createViewModeMenuItem(),
+      'outline',
+      'fullscreen',
+      'export',
+      '|',
+      'undo',
+      'redo',
+    ],
+    input(value: string) {
+      markdown.value = value
+      markDirtyAndAutosave()
+    },
+    ctrlEnter() {
+      handlePublish()
+    },
+    after() {
+      if (!editor) return
+      markdown.value = editor.getValue()
+    },
+  })
+}
+
+function switchViewMode(nextMode: ViewMode) {
+  if (nextMode === viewMode.value) return
+  const currentValue = editor?.getValue() ?? markdown.value
+  viewMode.value = nextMode
+  localStorage.setItem(VIEW_MODE_KEY, nextMode)
+  mountEditor(currentValue)
 }
 
 function clearDraft() {
@@ -304,6 +393,15 @@ function handleBeforeUnload(event: BeforeUnloadEvent) {
   min-height: 72vh;
 }
 
+.vditor-host--read :deep(.vditor-sv) {
+  display: none !important;
+}
+
+.vditor-host--read :deep(.vditor-preview) {
+  margin-left: 0;
+  border-left: none;
+}
+
 .action-bar {
   width: min(1200px, 100%);
   margin: 0 auto;
@@ -348,6 +446,41 @@ function handleBeforeUnload(event: BeforeUnloadEvent) {
 
 :deep(.vditor-reset) {
   font-size: 16px;
+}
+
+:deep(.write-view-trigger) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+:deep(.write-view-option) {
+  display: inline-flex;
+  align-items: center;
+  width: 170px;
+  justify-content: space-between;
+  gap: 10px;
+  color: #0f172a;
+  font-size: 13px;
+}
+
+:deep(.write-view-option__icon) {
+  width: 18px;
+  text-align: center;
+  color: #334155;
+  flex-shrink: 0;
+}
+
+:deep(.write-view-option__text) {
+  flex: 1;
+  text-align: left;
+}
+
+:deep(.write-view-option__check) {
+  width: 16px;
+  text-align: right;
+  color: #2563eb;
+  font-weight: 700;
 }
 
 @media (max-width: 900px) {
