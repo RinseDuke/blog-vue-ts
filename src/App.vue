@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useRoute, useRouter, RouterView } from 'vue-router'
 import { ref, computed, onMounted, watch, onUnmounted } from 'vue'
+import { storeToRefs } from 'pinia'
 import { usePostsStore } from '@/features/post/composables/usePostsStore'
 import { usePostSearchBundle } from '@/features/search/composables/usePostSearchBundle'
 import { useSearchHistory } from '@/features/search/composables/useSearchHistory'
@@ -18,7 +19,9 @@ const isNavHidden = ref(false)
 const isWritePage = computed(() => route.name === 'write')
 let lastScrollTop = 0
 
-const { posts, ensurePosts } = usePostsStore()
+const postsStore = usePostsStore()
+const { posts } = storeToRefs(postsStore)
+const { ensurePosts } = postsStore
 const { searchHistory, loadHistory, persistHistory, clearHistory } = useSearchHistory()
 const { normalizedQuery, suggestionPosts, recommendedPosts } = usePostSearchBundle(posts, searchQuery, {
   suggestionLimit: 5,
@@ -56,6 +59,8 @@ const handleSearch = (searchTerm: string) => {
 
 const handleScroll = (event: Event) => {
   const target = event.target
+  if (isWritePage.value && isScrollFromWriteEditor(target)) return
+
   const scrollTop =
     target instanceof Document ? window.scrollY : target instanceof HTMLElement ? target.scrollTop : window.scrollY
 
@@ -68,6 +73,15 @@ const handleScroll = (event: Event) => {
   }
 
   lastScrollTop = scrollTop
+}
+
+const isScrollFromWriteEditor = (target: EventTarget | null) => {
+  if (!(target instanceof Element)) return false
+  return Boolean(
+    target.closest(
+      '.write-page .editor-shell, .write-page .vditor, .write-page .vditor-content, .write-page .vditor-sv, .write-page .vditor-ir, .write-page .vditor-preview'
+    )
+  )
 }
 
 onMounted(async () => {

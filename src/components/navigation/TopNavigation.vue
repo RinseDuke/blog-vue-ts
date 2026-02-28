@@ -4,11 +4,16 @@
     <RouterLink to="/article">Articles</RouterLink>
     <RouterLink to="/write">Write</RouterLink>
     <RouterLink to="/about">About</RouterLink>
+    <RouterLink v-if="!isLoggedIn" to="/login">Login</RouterLink>
   </nav>
 </template>
 
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
+import { storeToRefs } from 'pinia'
+import { useAuthStore } from '@/features/auth/stores/useAuthStore'
+
+const { isLoggedIn } = storeToRefs(useAuthStore())
 </script>
 
 <style scoped lang="less">

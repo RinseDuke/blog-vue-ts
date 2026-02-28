@@ -1,5 +1,15 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
+import { storeToRefs } from 'pinia'
+import { useAuthStore } from '@/features/auth/stores/useAuthStore'
+
+const authStore = useAuthStore()
+const { isLoggedIn } = storeToRefs(authStore)
+
+function handleLogout() {
+  authStore.logout()
+  window.location.href = '/'
+}
 
 const profile = {
   displayName: 'Sign',
@@ -70,6 +80,9 @@ const recentActivity = [
           <RouterLink v-for="action in quickActions" :key="action.label" class="action-btn" :to="action.to">
             {{ action.label }}
           </RouterLink>
+          <button v-if="isLoggedIn" type="button" class="action-btn action-btn--logout" @click="handleLogout">
+            Logout
+          </button>
         </div>
       </header>
 
@@ -252,6 +265,18 @@ const recentActivity = [
   transform: translateY(-1px);
   border-color: rgba(31, 122, 99, 0.45);
   background: #fff;
+}
+
+.action-btn--logout {
+  color: var(--muted);
+  border-color: rgba(198, 40, 40, 0.25);
+  cursor: pointer;
+}
+
+.action-btn--logout:hover {
+  color: #c62828;
+  border-color: rgba(198, 40, 40, 0.45);
+  background: #fff5f5;
 }
 
 .stats {

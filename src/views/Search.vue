@@ -59,6 +59,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import type { Post } from '@/types/post'
+import { storeToRefs } from 'pinia'
 import { usePostsStore } from '@/features/post/composables/usePostsStore'
 import { formatPostDate } from '@/features/post/utils/post'
 import { usePostSearchBundle } from '@/features/search/composables/usePostSearchBundle'
@@ -70,7 +71,9 @@ import SearchDropdownContent from '@/components/search/SearchDropdownContent.vue
 const route = useRoute()
 const router = useRouter()
 
-const { posts, loading, error, ensurePosts } = usePostsStore()
+const postsStore = usePostsStore()
+const { posts, loading, error } = storeToRefs(postsStore)
+const { ensurePosts } = postsStore
 const searchInput = ref<string>((route.query.q as string) ?? '')
 
 const { searchHistory, loadHistory, persistHistory, clearHistory } = useSearchHistory()

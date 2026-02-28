@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
+import { storeToRefs } from 'pinia'
 import { usePostsStore } from '@/features/post/composables/usePostsStore'
 import PostList from '@/components/post/PostList.vue'
 
 const HOME_POST_LIMIT = 12
 
-const { sortedPosts, loading, error, ensurePosts, refreshPosts } = usePostsStore()
+const postsStore = usePostsStore()
+const { sortedPosts, loading, error } = storeToRefs(postsStore)
+const { ensurePosts, refreshPosts } = postsStore
 const latestPosts = computed(() => sortedPosts.value.slice(0, HOME_POST_LIMIT))
 
 async function loadHomePosts(force = false) {

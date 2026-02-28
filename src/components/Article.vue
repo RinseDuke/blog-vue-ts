@@ -36,6 +36,40 @@
         </div>
         <router-link to="/article" class="back-line">Back to articles</router-link>
       </footer>
+
+      <div class="article-actions">
+        <button
+          type="button"
+          class="article-actions__btn"
+          :class="{ 'article-actions__btn--liked': articleLiked }"
+          @click="handleArticleLike"
+        >
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
+          </svg>
+          <span>{{ articleLikeCount }}</span>
+        </button>
+        <button
+          type="button"
+          class="article-actions__btn article-actions__btn--report"
+          @click="showArticleReport = true"
+        >
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+            <line x1="4" y1="22" x2="4" y2="15" />
+          </svg>
+          <span>举报文章</span>
+        </button>
+      </div>
+
+      <ReportDialog
+        v-if="showArticleReport"
+        target-type="post"
+        :target-id="post.id"
+        @close="showArticleReport = false"
+      />
+
+      <CommentSection :post-id="post.id" />
     </article>
   </div>
 </template>
@@ -47,11 +81,21 @@ import DOMPurify from 'dompurify'
 import type { Post } from '@/types/post'
 import { fetchPostBySlug } from '@/services/postService'
 import { formatPostDate } from '@/features/post/utils/post'
+import CommentSection from '@/components/comment/CommentSection.vue'
+import ReportDialog from '@/components/comment/ReportDialog.vue'
 
 const route = useRoute()
 const post = ref<Post | null>(null)
 const loading = ref(true)
 const error = ref<string | null>(null)
+const articleLiked = ref(false)
+const articleLikeCount = ref(0)
+const showArticleReport = ref(false)
+
+function handleArticleLike() {
+  articleLiked.value = !articleLiked.value
+  articleLikeCount.value += articleLiked.value ? 1 : -1
+}
 
 const fallbackHtml = computed(() => {
   const excerpt = post.value?.excerpt ?? ''
@@ -258,6 +302,47 @@ function formatDate(dateString: string) {
       opacity: 0.8;
     }
   }
+}
+
+.article-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+}
+
+.article-actions__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.9rem;
+  border-radius: 10px;
+  border: 1px solid var(--line-soft);
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--ink-muted);
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.article-actions__btn:hover:enabled {
+  color: var(--brand-500);
+  border-color: rgba(0, 113, 227, 0.3);
+  background: rgba(0, 113, 227, 0.04);
+}
+
+.article-actions__btn--liked {
+  color: var(--brand-500);
+  border-color: rgba(0, 113, 227, 0.3);
+}
+
+
+.article-actions__btn--report:hover {
+  color: #c62828;
+  border-color: rgba(198, 40, 40, 0.3);
+  background: rgba(198, 40, 40, 0.04);
 }
 
 @media (max-width: 640px) {

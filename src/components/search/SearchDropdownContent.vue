@@ -138,6 +138,7 @@ function formatSuggestionMeta(post: Post) {
   background: #fff;
   cursor: pointer;
   text-align: left;
+  min-height: 60px;
   transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 
   &:hover {
@@ -177,6 +178,9 @@ function formatSuggestionMeta(post: Post) {
   font-weight: 700;
   line-height: 1.3;
   font-size: 0.9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .search-dropdown__hot-meta {
