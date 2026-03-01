@@ -1,6 +1,8 @@
 ﻿<template>
   <div class="article-container">
-    <div v-if="loading" class="status-message">Loading article...</div>
+    <div v-if="loading" class="article-content" style="padding: 2rem">
+      <SkeletonLoader variant="article-detail" />
+    </div>
     <div v-else-if="error" class="status-message error">{{ error }}</div>
 
     <article v-else-if="post" class="article-content">
@@ -79,10 +81,11 @@ import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import DOMPurify from 'dompurify'
 import type { Post } from '@/types/post'
-import { fetchPostBySlug } from '@/services/postService'
+import { fetchPostBySlug, likePost } from '@/services/postService'
 import { formatPostDate } from '@/features/post/utils/post'
 import CommentSection from '@/components/comment/CommentSection.vue'
 import ReportDialog from '@/components/comment/ReportDialog.vue'
+import SkeletonLoader from '@/components/ui/SkeletonLoader.vue'
 
 const route = useRoute()
 const post = ref<Post | null>(null)
@@ -93,8 +96,16 @@ const articleLikeCount = ref(0)
 const showArticleReport = ref(false)
 
 function handleArticleLike() {
-  articleLiked.value = !articleLiked.value
-  articleLikeCount.value += articleLiked.value ? 1 : -1
+  const wasLiked = articleLiked.value
+  articleLiked.value = !wasLiked
+  articleLikeCount.value += wasLiked ? -1 : 1
+
+  if (!wasLiked && post.value) {
+    likePost(post.value.id).catch(() => {
+      articleLiked.value = wasLiked
+      articleLikeCount.value += wasLiked ? 1 : -1
+    })
+  }
 }
 
 const fallbackHtml = computed(() => {
@@ -127,6 +138,8 @@ async function loadPostBySlug(slug: string) {
     }
 
     post.value = fetchedPost
+    articleLikeCount.value = fetchedPost.likes ?? 0
+    document.title = `${fetchedPost.title} - Sign Blog`
   } catch (err) {
     post.value = null
     error.value = err instanceof Error ? err.message : 'Failed to load article'

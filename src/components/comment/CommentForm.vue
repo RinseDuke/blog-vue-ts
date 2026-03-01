@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
+
+const MAX_COMMENT_LENGTH = 500
 
 const props = defineProps<{
   parentId?: string
@@ -12,28 +14,58 @@ const emit = defineEmits<{
 }>()
 
 const content = ref('')
+const touched = ref(false)
+
+const trimmedContent = computed(() => content.value.trim())
+const charCount = computed(() => trimmedContent.value.length)
+const isTooLong = computed(() => charCount.value > MAX_COMMENT_LENGTH)
+const isEmpty = computed(() => charCount.value === 0)
+const validationError = computed(() => {
+  if (!touched.value) return ''
+  if (isEmpty.value) return '评论内容不能为空'
+  if (isTooLong.value) return `超出字数限制（${charCount.value}/${MAX_COMMENT_LENGTH}）`
+  return ''
+})
 
 function handleSubmit() {
-  const trimmed = content.value.trim()
-  if (!trimmed) return
+  touched.value = true
+  if (isEmpty.value || isTooLong.value) return
 
   emit('submit', {
-    content: trimmed,
+    content: trimmedContent.value,
     parentId: props.parentId,
   })
 
   content.value = ''
+  touched.value = false
+}
+
+function handleBlur() {
+  if (content.value.length > 0) {
+    touched.value = true
+  }
 }
 </script>
 
 <template>
   <form class="comment-form" @submit.prevent="handleSubmit">
-    <textarea
-      v-model="content"
-      class="comment-form__input"
-      :placeholder="parentId ? '写下你的回复...' : '写下你的评论...'"
-      rows="3"
-    />
+    <div class="comment-form__field">
+      <textarea
+        v-model="content"
+        class="comment-form__input"
+        :class="{ 'comment-form__input--error': validationError }"
+        :placeholder="parentId ? '写下你的回复...' : '写下你的评论...'"
+        :maxlength="MAX_COMMENT_LENGTH + 50"
+        rows="3"
+        @blur="handleBlur"
+      />
+      <div class="comment-form__info">
+        <span v-if="validationError" class="comment-form__error">{{ validationError }}</span>
+        <span class="comment-form__counter" :class="{ 'comment-form__counter--warn': isTooLong }">
+          {{ charCount }}/{{ MAX_COMMENT_LENGTH }}
+        </span>
+      </div>
+    </div>
     <div class="comment-form__actions">
       <button
         v-if="parentId"
@@ -46,7 +78,7 @@ function handleSubmit() {
       <button
         type="submit"
         class="comment-form__btn comment-form__btn--submit"
-        :disabled="!content.trim() || submitting"
+        :disabled="isEmpty || isTooLong || submitting"
       >
         {{ submitting ? '提交中...' : '发表评论' }}
       </button>
@@ -59,6 +91,12 @@ function handleSubmit() {
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
+}
+
+.comment-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
 }
 
 .comment-form__input {
@@ -82,8 +120,42 @@ function handleSubmit() {
   box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.1);
 }
 
+.comment-form__input--error {
+  border-color: var(--danger-500);
+}
+
+.comment-form__input--error:focus {
+  box-shadow: 0 0 0 3px rgba(198, 40, 40, 0.08);
+}
+
 .comment-form__input::placeholder {
   color: var(--ink-muted);
+}
+
+.comment-form__info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 0.2rem;
+  min-height: 1.2rem;
+}
+
+.comment-form__error {
+  color: var(--danger-500);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.comment-form__counter {
+  margin-left: auto;
+  color: var(--ink-muted);
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.comment-form__counter--warn {
+  color: var(--danger-500);
+  font-weight: 700;
 }
 
 .comment-form__actions {

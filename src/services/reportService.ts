@@ -1,9 +1,5 @@
 import type { Report, ReportReason, ReportTargetType } from '@/types/post'
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? ''
-const USE_MOCK = import.meta.env.VITE_USE_MOCK !== 'false'
-
-const networkDelay = (ms = 300) => new Promise((resolve) => setTimeout(resolve, ms))
+import { apiFetch, isMockMode, networkDelay } from './apiClient'
 
 const mockReports: Report[] = []
 let nextReportId = 1
@@ -16,7 +12,7 @@ export interface CreateReportPayload {
 }
 
 export async function submitReport(payload: CreateReportPayload): Promise<Report> {
-    if (USE_MOCK || !API_BASE_URL) {
+    if (isMockMode()) {
         await networkDelay(200)
 
         const report: Report = {
@@ -35,17 +31,10 @@ export async function submitReport(payload: CreateReportPayload): Promise<Report
         return report
     }
 
-    const response = await fetch(`${API_BASE_URL}/reports`, {
+    return apiFetch<Report>('/reports', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
     })
-
-    if (!response.ok) {
-        throw new Error(`提交举报失败：${response.status}`)
-    }
-
-    return (await response.json()) as Report
 }
 
 export function getMockReports(): Report[] {

@@ -4,6 +4,7 @@ import { storeToRefs } from 'pinia'
 import { useCommentStore } from '@/features/comment/stores/useCommentStore'
 import CommentItem from './CommentItem.vue'
 import CommentForm from './CommentForm.vue'
+import SkeletonLoader from '@/components/ui/SkeletonLoader.vue'
 
 const props = defineProps<{
   postId: string
@@ -53,7 +54,9 @@ onMounted(() => {
 
     <CommentForm :submitting="submitting" @submit="handleSubmit" />
 
-    <div v-if="loading" class="comment-section__state">加载评论中...</div>
+    <div v-if="loading" class="comment-section__skeletons">
+      <SkeletonLoader v-for="i in 3" :key="i" variant="comment" />
+    </div>
     <div v-else-if="error" class="comment-section__state comment-section__state--error">{{ error }}</div>
 
     <div v-else-if="!topLevelComments.length" class="comment-section__state comment-section__state--empty">
@@ -135,5 +138,12 @@ onMounted(() => {
 .comment-section__list {
   display: flex;
   flex-direction: column;
+}
+
+.comment-section__skeletons {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 0.5rem 0;
 }
 </style>

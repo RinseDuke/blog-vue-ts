@@ -16,6 +16,42 @@
           <span>{{ saveLabel }}</span>
           <span>当前：{{ currentModeLabel }}</span>
         </div>
+
+        <div class="tag-section">
+          <div class="tag-pills">
+            <span
+              v-for="tag in selectedTags"
+              :key="tag"
+              class="tag-pill"
+            >
+              #{{ tag }}
+              <button type="button" class="tag-pill__remove" @click="removeTag(tag)">✕</button>
+            </span>
+
+            <span v-if="selectedTags.length < MAX_TAGS" class="tag-input-wrap">
+              <input
+                v-model="tagInput"
+                class="tag-input"
+                type="text"
+                placeholder="输入标签后按 Enter"
+                maxlength="20"
+                @keydown.enter.prevent="addCustomTag"
+              />
+            </span>
+          </div>
+
+          <div v-if="suggestedTags.length && selectedTags.length < MAX_TAGS" class="tag-suggestions">
+            <button
+              v-for="tag in suggestedTags"
+              :key="tag"
+              type="button"
+              class="tag-suggest-btn"
+              @click="addTag(tag)"
+            >
+              + {{ tag }}
+            </button>
+          </div>
+        </div>
       </header>
 
       <div :id="EDITOR_ID" :class="['vditor-host', { 'vditor-host--read': viewMode === 'read' }]"></div>
@@ -37,6 +73,7 @@ import 'vditor/dist/index.css'
 interface DraftPayload {
   title: string
   markdown: string
+  tags: string[]
   updatedAt: string
 }
 
@@ -47,14 +84,43 @@ const DRAFT_KEY = 'blog_write_draft_v1'
 const VIEW_MODE_KEY = 'blog_write_view_mode_v1'
 const AUTOSAVE_DELAY = 500
 
+const PRESET_TAGS = ['开发经验', 'Vue Router', 'Pinia', 'TypeScript', '性能优化', 'CSS', 'JavaScript', '前端工程化']
+const MAX_TAGS = 5
+
 const title = ref('')
 const markdown = ref('')
+const selectedTags = ref<string[]>([])
+const tagInput = ref('')
 const lastSavedAt = ref<string | null>(null)
 const isDirty = ref(false)
 const viewMode = ref<ViewMode>(readViewMode())
 
 let editor: Vditor | null = null
 let autosaveTimer: ReturnType<typeof setTimeout> | null = null
+
+const suggestedTags = computed(() =>
+  PRESET_TAGS.filter((t) => !selectedTags.value.includes(t))
+)
+
+function addTag(tag: string) {
+  const normalized = tag.trim()
+  if (!normalized) return
+  if (selectedTags.value.length >= MAX_TAGS) return
+  if (selectedTags.value.includes(normalized)) return
+  selectedTags.value.push(normalized)
+  markDirtyAndAutosave()
+}
+
+function removeTag(tag: string) {
+  selectedTags.value = selectedTags.value.filter((t) => t !== tag)
+  markDirtyAndAutosave()
+}
+
+function addCustomTag() {
+  const raw = tagInput.value.trim()
+  if (raw) addTag(raw)
+  tagInput.value = ''
+}
 
 const wordCount = computed(() => {
   const chineseChars = (markdown.value.match(/[\u4e00-\u9fff]/g) ?? []).length
@@ -84,6 +150,7 @@ onMounted(() => {
   const restoredDraft = readDraft()
   title.value = restoredDraft?.title ?? ''
   markdown.value = restoredDraft?.markdown ?? ''
+  selectedTags.value = restoredDraft?.tags ?? []
   lastSavedAt.value = restoredDraft?.updatedAt ?? null
 
   mountEditor(markdown.value)
@@ -121,6 +188,7 @@ function persistDraft() {
   const payload: DraftPayload = {
     title: title.value.trim(),
     markdown: editor?.getValue() ?? markdown.value,
+    tags: selectedTags.value,
     updatedAt: new Date().toISOString(),
   }
   localStorage.setItem(DRAFT_KEY, JSON.stringify(payload))
@@ -137,6 +205,7 @@ function readDraft(): DraftPayload | null {
     return {
       title: typeof parsed.title === 'string' ? parsed.title : '',
       markdown: parsed.markdown,
+      tags: Array.isArray((parsed as { tags?: unknown }).tags) ? (parsed as { tags: string[] }).tags : [],
       updatedAt: typeof parsed.updatedAt === 'string' ? parsed.updatedAt : new Date().toISOString(),
     }
   } catch {
@@ -283,6 +352,8 @@ function clearDraft() {
 
   title.value = ''
   markdown.value = ''
+  selectedTags.value = []
+  tagInput.value = ''
   lastSavedAt.value = null
   isDirty.value = false
   localStorage.removeItem(DRAFT_KEY)
@@ -318,11 +389,16 @@ function handlePublish() {
     editor?.tip('正文不能为空', 2000)
     return
   }
+  if (selectedTags.value.length === 0) {
+    editor?.tip('请至少添加一个标签', 2000)
+    return
+  }
 
   persistDraft()
   console.log('Publish payload:', {
     title: finalTitle,
     markdown: content,
+    tags: selectedTags.value,
     updatedAt: new Date().toISOString(),
   })
   editor?.tip('已输出到控制台，下一步可接入发布 API', 2000)
@@ -387,6 +463,94 @@ function handleBeforeUnload(event: BeforeUnloadEvent) {
   gap: 10px;
   color: #64748b;
   font-size: 0.88rem;
+}
+
+.tag-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.tag-pills {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.tag-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: var(--brand-100);
+  color: var(--brand-500);
+  font-weight: 600;
+  font-size: 0.82rem;
+  white-space: nowrap;
+  animation: pill-in 0.15s ease;
+}
+
+@keyframes pill-in {
+  from { opacity: 0; transform: scale(0.85); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.tag-pill__remove {
+  background: none;
+  border: none;
+  color: var(--brand-500);
+  cursor: pointer;
+  font-size: 0.7rem;
+  padding: 0 2px;
+  opacity: 0.6;
+  transition: opacity 0.15s ease;
+}
+
+.tag-pill__remove:hover {
+  opacity: 1;
+}
+
+.tag-input-wrap {
+  display: inline-flex;
+}
+
+.tag-input {
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 0.85rem;
+  color: var(--ink-main);
+  width: 140px;
+  padding: 0.2rem 0;
+}
+
+.tag-input::placeholder {
+  color: #9aa6bb;
+}
+
+.tag-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.tag-suggest-btn {
+  background: none;
+  border: 1px dashed var(--line-strong);
+  border-radius: 999px;
+  padding: 0.15rem 0.6rem;
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.tag-suggest-btn:hover {
+  border-color: var(--brand-400);
+  color: var(--brand-500);
+  background: rgba(0, 113, 227, 0.04);
 }
 
 .vditor-host {

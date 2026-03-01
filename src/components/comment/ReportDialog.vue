@@ -213,13 +213,13 @@ function handleOverlayClick(e: MouseEvent) {
 
 .report-form__reason:hover {
   border-color: rgba(198, 40, 40, 0.3);
-  background: #fef5f5;
+  background: var(--danger-bg);
 }
 
 .report-form__reason--selected {
-  border-color: #c62828;
-  background: #fef5f5;
-  color: #c62828;
+  border-color: var(--danger-500);
+  background: var(--danger-bg);
+  color: var(--danger-500);
   font-weight: 600;
 }
 
@@ -244,7 +244,7 @@ function handleOverlayClick(e: MouseEvent) {
 
 .report-form__error {
   margin: 0;
-  color: #c62828;
+  color: var(--danger-500);
   font-size: 0.87rem;
   font-weight: 600;
 }
@@ -276,7 +276,7 @@ function handleOverlayClick(e: MouseEvent) {
 
 .report-form__btn--submit {
   border: none;
-  background: #c62828;
+  background: var(--danger-500);
   color: #fff;
 }
 
@@ -303,8 +303,8 @@ function handleOverlayClick(e: MouseEvent) {
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: #e8f5e9;
-  color: #2e7d32;
+  background: var(--success-bg);
+  color: var(--success-500);
   font-size: 1.5rem;
   font-weight: 700;
   display: grid;

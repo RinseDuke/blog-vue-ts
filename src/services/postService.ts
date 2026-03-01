@@ -1,10 +1,6 @@
 import type { Post } from '@/types/post'
 import { mockPosts } from '@/mocks/posts'
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? ''
-const USE_MOCK = import.meta.env.VITE_USE_MOCK !== 'false'
-
-const networkDelay = (ms = 300) => new Promise((resolve) => setTimeout(resolve, ms))
+import { apiFetch, isMockMode, networkDelay } from './apiClient'
 
 export interface FetchPostsParams {
   limit?: number
@@ -13,7 +9,7 @@ export interface FetchPostsParams {
 
 //获取文章
 export async function fetchPosts(params: FetchPostsParams = {}): Promise<Post[]> {
-  if (USE_MOCK || !API_BASE_URL) {
+  if (isMockMode()) {
     await networkDelay()
     let result = [...mockPosts]
 
@@ -32,27 +28,38 @@ export async function fetchPosts(params: FetchPostsParams = {}): Promise<Post[]>
   if (params.limit) searchParams.append('limit', String(params.limit))
   if (params.featuredOnly) searchParams.append('featured', 'true')
 
-  const response = await fetch(`${API_BASE_URL}/posts?${searchParams.toString()}`)
-
-  if (!response.ok) {
-    throw new Error(`获取文章列表失败：${response.status}`)
-  }
-
-  return (await response.json()) as Post[]
+  return apiFetch<Post[]>(`/posts?${searchParams.toString()}`)
 }
 
 export async function fetchPostBySlug(slug: string): Promise<Post | undefined> {
-  if (USE_MOCK || !API_BASE_URL) {
+  if (isMockMode()) {
     await networkDelay()
     return mockPosts.find((post) => post.slug === slug)
   }
 
-  const response = await fetch(`${API_BASE_URL}/posts/${slug}`)
+  try {
+    return await apiFetch<Post>(`/posts/${slug}`)
+  } catch (err: unknown) {
+    if (err instanceof Error && 'status' in err && (err as { status: number }).status === 404) {
+      return undefined
+    }
+    throw err
+  }
+}
 
-  if (!response.ok) {
-    if (response.status === 404) return undefined
-    throw new Error(`获取文章失败：${response.status}`)
+export async function likePost(postId: string): Promise<number> {
+  if (isMockMode()) {
+    await networkDelay(100)
+    const post = mockPosts.find((p) => p.id === postId)
+    if (post) {
+      post.likes = (post.likes ?? 0) + 1
+      return post.likes
+    }
+    return 1
   }
 
-  return (await response.json()) as Post
+  const data = await apiFetch<{ likes: number }>(`/posts/${postId}/like`, {
+    method: 'POST',
+  })
+  return data.likes
 }
