@@ -120,12 +120,11 @@ onUnmounted(() => {
       <RouterView />
     </main>
 
-    <TopFooter />
+    <TopFooter v-if="!isWritePage" />
   </div>
 </template>
 
 <style lang="less">
-
 .layout {
   width: 100%;
   min-height: 100vh;

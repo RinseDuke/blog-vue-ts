@@ -1,664 +1,499 @@
 ﻿<template>
   <section class="write-page">
+    <!-- ─── Toolbar + Editor Area ─── -->
     <div class="editor-shell">
-      <header class="editor-head">
+      <div class="editor-body">
         <input
           v-model="title"
           class="title-input"
           type="text"
-          maxlength="120"
-          placeholder="无标题文档"
-          @input="handleTitleInput"
+          maxlength="100"
+          placeholder="请输入标题（最多 100 个字）"
+          @input="onDirtyAndAutosave"
         />
-        <div class="meta-row">
-          <span>{{ wordCount }} 字</span>
-          <span>{{ lineCount }} 行</span>
-          <span>{{ saveLabel }}</span>
-          <span>当前：{{ currentModeLabel }}</span>
+        
+        <!-- Tiptap Toolbar -->
+        <EditorToolbar :editor="editor || null" />
+        
+        <!-- Tiptap Content -->
+        <editor-content :editor="editor" class="tiptap-editor" />
+        
+        <!-- Markdown live rendering mode fallback warning -->
+        <div v-if="viewMode !== 'live'" class="mode-warning">
+          已弃用双栏模式，Tiptap 采用真正的所见即所得体验。
         </div>
+      </div>
 
-        <div class="tag-section">
-          <div class="tag-pills">
-            <span
-              v-for="tag in selectedTags"
-              :key="tag"
-              class="tag-pill"
-            >
-              #{{ tag }}
-              <button type="button" class="tag-pill__remove" @click="removeTag(tag)">✕</button>
-            </span>
-
-            <span v-if="selectedTags.length < MAX_TAGS" class="tag-input-wrap">
-              <input
-                v-model="tagInput"
-                class="tag-input"
-                type="text"
-                placeholder="输入标签后按 Enter"
-                maxlength="20"
-                @keydown.enter.prevent="addCustomTag"
-              />
-            </span>
-          </div>
-
-          <div v-if="suggestedTags.length && selectedTags.length < MAX_TAGS" class="tag-suggestions">
-            <button
-              v-for="tag in suggestedTags"
-              :key="tag"
-              type="button"
-              class="tag-suggest-btn"
-              @click="addTag(tag)"
-            >
-              + {{ tag }}
-            </button>
-          </div>
-        </div>
-      </header>
-
-      <div :id="EDITOR_ID" :class="['vditor-host', { 'vditor-host--read': viewMode === 'read' }]"></div>
+      <!-- ─── Publish Settings Panel (expandable) ─── -->
+      <Transition name="panel-slide">
+        <PublishPanel 
+          v-show="showPublishSettings"
+          :cover-preview-url="coverPreviewUrl"
+          :selected-tags="selectedTags"
+          :suggested-tags="suggestedTags"
+          :max-tags="maxTags"
+          v-model:tag-input="tagInput"
+          @remove-cover="removeCover"
+          @trigger-cover="triggerCoverInput"
+          @remove-tag="removeTag"
+          @add-tag="addTag"
+          @add-custom-tag="addCustomTag"
+        />
+      </Transition>
+      <input
+        ref="coverInputRef"
+        type="file"
+        accept="image/jpeg,image/jpg,image/png"
+        class="sr-only"
+        @change="onCoverChange"
+      />
     </div>
 
-    <footer class="action-bar">
-      <button type="button" class="btn btn-ghost" @click="clearDraft">清空草稿</button>
-      <button type="button" class="btn btn-ghost" @click="downloadMarkdown">导出 Markdown</button>
-      <button type="button" class="btn btn-primary" @click="handlePublish">发布</button>
-    </footer>
+    <!-- ─── Bottom Status Bar ─── -->
+    <StatusBar 
+      :show-publish-settings="showPublishSettings"
+      :word-count="wordCount"
+      :current-mode-label="currentModeLabel"
+      :save-label="saveLabel"
+      @toggle-publish-settings="showPublishSettings = !showPublishSettings"
+      @clear-draft="onClearDraft"
+      @save-draft="saveDraftNow"
+      @export-markdown="onExportMarkdown"
+      @publish="onPublish"
+    />
   </section>
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import Vditor from 'vditor'
-import 'vditor/dist/index.css'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
-interface DraftPayload {
-  title: string
-  markdown: string
-  tags: string[]
-  updatedAt: string
-}
+// Tiptap imports
+import { useEditor, EditorContent } from '@tiptap/vue-3'
+import StarterKit from '@tiptap/starter-kit'
+import Placeholder from '@tiptap/extension-placeholder'
+import Underline from '@tiptap/extension-underline'
+import Link from '@tiptap/extension-link'
+import TaskList from '@tiptap/extension-task-list'
+import TaskItem from '@tiptap/extension-task-item'
+import { Table } from '@tiptap/extension-table'
+import { TableRow } from '@tiptap/extension-table-row'
+import { TableHeader } from '@tiptap/extension-table-header'
+import { TableCell } from '@tiptap/extension-table-cell'
+import TurndownService from 'turndown'
+// @ts-ignore - no types available
+import { gfm } from 'turndown-plugin-gfm'
+import MarkdownIt from 'markdown-it'
+
+// Composables
+import { useDraft } from '@/features/post/composables/useDraft'
+import { useCoverUpload } from '@/features/post/composables/useCoverUpload'
+import { useTagManager } from '@/features/post/composables/useTagManager'
+
+// Custom Components
+import EditorToolbar from '@/components/post/EditorToolbar.vue'
+import PublishPanel from '@/components/post/PublishPanel.vue'
+import StatusBar from '@/components/post/StatusBar.vue'
+
+// ── Markdown/HTML Tools ──
+const turndownService = new TurndownService({ headingStyle: 'atx' })
+turndownService.use(gfm)
+const mdParser = new MarkdownIt()
 
 type ViewMode = 'read' | 'source' | 'live'
-
-const EDITOR_ID = 'write-vditor-editor'
-const DRAFT_KEY = 'blog_write_draft_v1'
 const VIEW_MODE_KEY = 'blog_write_view_mode_v1'
-const AUTOSAVE_DELAY = 500
 
-const PRESET_TAGS = ['开发经验', 'Vue Router', 'Pinia', 'TypeScript', '性能优化', 'CSS', 'JavaScript', '前端工程化']
-const MAX_TAGS = 5
+// ── Composables ──
+const {
+  lastSavedAt, isDirty,
+  readDraft, persistDraft, clearPersistedDraft,
+  markDirty, queueAutosave, cancelPendingAutosave,
+} = useDraft()
 
+function onDirtyAndAutosave() {
+  markDirty()
+  queueAutosave(saveDraftNow)
+}
+
+const {
+  coverInputRef, coverFile, coverPreviewUrl,
+  triggerCoverInput, handleCoverSelect, removeCover, restoreCoverFromUrl,
+} = useCoverUpload(onDirtyAndAutosave)
+
+const {
+  selectedTags, tagInput, suggestedTags, maxTags,
+  addTag, removeTag, addCustomTag, restoreTags, clearTags,
+} = useTagManager(onDirtyAndAutosave)
+
+// ── Local state ──
 const title = ref('')
 const markdown = ref('')
-const selectedTags = ref<string[]>([])
-const tagInput = ref('')
-const lastSavedAt = ref<string | null>(null)
-const isDirty = ref(false)
 const viewMode = ref<ViewMode>(readViewMode())
+const showPublishSettings = ref(false)
 
-let editor: Vditor | null = null
-let autosaveTimer: ReturnType<typeof setTimeout> | null = null
-
-const suggestedTags = computed(() =>
-  PRESET_TAGS.filter((t) => !selectedTags.value.includes(t))
-)
-
-function addTag(tag: string) {
-  const normalized = tag.trim()
-  if (!normalized) return
-  if (selectedTags.value.length >= MAX_TAGS) return
-  if (selectedTags.value.includes(normalized)) return
-  selectedTags.value.push(normalized)
-  markDirtyAndAutosave()
-}
-
-function removeTag(tag: string) {
-  selectedTags.value = selectedTags.value.filter((t) => t !== tag)
-  markDirtyAndAutosave()
-}
-
-function addCustomTag() {
-  const raw = tagInput.value.trim()
-  if (raw) addTag(raw)
-  tagInput.value = ''
-}
-
-const wordCount = computed(() => {
-  const chineseChars = (markdown.value.match(/[\u4e00-\u9fff]/g) ?? []).length
-  const latinWords = (markdown.value.replace(/[\u4e00-\u9fff]/g, '').match(/[A-Za-z0-9_]+/g) ?? []).length
-  return chineseChars + latinWords
+// ── Tiptap Editor Initialization ──
+const editor = useEditor({
+  extensions: [
+    StarterKit,
+    Placeholder.configure({
+      placeholder: '请输入正文...',
+    }),
+    Underline,
+    Link.configure({
+      openOnClick: false,
+    }),
+    TaskList,
+    TaskItem.configure({
+      nested: true,
+    }),
+    Table.configure({
+      resizable: true,
+    }),
+    TableRow,
+    TableHeader,
+    TableCell,
+  ],
+  content: '',
+  onUpdate: ({ editor }) => {
+    // Generate markdown on the fly for saving
+    const html = editor.getHTML()
+    markdown.value = turndownService.turndown(html)
+    onDirtyAndAutosave()
+  },
 })
 
-const lineCount = computed(() => {
-  if (!markdown.value) return 0
-  return markdown.value.split(/\r?\n/).length
+// ── Computed ──
+const wordCount = computed(() => {
+  const zh = (markdown.value.match(/[\u4e00-\u9fff]/g) ?? []).length
+  const en = (markdown.value.replace(/[\u4e00-\u9fff]/g, '').match(/[A-Za-z0-9_]+/g) ?? []).length
+  return zh + en
 })
 
 const saveLabel = computed(() => {
-  if (isDirty.value) return '未保存'
-  if (!lastSavedAt.value) return '未保存'
+  if (isDirty.value || !lastSavedAt.value) return ''
   const dt = new Date(lastSavedAt.value)
-  return `已保存 ${dt.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`
+  return `已保存 ${dt.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}`
 })
 
 const currentModeLabel = computed(() => {
-  if (viewMode.value === 'read') return '阅读视图'
-  if (viewMode.value === 'source') return '源码模式'
-  return '实时阅览'
+  return '所见即所得模式' 
 })
 
-onMounted(() => {
-  const restoredDraft = readDraft()
-  title.value = restoredDraft?.title ?? ''
-  markdown.value = restoredDraft?.markdown ?? ''
-  selectedTags.value = restoredDraft?.tags ?? []
-  lastSavedAt.value = restoredDraft?.updatedAt ?? null
-
-  mountEditor(markdown.value)
-
-  window.addEventListener('beforeunload', handleBeforeUnload)
-})
-
-onBeforeUnmount(() => {
-  if (autosaveTimer) {
-    clearTimeout(autosaveTimer)
-    autosaveTimer = null
-  }
-  window.removeEventListener('beforeunload', handleBeforeUnload)
-  editor?.destroy()
-  editor = null
-})
-
-function handleTitleInput() {
-  markDirtyAndAutosave()
+// ── Cover handler bridge ──
+function onCoverChange(event: Event) {
+  const errMsg = handleCoverSelect(event)
+  if (errMsg) alert(errMsg)
 }
 
-function markDirtyAndAutosave() {
-  isDirty.value = true
-  queueAutosave()
-}
-
-function queueAutosave() {
-  if (autosaveTimer) clearTimeout(autosaveTimer)
-  autosaveTimer = setTimeout(() => {
-    persistDraft()
-  }, AUTOSAVE_DELAY)
-}
-
-function persistDraft() {
-  const payload: DraftPayload = {
+// ── Draft actions ──
+function saveDraftNow() {
+  persistDraft({
     title: title.value.trim(),
-    markdown: editor?.getValue() ?? markdown.value,
+    markdown: markdown.value, 
     tags: selectedTags.value,
+    coverDataUrl: coverPreviewUrl.value,
     updatedAt: new Date().toISOString(),
-  }
-  localStorage.setItem(DRAFT_KEY, JSON.stringify(payload))
-  lastSavedAt.value = payload.updatedAt
-  isDirty.value = false
-}
-
-function readDraft(): DraftPayload | null {
-  try {
-    const raw = localStorage.getItem(DRAFT_KEY)
-    if (!raw) return null
-    const parsed = JSON.parse(raw) as Partial<DraftPayload>
-    if (typeof parsed.markdown !== 'string') return null
-    return {
-      title: typeof parsed.title === 'string' ? parsed.title : '',
-      markdown: parsed.markdown,
-      tags: Array.isArray((parsed as { tags?: unknown }).tags) ? (parsed as { tags: string[] }).tags : [],
-      updatedAt: typeof parsed.updatedAt === 'string' ? parsed.updatedAt : new Date().toISOString(),
-    }
-  } catch {
-    return null
-  }
-}
-
-function readViewMode(): ViewMode {
-  const raw = localStorage.getItem(VIEW_MODE_KEY)
-  if (raw === 'read' || raw === 'source' || raw === 'live') return raw
-  if (raw === 'mixed') return 'read'
-  return 'live'
-}
-
-function getEditorDisplayConfig(mode: ViewMode) {
-  if (mode === 'read') {
-    return { editorMode: 'sv' as const, previewMode: 'both' as const }
-  }
-  if (mode === 'source') {
-    return { editorMode: 'sv' as const, previewMode: 'editor' as const }
-  }
-  return { editorMode: 'ir' as const, previewMode: 'editor' as const }
-}
-
-function getViewSwitchIcon() {
-  return `<span class="write-view-trigger" aria-hidden="true">
-    <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8">
-      <path d="M3 6.5a2.5 2.5 0 0 1 2.5-2.5h6.5v16H5.5A2.5 2.5 0 0 1 3 17.5v-11z"></path>
-      <path d="M21 6.5a2.5 2.5 0 0 0-2.5-2.5H12v16h6.5a2.5 2.5 0 0 0 2.5-2.5v-11z"></path>
-    </svg>
-  </span>`
-}
-
-function getViewMenuOptionIcon(targetMode: ViewMode, label: string, symbol: string) {
-  const checked = viewMode.value === targetMode
-  return `<span class="write-view-option">
-    <span class="write-view-option__icon">${symbol}</span>
-    <span class="write-view-option__text">${label}</span>
-    <span class="write-view-option__check">${checked ? "✓" : ""}</span>
-  </span>`
-}
-
-function createViewModeMenuItem() {
-  return {
-    name: 'view-mode-switch',
-    icon: getViewSwitchIcon(),
-    tip: '视图模式',
-    toolbar: [
-      {
-        name: 'view-mode-read',
-        icon: getViewMenuOptionIcon('read', '阅读视图', '📖'),
-        tip: '阅读视图',
-        click: () => switchViewMode('read'),
-      },
-      {
-        name: 'view-mode-source',
-        icon: getViewMenuOptionIcon('source', '源码模式', '&lt;/&gt;'),
-        tip: '源码模式',
-        click: () => switchViewMode('source'),
-      },
-      {
-        name: 'view-mode-live',
-        icon: getViewMenuOptionIcon('live', '实时阅览', '✎'),
-        tip: '实时阅览',
-        click: () => switchViewMode('live'),
-      },
-    ],
-  }
-}
-
-function mountEditor(initialValue: string) {
-  editor?.destroy()
-  editor = null
-
-  const { editorMode, previewMode } = getEditorDisplayConfig(viewMode.value)
-  editor = new Vditor(EDITOR_ID, {
-    mode: editorMode,
-    height: '72vh',
-    lang: 'zh_CN',
-    placeholder: '开始写作，支持 Markdown。Ctrl/Cmd + Enter 可快速发布',
-    value: initialValue,
-    cache: { enable: false },
-    counter: { enable: true, type: 'text' },
-    outline: { enable: true, position: 'right' },
-    preview: {
-      mode: previewMode,
-      markdown: {
-        toc: true,
-        autoSpace: true,
-        sanitize: true,
-      },
-    },
-    toolbar: [
-      'emoji',
-      'headings',
-      'bold',
-      'italic',
-      'strike',
-      '|',
-      'line',
-      'quote',
-      'list',
-      'ordered-list',
-      'check',
-      '|',
-      'code',
-      'inline-code',
-      'table',
-      'link',
-      '|',
-      createViewModeMenuItem(),
-      'outline',
-      'fullscreen',
-      'export',
-      '|',
-      'undo',
-      'redo',
-    ],
-    input(value: string) {
-      markdown.value = value
-      markDirtyAndAutosave()
-    },
-    ctrlEnter() {
-      handlePublish()
-    },
-    after() {
-      if (!editor) return
-      markdown.value = editor.getValue()
-    },
   })
 }
 
-function switchViewMode(nextMode: ViewMode) {
-  if (nextMode === viewMode.value) return
-  const currentValue = editor?.getValue() ?? markdown.value
-  viewMode.value = nextMode
-  localStorage.setItem(VIEW_MODE_KEY, nextMode)
-  mountEditor(currentValue)
-}
-
-function clearDraft() {
-  const confirmed = window.confirm('确定要清空当前草稿吗？此操作不可撤销。')
-  if (!confirmed) return
-
+function onClearDraft() {
+  if (!window.confirm('确定要清空当前草稿吗？此操作不可撤销。')) return
   title.value = ''
   markdown.value = ''
-  selectedTags.value = []
-  tagInput.value = ''
-  lastSavedAt.value = null
-  isDirty.value = false
-  localStorage.removeItem(DRAFT_KEY)
-  editor?.setValue('', true)
+  clearTags()
+  removeCover()
+  clearPersistedDraft()
+  editor.value?.commands.setContent('')
 }
 
-function downloadMarkdown() {
-  const content = editor?.getValue() ?? markdown.value
+function onExportMarkdown() {
+  const content = markdown.value
   if (!content.trim()) {
-    editor?.tip('当前没有可导出的内容', 2000)
+    alert('当前没有可导出的内容')
     return
   }
-
-  const filenameBase = (title.value.trim() || 'untitled').replace(/[\\/:*?"<>|]/g, '-')
+  const name = (title.value.trim() || 'untitled').replace(/[\\/:*?"<>|]/g, '-')
   const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = `${filenameBase}.md`
+  a.download = `${name}.md`
   a.click()
   URL.revokeObjectURL(url)
 }
 
-function handlePublish() {
-  const content = editor?.getValue() ?? markdown.value
+function onPublish() {
+  const content = markdown.value
   const finalTitle = title.value.trim()
 
-  if (!finalTitle) {
-    editor?.tip('请先填写标题', 2000)
-    return
-  }
-  if (!content.trim()) {
-    editor?.tip('正文不能为空', 2000)
-    return
-  }
-  if (selectedTags.value.length === 0) {
-    editor?.tip('请至少添加一个标签', 2000)
-    return
-  }
+  if (!finalTitle) { alert('请先填写标题'); return }
+  if (!content.trim()) { alert('正文不能为空'); return }
+  if (selectedTags.value.length === 0) { alert('请至少添加一个标签'); return }
 
-  persistDraft()
+  saveDraftNow()
   console.log('Publish payload:', {
     title: finalTitle,
     markdown: content,
+    html: editor.value?.getHTML(),
     tags: selectedTags.value,
+    coverFile: coverFile.value,
     updatedAt: new Date().toISOString(),
   })
-  editor?.tip('已输出到控制台，下一步可接入发布 API', 2000)
+  alert('已输出到控制台，下一步可接入发布 API')
 }
 
-function handleBeforeUnload(event: BeforeUnloadEvent) {
+// ── View mode ──
+function readViewMode(): ViewMode {
+  return 'live'
+}
+
+// ── Lifecycle ──
+onMounted(() => {
+  const draft = readDraft()
+  title.value = draft?.title ?? ''
+  markdown.value = draft?.markdown ?? ''
+  restoreTags(draft?.tags ?? [])
+  restoreCoverFromUrl(draft?.coverDataUrl ?? null)
+
+  if (draft?.updatedAt) {
+    lastSavedAt.value = draft.updatedAt
+  }
+
+  // Load markdown draft into tiptap as HTML
+  if (markdown.value && editor.value) {
+    const htmlContent = mdParser.render(markdown.value)
+    editor.value.commands.setContent(htmlContent)
+  }
+
+  window.addEventListener('beforeunload', onBeforeUnload)
+})
+
+onBeforeUnmount(() => {
+  cancelPendingAutosave()
+  window.removeEventListener('beforeunload', onBeforeUnload)
+})
+
+function onBeforeUnload(e: BeforeUnloadEvent) {
   if (!isDirty.value) return
-  event.preventDefault()
-  event.returnValue = ''
+  e.preventDefault()
+  e.returnValue = ''
 }
 </script>
 
 <style scoped lang="less">
+/* ───────── Page Layout ───────── */
 .write-page {
-  min-height: 100%;
-  padding: 24px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  background:
-    radial-gradient(circle at 18% 10%, rgba(59, 130, 246, 0.08), transparent 45%),
-    radial-gradient(circle at 84% 4%, rgba(14, 165, 233, 0.07), transparent 40%),
-    #f3f7ff;
+  min-height: calc(100vh - 78px);
+  padding-bottom: 44px;
+  background: #f5f7fa;
 }
 
+/* ───────── Editor Shell ───────── */
 .editor-shell {
-  width: min(1200px, 100%);
-  margin: 0 auto;
-  background: #fff;
-  border-radius: 18px;
-  border: 1px solid #dbe5f4;
-  box-shadow: 0 16px 42px rgba(15, 23, 42, 0.1);
-  overflow: hidden;
-}
-
-.editor-head {
-  padding: 18px 20px 14px;
-  border-bottom: 1px solid #e9eef8;
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  width: 100%;
+  background: #fff;
+  border-bottom: 1px solid #eaeff6;
 }
 
+.editor-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  max-width: 820px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* ───────── Title ───────── */
 .title-input {
   width: 100%;
   border: none;
   outline: none;
-  font-size: clamp(1.7rem, 2.8vw, 2.3rem);
+  font-size: clamp(1.45rem, 2.4vw, 1.9rem);
   font-weight: 700;
-  color: #0f172a;
-  line-height: 1.3;
+  color: var(--ink-strong, #0f172a);
+  line-height: 1.4;
+  padding: 28px 0 10px;
+  background: transparent;
+
+  &::placeholder {
+    color: #b4bdd0;
+    font-weight: 600;
+  }
 }
 
-.title-input::placeholder {
-  color: #9aa6bb;
-  font-weight: 600;
+/* ───────── Tiptap Editor Content ───────── */
+.tiptap-editor {
+  flex: 1;
+  margin-top: 16px;
+  padding-bottom: 40px;
 }
 
-.meta-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  color: #64748b;
-  font-size: 0.88rem;
+:deep(.tiptap) {
+  outline: none !important;
+  min-height: 50vh;
+  font-size: 16px;
+  line-height: 1.7;
+  color: #334155;
+
+  p.is-editor-empty:first-child::before {
+    color: #adb5bd;
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    pointer-events: none;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    line-height: 1.3;
+    color: #0f172a;
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+  }
+
+  h2 {
+    font-size: 1.5em;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 0.3em;
+  }
+
+  h3 {
+    font-size: 1.25em;
+  }
+
+  ul,
+  ol {
+    padding-left: 1.5rem;
+    margin: 1em 0;
+  }
+
+  blockquote {
+    border-left: 4px solid #cbd5e1;
+    padding-left: 1rem;
+    color: #64748b;
+    margin: 1em 0;
+    background: #f8fafc;
+    padding: 0.5rem 1rem;
+    border-radius: 0 4px 4px 0;
+  }
+
+  pre {
+    background: #0f172a;
+    color: #f8fafc;
+    font-family: inherit;
+    padding: 1rem;
+    border-radius: 8px;
+    margin: 1em 0;
+    overflow-x: auto;
+
+    code {
+      color: inherit;
+      padding: 0;
+      background: none;
+      font-size: 0.9em;
+    }
+  }
+
+  code {
+    background-color: #f1f5f9;
+    padding: 0.2em 0.4em;
+    border-radius: 4px;
+    font-size: 0.9em;
+    color: #db2777;
+    font-family: monospace;
+  }
+
+  hr {
+    border: none;
+    border-top: 2px solid #e2e8f0;
+    margin: 2rem 0;
+  }
+
+  /* Table Styles */
+  table {
+    border-collapse: collapse;
+    margin: 0;
+    overflow: hidden;
+    table-layout: fixed;
+    width: 100%;
+
+    td,
+    th {
+      border: 1px solid #cbd5e1;
+      box-sizing: border-box;
+      min-width: 1em;
+      padding: 6px 8px;
+      position: relative;
+      vertical-align: top;
+
+      >* {
+        margin-bottom: 0;
+      }
+    }
+
+    th {
+      background-color: #f8fafc;
+      font-weight: 600;
+      text-align: left;
+    }
+  }
 }
 
-.tag-section {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+.mode-warning {
+  margin-top: 10px;
+  padding: 8px 12px;
+  background-color: #fffbeb;
+  color: #d97706;
+  border-radius: 4px;
+  font-size: 14px;
 }
 
-.tag-pills {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-.tag-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.2rem 0.55rem;
-  border-radius: 999px;
-  background: var(--brand-100);
-  color: var(--brand-500);
-  font-weight: 600;
-  font-size: 0.82rem;
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
   white-space: nowrap;
-  animation: pill-in 0.15s ease;
+  border: 0;
 }
 
-@keyframes pill-in {
-  from { opacity: 0; transform: scale(0.85); }
-  to { opacity: 1; transform: scale(1); }
+/* transition */
+.panel-slide-enter-active {
+  transition: max-height 0.32s cubic-bezier(.4, 0, .2, 1), opacity 0.24s ease;
 }
 
-.tag-pill__remove {
-  background: none;
-  border: none;
-  color: var(--brand-500);
-  cursor: pointer;
-  font-size: 0.7rem;
-  padding: 0 2px;
-  opacity: 0.6;
-  transition: opacity 0.15s ease;
+.panel-slide-leave-active {
+  transition: max-height 0.26s cubic-bezier(.4, 0, .6, 1), opacity 0.18s ease;
 }
 
-.tag-pill__remove:hover {
+.panel-slide-enter-from,
+.panel-slide-leave-to {
+  max-height: 0;
+  opacity: 0;
+}
+
+.panel-slide-enter-to,
+.panel-slide-leave-from {
+  max-height: 600px;
   opacity: 1;
 }
 
-.tag-input-wrap {
-  display: inline-flex;
-}
-
-.tag-input {
-  border: none;
-  outline: none;
-  background: transparent;
-  font-size: 0.85rem;
-  color: var(--ink-main);
-  width: 140px;
-  padding: 0.2rem 0;
-}
-
-.tag-input::placeholder {
-  color: #9aa6bb;
-}
-
-.tag-suggestions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-}
-
-.tag-suggest-btn {
-  background: none;
-  border: 1px dashed var(--line-strong);
-  border-radius: 999px;
-  padding: 0.15rem 0.6rem;
-  font-size: 0.8rem;
-  color: var(--ink-muted);
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.tag-suggest-btn:hover {
-  border-color: var(--brand-400);
-  color: var(--brand-500);
-  background: rgba(0, 113, 227, 0.04);
-}
-
-.vditor-host {
-  min-height: 72vh;
-}
-
-.vditor-host--read :deep(.vditor-sv) {
-  display: none !important;
-}
-
-.vditor-host--read :deep(.vditor-preview) {
-  margin-left: 0;
-  border-left: none;
-}
-
-.action-bar {
-  width: min(1200px, 100%);
-  margin: 0 auto;
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-}
-
-.btn {
-  border: 1px solid transparent;
-  border-radius: 10px;
-  padding: 0.5rem 0.95rem;
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.16s ease;
-}
-
-.btn-ghost {
-  background: #fff;
-  border-color: #d4deee;
-  color: #334155;
-}
-
-.btn-ghost:hover {
-  background: #f8fbff;
-  border-color: #b8c9e6;
-}
-
-.btn-primary {
-  background: #2563eb;
-  color: #fff;
-}
-
-.btn-primary:hover {
-  background: #1d4ed8;
-}
-
-:deep(.vditor-toolbar) {
-  border-bottom: 1px solid #e9eef8 !important;
-}
-
-:deep(.vditor-reset) {
-  font-size: 16px;
-}
-
-:deep(.write-view-trigger) {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-:deep(.write-view-option) {
-  display: inline-flex;
-  align-items: center;
-  width: 170px;
-  justify-content: space-between;
-  gap: 10px;
-  color: #0f172a;
-  font-size: 13px;
-}
-
-:deep(.write-view-option__icon) {
-  width: 18px;
-  text-align: center;
-  color: #334155;
-  flex-shrink: 0;
-}
-
-:deep(.write-view-option__text) {
-  flex: 1;
-  text-align: left;
-}
-
-:deep(.write-view-option__check) {
-  width: 16px;
-  text-align: right;
-  color: #2563eb;
-  font-weight: 700;
-}
-
-@media (max-width: 900px) {
-  .write-page {
-    padding: 14px;
-  }
-
-  .action-bar {
-    justify-content: stretch;
-  }
-
-  .btn {
-    flex: 1;
-    text-align: center;
+/* ───────── Responsive ───────── */
+@media (max-width: 768px) {
+  .editor-body {
+    padding-left: 14px;
+    padding-right: 14px;
   }
 }
 </style>
