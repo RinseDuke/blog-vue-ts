@@ -11,35 +11,55 @@
           placeholder="请输入标题（最多 100 个字）"
           @input="onDirtyAndAutosave"
         />
-        
-        <!-- Tiptap Toolbar -->
-        <EditorToolbar :editor="editor || null" />
-        
-        <!-- Tiptap Content -->
-        <editor-content :editor="editor" class="tiptap-editor" />
-        
-        <!-- Markdown live rendering mode fallback warning -->
-        <div v-if="viewMode !== 'live'" class="mode-warning">
-          已弃用双栏模式，Tiptap 采用真正的所见即所得体验。
-        </div>
+
+        <!-- ═══ Mode: 实时阅览 (Live WYSIWYG) ═══ -->
+        <template v-if="viewMode === 'live'">
+          <EditorToolbar :editor="editor || null" />
+          <editor-content :editor="editor" class="tiptap-editor" />
+        </template>
+
+        <!-- ═══ Mode: 源码模式 (Source Markdown) ═══ -->
+        <template v-else-if="viewMode === 'source'">
+          <div class="source-editor-wrap">
+            <textarea
+              v-model="markdown"
+              class="source-editor"
+              placeholder="在此输入 Markdown 源码..."
+              spellcheck="false"
+              @input="onSourceInput"
+            ></textarea>
+          </div>
+        </template>
+
+        <!-- ═══ Mode: 阅读视图 (Read-only Preview) ═══ -->
+        <template v-else-if="viewMode === 'read'">
+          <div v-if="markdown.trim()" class="read-preview" v-html="renderedHtml"></div>
+          <div v-else class="read-preview read-preview--empty">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+              <polyline points="10 9 9 9 8 9"/>
+            </svg>
+            <p>暂无内容，请先在编辑模式中撰写文章</p>
+          </div>
+        </template>
       </div>
 
-      <!-- ─── Publish Settings Panel (expandable) ─── -->
-      <Transition name="panel-slide">
-        <PublishPanel 
-          v-show="showPublishSettings"
-          :cover-preview-url="coverPreviewUrl"
-          :selected-tags="selectedTags"
-          :suggested-tags="suggestedTags"
-          :max-tags="maxTags"
-          v-model:tag-input="tagInput"
-          @remove-cover="removeCover"
-          @trigger-cover="triggerCoverInput"
-          @remove-tag="removeTag"
-          @add-tag="addTag"
-          @add-custom-tag="addCustomTag"
-        />
-      </Transition>
+      <!-- ─── Publish Settings Panel (always visible, scroll to see) ─── -->
+      <PublishPanel 
+        :cover-preview-url="coverPreviewUrl"
+        :selected-tags="selectedTags"
+        :suggested-tags="suggestedTags"
+        :max-tags="maxTags"
+        v-model:tag-input="tagInput"
+        @remove-cover="removeCover"
+        @trigger-cover="triggerCoverInput"
+        @remove-tag="removeTag"
+        @add-tag="addTag"
+        @add-custom-tag="addCustomTag"
+      />
       <input
         ref="coverInputRef"
         type="file"
@@ -51,11 +71,11 @@
 
     <!-- ─── Bottom Status Bar ─── -->
     <StatusBar 
-      :show-publish-settings="showPublishSettings"
       :word-count="wordCount"
       :current-mode-label="currentModeLabel"
+      :view-mode="viewMode"
       :save-label="saveLabel"
-      @toggle-publish-settings="showPublishSettings = !showPublishSettings"
+      @change-mode="setViewMode"
       @clear-draft="onClearDraft"
       @save-draft="saveDraftNow"
       @export-markdown="onExportMarkdown"
@@ -65,7 +85,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 // Tiptap imports
 import { useEditor, EditorContent } from '@tiptap/vue-3'
@@ -128,7 +148,7 @@ const {
 const title = ref('')
 const markdown = ref('')
 const viewMode = ref<ViewMode>(readViewMode())
-const showPublishSettings = ref(false)
+
 
 // ── Tiptap Editor Initialization ──
 const editor = useEditor({
@@ -174,9 +194,43 @@ const saveLabel = computed(() => {
   return `已保存 ${dt.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}`
 })
 
-const currentModeLabel = computed(() => {
-  return '所见即所得模式' 
-})
+const MODE_LABELS: Record<ViewMode, string> = {
+  read: '阅读视图',
+  source: '源码模式',
+  live: '实时阅览',
+}
+
+const currentModeLabel = computed(() => MODE_LABELS[viewMode.value])
+
+// Rendered HTML for read-only preview
+const renderedHtml = computed(() => mdParser.render(markdown.value))
+
+// Sync content when switching modes
+function setViewMode(mode: string) {
+  const prevMode = viewMode.value
+  const newMode = mode as ViewMode
+
+  // Leaving live mode → grab latest markdown from Tiptap
+  if (prevMode === 'live' && editor.value) {
+    const html = editor.value.getHTML()
+    markdown.value = turndownService.turndown(html)
+  }
+
+  // Entering live mode → push markdown into Tiptap
+  if (newMode === 'live' && editor.value) {
+    const htmlContent = mdParser.render(markdown.value)
+    editor.value.commands.setContent(htmlContent)
+  }
+
+  // Entering read mode → make editor non-editable feeling (just visual)
+  viewMode.value = newMode
+  localStorage.setItem(VIEW_MODE_KEY, mode)
+}
+
+// Source textarea input handler
+function onSourceInput() {
+  onDirtyAndAutosave()
+}
 
 // ── Cover handler bridge ──
 function onCoverChange(event: Event) {
@@ -243,6 +297,8 @@ function onPublish() {
 
 // ── View mode ──
 function readViewMode(): ViewMode {
+  const stored = localStorage.getItem(VIEW_MODE_KEY)
+  if (stored === 'read' || stored === 'source' || stored === 'live') return stored
   return 'live'
 }
 
@@ -327,7 +383,7 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   }
 }
 
-/* ───────── Tiptap Editor Content ───────── */
+/* ───────── Tiptap Editor Content (live mode) ───────── */
 .tiptap-editor {
   flex: 1;
   margin-top: 16px;
@@ -336,7 +392,7 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
 
 :deep(.tiptap) {
   outline: none !important;
-  min-height: 50vh;
+  min-height: calc(100vh - 280px);
   font-size: 16px;
   line-height: 1.7;
   color: #334155;
@@ -349,12 +405,7 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
     pointer-events: none;
   }
 
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
+  h1, h2, h3, h4, h5, h6 {
     line-height: 1.3;
     color: #0f172a;
     margin-top: 1.5em;
@@ -367,12 +418,9 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
     padding-bottom: 0.3em;
   }
 
-  h3 {
-    font-size: 1.25em;
-  }
+  h3 { font-size: 1.25em; }
 
-  ul,
-  ol {
+  ul, ol {
     padding-left: 1.5rem;
     margin: 1em 0;
   }
@@ -419,7 +467,6 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
     margin: 2rem 0;
   }
 
-  /* Table Styles */
   table {
     border-collapse: collapse;
     margin: 0;
@@ -427,8 +474,7 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
     table-layout: fixed;
     width: 100%;
 
-    td,
-    th {
+    td, th {
       border: 1px solid #cbd5e1;
       box-sizing: border-box;
       min-width: 1em;
@@ -436,9 +482,7 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
       position: relative;
       vertical-align: top;
 
-      >* {
-        margin-bottom: 0;
-      }
+      >* { margin-bottom: 0; }
     }
 
     th {
@@ -449,13 +493,142 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   }
 }
 
-.mode-warning {
-  margin-top: 10px;
-  padding: 8px 12px;
-  background-color: #fffbeb;
-  color: #d97706;
-  border-radius: 4px;
+/* ───────── Source Editor (source mode) ───────── */
+.source-editor-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin-top: 16px;
+  padding-bottom: 40px;
+}
+
+.source-editor {
+  flex: 1;
+  width: 100%;
+  min-height: calc(100vh - 280px);
+  border: none;
+  outline: none;
+  resize: none;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
   font-size: 14px;
+  line-height: 1.75;
+  color: #1e293b;
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 20px;
+  tab-size: 2;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  transition: background 0.2s;
+
+  &::placeholder {
+    color: #94a3b8;
+  }
+
+  &:focus {
+    background: #f1f5f9;
+    box-shadow: inset 0 0 0 1.5px rgba(0, 113, 227, 0.15);
+  }
+}
+
+/* ───────── Read Preview (read mode) ───────── */
+.read-preview {
+  flex: 1;
+  margin-top: 16px;
+  padding-bottom: 40px;
+  font-size: 16px;
+  line-height: 1.7;
+  color: #334155;
+
+  &--empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - 280px);
+    gap: 16px;
+    color: #94a3b8;
+    font-size: 0.92rem;
+  }
+
+  :deep(h1), :deep(h2), :deep(h3), :deep(h4), :deep(h5), :deep(h6) {
+    line-height: 1.3;
+    color: #0f172a;
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+  }
+
+  :deep(h2) {
+    font-size: 1.5em;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 0.3em;
+  }
+
+  :deep(h3) { font-size: 1.25em; }
+
+  :deep(ul), :deep(ol) {
+    padding-left: 1.5rem;
+    margin: 1em 0;
+  }
+
+  :deep(blockquote) {
+    border-left: 4px solid #cbd5e1;
+    color: #64748b;
+    margin: 1em 0;
+    background: #f8fafc;
+    padding: 0.5rem 1rem;
+    border-radius: 0 4px 4px 0;
+  }
+
+  :deep(pre) {
+    background: #0f172a;
+    color: #f8fafc;
+    padding: 1rem;
+    border-radius: 8px;
+    margin: 1em 0;
+    overflow-x: auto;
+
+    code {
+      color: inherit;
+      padding: 0;
+      background: none;
+      font-size: 0.9em;
+    }
+  }
+
+  :deep(code) {
+    background-color: #f1f5f9;
+    padding: 0.2em 0.4em;
+    border-radius: 4px;
+    font-size: 0.9em;
+    color: #db2777;
+    font-family: monospace;
+  }
+
+  :deep(hr) {
+    border: none;
+    border-top: 2px solid #e2e8f0;
+    margin: 2rem 0;
+  }
+
+  :deep(table) {
+    border-collapse: collapse;
+    margin: 0;
+    table-layout: fixed;
+    width: 100%;
+
+    td, th {
+      border: 1px solid #cbd5e1;
+      padding: 6px 8px;
+      vertical-align: top;
+    }
+
+    th {
+      background-color: #f8fafc;
+      font-weight: 600;
+      text-align: left;
+    }
+  }
 }
 
 .sr-only {
@@ -468,26 +641,7 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   border: 0;
 }
 
-/* transition */
-.panel-slide-enter-active {
-  transition: max-height 0.32s cubic-bezier(.4, 0, .2, 1), opacity 0.24s ease;
-}
 
-.panel-slide-leave-active {
-  transition: max-height 0.26s cubic-bezier(.4, 0, .6, 1), opacity 0.18s ease;
-}
-
-.panel-slide-enter-from,
-.panel-slide-leave-to {
-  max-height: 0;
-  opacity: 0;
-}
-
-.panel-slide-enter-to,
-.panel-slide-leave-from {
-  max-height: 600px;
-  opacity: 1;
-}
 
 /* ───────── Responsive ───────── */
 @media (max-width: 768px) {

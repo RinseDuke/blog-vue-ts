@@ -59,13 +59,12 @@ const recentActivity = [
     <div class="profile-page__shape" aria-hidden="true"></div>
     <div class="profile-page__inner">
       <header class="hero panel panel--hero">
-        <div class="hero__left">
+        <div class="hero__info">
           <div class="avatar" aria-hidden="true">{{ profile.avatarInitial }}</div>
           <div class="hero__meta">
             <p class="hero__eyebrow">Profile Center</p>
             <h1>{{ profile.displayName }}</h1>
             <p class="hero__title">{{ profile.title }}</p>
-            <p class="hero__bio">{{ profile.bio }}</p>
             <div class="hero__line">
               <span>{{ profile.location }}</span>
               <span class="hero__dot">|</span>
@@ -76,15 +75,20 @@ const recentActivity = [
           </div>
         </div>
 
-        <div class="hero__actions">
-          <RouterLink v-for="action in quickActions" :key="action.label" class="action-btn" :to="action.to">
-            {{ action.label }}
-          </RouterLink>
-          <button v-if="isLoggedIn" type="button" class="action-btn action-btn--logout" @click="handleLogout">
-            Logout
-          </button>
+        <div class="hero__bio-section">
+          <h3>About Me</h3>
+          <p class="hero__bio">{{ profile.bio }}</p>
         </div>
       </header>
+
+      <div class="hero__actions-bar">
+        <RouterLink v-for="action in quickActions" :key="action.label" class="action-btn" :to="action.to">
+          {{ action.label }}
+        </RouterLink>
+        <button v-if="isLoggedIn" type="button" class="action-btn action-btn--logout" @click="handleLogout">
+          Logout
+        </button>
+      </div>
 
       <section class="stats">
         <article v-for="item in stats" :key="item.label" class="panel stat-card">
@@ -176,25 +180,25 @@ const recentActivity = [
 
 .panel--hero {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   justify-content: space-between;
-  gap: 1.6rem;
+  gap: 2rem;
   flex-wrap: wrap;
-  padding: 1.6rem 1.8rem;
+  padding: 2.2rem 2.4rem;
   animation: rise-in 0.55s ease both;
 }
 
-.hero__left {
+.hero__info {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  min-width: 260px;
+  gap: 1.5rem;
+  min-width: 280px;
   flex: 1;
 }
 
 .avatar {
-  width: 78px;
-  height: 78px;
+  width: 86px;
+  height: 86px;
   border-radius: 24px;
   display: grid;
   place-items: center;
@@ -221,15 +225,34 @@ const recentActivity = [
 }
 
 .hero__title {
-  margin: 0;
+  margin: 0.3rem 0 0.8rem;
   color: var(--muted);
   font-weight: 600;
 }
 
+.hero__bio-section {
+  flex: 1;
+  min-width: 280px;
+  padding-left: 2.4rem;
+  border-left: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.hero__bio-section h3 {
+  margin: 0 0 0.6rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--ink);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
 .hero__bio {
-  margin: 0.55rem 0 0.75rem;
+  margin: 0;
   line-height: 1.68;
-  max-width: 560px;
+  color: var(--muted);
 }
 
 .hero__line {
@@ -244,10 +267,13 @@ const recentActivity = [
   opacity: 0.45;
 }
 
-.hero__actions {
+.hero__actions-bar {
   display: flex;
   flex-wrap: wrap;
   gap: 0.7rem;
+  margin-top: 1.2rem;
+  animation: rise-in 0.55s ease both;
+  animation-delay: 0.05s;
 }
 
 .action-btn {
@@ -481,10 +507,29 @@ const recentActivity = [
   }
 
   .panel--hero {
-    padding: 1.2rem;
+    padding: 1.5rem;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .hero__info {
+    flex-direction: column;
+    text-align: center;
   }
 
-  .hero__actions {
+  .hero__bio-section {
+    padding-left: 0;
+    padding-top: 1.5rem;
+    border-left: none;
+    border-top: 1px solid var(--line);
+    text-align: center;
+  }
+
+  .hero__line {
+    justify-content: center;
+  }
+
+  .hero__actions-bar {
     width: 100%;
   }
 

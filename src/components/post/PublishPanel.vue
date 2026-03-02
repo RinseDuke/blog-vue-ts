@@ -110,7 +110,7 @@ function handleAddCustomTag() {
     max-width: 820px;
     width: 100%;
     margin: 0 auto;
-    padding: 22px 24px 26px;
+    padding: 22px 24px 60px;
 }
 
 .publish-panel__title {
