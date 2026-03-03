@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import { ref, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '@/features/auth/stores/useAuthStore'
+import { profileService, type UserProfile } from '@/services/profileService'
 
 const authStore = useAuthStore()
 const { isLoggedIn } = storeToRefs(authStore)
@@ -11,14 +13,56 @@ function handleLogout() {
   window.location.href = '/'
 }
 
-const profile = {
+const profile = ref<UserProfile>({
   displayName: 'Sign',
-  title: 'Frontend Engineer - Product Experience Enthusiast',
-  bio: 'I focus on frontend engineering, interface design, and writing workflows to turn complex work into clear execution steps.',
+  bio: '...',
   location: 'Hangzhou',
   joinedAt: '2024-05-12',
   lastActive: 'Today',
   avatarInitial: 'S',
+})
+
+const isLoadingProfile = ref(true)
+const isEditingBio = ref(false)
+const isSaving = ref(false)
+const editedBio = ref('')
+
+onMounted(async () => {
+  try {
+    const data = await profileService.getProfile()
+    profile.value = data
+    editedBio.value = data.bio
+  } catch (e) {
+    console.error('Failed to load profile', e)
+  } finally {
+    isLoadingProfile.value = false
+  }
+})
+
+async function saveBio() {
+  if (!editedBio.value.trim() || isSaving.value) return
+  
+  isSaving.value = true
+  try {
+    const updated = await profileService.updateBio(editedBio.value)
+    profile.value = updated
+    isEditingBio.value = false
+  } catch (e) {
+    console.error('Failed to save bio', e)
+    // Here you would typically show a toast notification
+  } finally {
+    isSaving.value = false
+  }
+}
+
+function cancelEdit() {
+  editedBio.value = profile.value.bio
+  isEditingBio.value = false
+}
+
+function enterEditMode() {
+  editedBio.value = profile.value.bio
+  isEditingBio.value = true
 }
 
 const stats = [
@@ -64,7 +108,6 @@ const recentActivity = [
           <div class="hero__meta">
             <p class="hero__eyebrow">Profile Center</p>
             <h1>{{ profile.displayName }}</h1>
-            <p class="hero__title">{{ profile.title }}</p>
             <div class="hero__line">
               <span>{{ profile.location }}</span>
               <span class="hero__dot">|</span>
@@ -76,8 +119,22 @@ const recentActivity = [
         </div>
 
         <div class="hero__bio-section">
-          <h3>About Me</h3>
-          <p class="hero__bio">{{ profile.bio }}</p>
+          <div class="bio-header">
+            <h3>About Me</h3>
+            <button v-if="isLoggedIn && !isEditingBio" class="edit-btn" @click="enterEditMode">Edit</button>
+          </div>
+          <div v-if="isEditingBio" class="bio-edit-mode">
+            <textarea v-model="editedBio" class="bio-textarea" rows="4" :disabled="isSaving"></textarea>
+            <div class="bio-edit-actions">
+              <button class="bio-btn bio-btn--save" :disabled="isSaving" @click="saveBio">{{ isSaving ? 'Saving...' : 'Save' }}</button>
+              <button class="bio-btn bio-btn--cancel" :disabled="isSaving" @click="cancelEdit">Cancel</button>
+            </div>
+          </div>
+          <div v-else class="hero__bio">
+            <div v-if="isLoadingProfile" class="bio-skeleton"></div>
+            <div v-if="isLoadingProfile" class="bio-skeleton short"></div>
+            <p v-else>{{ profile.bio }}</p>
+          </div>
         </div>
       </header>
 
@@ -210,7 +267,7 @@ const recentActivity = [
 }
 
 .hero__meta h1 {
-  margin: 0.1rem 0;
+  margin: 0.1rem 0 0.8rem;
   font-size: clamp(2rem, 4vw, 2.7rem);
   line-height: 1.1;
 }
@@ -224,12 +281,6 @@ const recentActivity = [
   color: var(--accent);
 }
 
-.hero__title {
-  margin: 0.3rem 0 0.8rem;
-  color: var(--muted);
-  font-weight: 600;
-}
-
 .hero__bio-section {
   flex: 1;
   min-width: 280px;
@@ -240,8 +291,15 @@ const recentActivity = [
   justify-content: center;
 }
 
-.hero__bio-section h3 {
-  margin: 0 0 0.6rem;
+.bio-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.6rem;
+}
+
+.bio-header h3 {
+  margin: 0;
   font-size: 0.88rem;
   font-weight: 700;
   color: var(--ink);
@@ -249,10 +307,111 @@ const recentActivity = [
   letter-spacing: 0.05em;
 }
 
-.hero__bio {
+.edit-btn {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.edit-btn:hover {
+  background-color: var(--accent-soft);
+}
+
+.bio-edit-mode {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.bio-textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.5);
+  font-family: inherit;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  resize: vertical;
+  color: var(--ink);
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.bio-textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: #fff;
+}
+
+.bio-edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.bio-btn {
+  padding: 0.4rem 0.9rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.bio-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.bio-btn--save {
+  background-color: var(--accent);
+  color: #fff;
+  border: none;
+}
+
+.bio-btn--save:hover {
+  background-color: #005bb5;
+}
+
+.bio-btn--cancel {
+  background-color: transparent;
+  color: var(--muted);
+  border: 1px solid var(--line);
+}
+
+.bio-btn--cancel:hover {
+  background-color: #f5f5f7;
+  color: var(--ink);
+}
+
+.hero__bio p {
   margin: 0;
   line-height: 1.68;
   color: var(--muted);
+}
+
+.bio-skeleton {
+  height: 14px;
+  background: var(--line);
+  border-radius: 4px;
+  margin-bottom: 8px;
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+.bio-skeleton.short {
+  width: 60%;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 0.3; }
+  100% { opacity: 0.6; }
 }
 
 .hero__line {
