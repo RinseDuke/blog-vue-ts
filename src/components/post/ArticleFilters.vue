@@ -59,12 +59,12 @@ function selectTag(tag: string) {
 <template>
   <aside class="filter-box">
     <header class="filter-box__head">
-      <h3>Filters</h3>
-      <button type="button" class="filter-reset" :disabled="!hasActiveFilters" @click="emit('clearFilters')">Reset</button>
+      <h3>筛选</h3>
+      <button type="button" class="filter-reset" :disabled="!hasActiveFilters" @click="emit('clearFilters')">重置</button>
     </header>
 
     <section class="filter-group">
-      <p class="filter-group__title">Tags</p>
+      <p class="filter-group__title">标签</p>
       <div class="filter-tags">
         <button
           type="button"
@@ -72,7 +72,7 @@ function selectTag(tag: string) {
           :class="{ 'tag-chip--active': selectedTagValue === 'all' }"
           @click="selectTag('all')"
         >
-          <span>All</span>
+          <span>全部</span>
           <span class="tag-chip__count">{{ totalPosts }}</span>
         </button>
 
@@ -91,23 +91,23 @@ function selectTag(tag: string) {
     </section>
 
     <section class="filter-group">
-      <p class="filter-group__title">Publish date</p>
+      <p class="filter-group__title">发布时间</p>
       <select v-model="datePresetValue" class="filter-select">
         <option v-for="option in dateOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
       </select>
 
       <div v-if="datePresetValue === 'custom'" class="date-range">
         <label>
-          <span>Start date</span>
+          <span>开始日期</span>
           <input v-model="customStartDateValue" type="date" />
         </label>
         <label>
-          <span>End date</span>
+          <span>结束日期</span>
           <input v-model="customEndDateValue" type="date" />
         </label>
       </div>
 
-      <p v-if="isCustomDateInvalid" class="filter-error">End date cannot be earlier than start date.</p>
+      <p v-if="isCustomDateInvalid" class="filter-error">结束日期不能早于开始日期。</p>
     </section>
   </aside>
 </template>
@@ -115,7 +115,7 @@ function selectTag(tag: string) {
 <style scoped lang="less">
 .filter-box {
   background: rgba(255, 255, 255, 0.84);
-  border-radius: 20px;
+  border-radius: var(--radius-lg);
   border: 1px solid var(--line-soft);
   box-shadow: var(--shadow-sm);
   backdrop-filter: blur(8px);
@@ -140,16 +140,16 @@ function selectTag(tag: string) {
 
 .filter-reset {
   border: 1px solid var(--line-soft);
-  background: #fff;
+  background: var(--surface-strong);
   color: var(--brand-500);
   padding: 0.35rem 0.75rem;
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
 
   &:disabled {
-    color: #a1a1aa;
+    color: var(--ink-muted);
     border-color: var(--line-soft);
     cursor: not-allowed;
   }
@@ -217,9 +217,9 @@ function selectTag(tag: string) {
 .filter-select {
   width: 100%;
   border: 1px solid var(--line-soft);
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   padding: 0.55rem 0.65rem;
-  background: #fff;
+  background: var(--surface-strong);
   color: var(--ink-strong);
 }
 
@@ -231,14 +231,13 @@ function selectTag(tag: string) {
     display: flex;
     flex-direction: column;
     gap: 0.3rem;
-    color: #475569;
     color: var(--ink-muted);
     font-size: 0.85rem;
   }
 
   input {
     border: 1px solid var(--line-soft);
-    border-radius: 10px;
+    border-radius: var(--radius-sm);
     padding: 0.5rem 0.6rem;
     color: var(--ink-strong);
   }
@@ -246,7 +245,7 @@ function selectTag(tag: string) {
 
 .filter-error {
   margin: 0;
-  color: #dc2626;
+  color: var(--danger-500);
   font-size: 0.85rem;
   font-weight: 600;
 }

@@ -32,20 +32,20 @@ const pageSize = ref(6)
 const currentPage = ref(1)
 
 const dateOptions: { label: string; value: DatePreset }[] = [
-  { label: 'All time', value: 'all' },
-  { label: 'Last 7 days', value: '7d' },
-  { label: 'Last 30 days', value: '30d' },
-  { label: 'Last 3 months', value: '90d' },
-  { label: 'Last 1 year', value: '365d' },
-  { label: 'Custom range', value: 'custom' },
+  { label: '全部时间', value: 'all' },
+  { label: '近 7 天', value: '7d' },
+  { label: '近 30 天', value: '30d' },
+  { label: '近 3 个月', value: '90d' },
+  { label: '近 1 年', value: '365d' },
+  { label: '自定义范围', value: 'custom' },
 ]
 
 const sortOptions: { label: string; value: SortMode }[] = [
-  { label: 'Newest first', value: 'newest' },
-  { label: 'Oldest first', value: 'oldest' },
-  { label: 'Read time: high to low', value: 'readDesc' },
-  { label: 'Read time: low to high', value: 'readAsc' },
-  { label: 'Title: A to Z', value: 'titleAsc' },
+  { label: '最新优先', value: 'newest' },
+  { label: '最早优先', value: 'oldest' },
+  { label: '阅读时长：从高到低', value: 'readDesc' },
+  { label: '阅读时长：从低到高', value: 'readAsc' },
+  { label: '标题：按拼音/字母', value: 'titleAsc' },
 ]
 
 const pageSizeOptions = [6, 9, 12, 18]
@@ -113,12 +113,12 @@ const rangeEnd = computed(() => Math.min(currentPage.value * pageSize.value, dis
 
 const selectedDateLabel = computed(() => {
   const matched = dateOptions.find((item) => item.value === datePreset.value)
-  if (!matched) return 'All time'
+  if (!matched) return '全部时间'
   if (matched.value !== 'custom') return matched.label
 
-  const start = customStartDate.value || 'No limit'
-  const end = customEndDate.value || 'No limit'
-  return `${start} to ${end}`
+  const start = customStartDate.value || '不限'
+  const end = customEndDate.value || '不限'
+  return `${start} 至 ${end}`
 })
 
 const hasActiveFilters = computed(
@@ -127,9 +127,9 @@ const hasActiveFilters = computed(
 
 const activeFiltersSummary = computed(() => {
   const parts: string[] = []
-  if (selectedTag.value !== 'all') parts.push(`Tag: ${selectedTag.value}`)
-  if (datePreset.value !== 'all') parts.push(`Date: ${selectedDateLabel.value}`)
-  if (normalizedKeyword.value) parts.push(`Search: "${normalizedKeyword.value}"`)
+  if (selectedTag.value !== 'all') parts.push(`标签: ${selectedTag.value}`)
+  if (datePreset.value !== 'all') parts.push(`日期: ${selectedDateLabel.value}`)
+  if (normalizedKeyword.value) parts.push(`搜索: "${normalizedKeyword.value}"`)
   return parts.join(', ')
 })
 
@@ -180,7 +180,7 @@ watch(
 
 onMounted(() => {
   void ensurePosts().catch((err) => {
-    console.warn('Failed to preload posts for article list', err)
+    console.warn('文章列表预加载失败', err)
   })
 })
 
@@ -189,7 +189,7 @@ function sortByMode(a: Post, b: Post) {
   if (sortMode.value === 'oldest') return sortPostsByDateDesc(b, a)
   if (sortMode.value === 'readDesc') return b.readMinutes - a.readMinutes || sortPostsByDateDesc(a, b)
   if (sortMode.value === 'readAsc') return a.readMinutes - b.readMinutes || sortPostsByDateDesc(a, b)
-  return a.title.localeCompare(b.title)
+  return a.title.localeCompare(b.title, 'zh-CN')
 }
 
 function clearFilters() {
@@ -259,27 +259,27 @@ function isPostInDateRange(publishedAt: string) {
 <template>
   <section class="article-page">
     <header class="article-page__hero">
-      <p class="article-page__eyebrow">Articles</p>
-      <h1>Article Showcase</h1>
+      <p class="article-page__eyebrow">文章</p>
+      <h1>文章总览</h1>
       <p class="article-page__hint">
-        Search, filter, and sort your content quickly. This page is now ready for larger-scale content management.
+        快速搜索、筛选与排序文章，已支持更大规模的内容管理。
       </p>
 
       <div class="article-page__stats">
         <article class="hero-stat">
-          <p>Total posts</p>
+          <p>文章总数</p>
           <strong>{{ totalPosts }}</strong>
         </article>
         <article class="hero-stat">
-          <p>Topics</p>
+          <p>主题数</p>
           <strong>{{ totalTags }}</strong>
         </article>
         <article class="hero-stat">
-          <p>Authors</p>
+          <p>作者数</p>
           <strong>{{ totalAuthors }}</strong>
         </article>
         <article class="hero-stat">
-          <p>Visible now</p>
+          <p>当前可见</p>
           <strong>{{ displayCount }}</strong>
         </article>
       </div>
@@ -289,21 +289,21 @@ function isPostInDateRange(publishedAt: string) {
       <section class="feed" aria-live="polite">
         <header class="feed__head">
           <div class="feed__title">
-            <h2>Article List</h2>
+            <h2>文章列表</h2>
             <p class="feed__meta">
-              Showing {{ rangeStart }}-{{ rangeEnd }} of {{ displayCount }} posts
+              显示 {{ rangeStart }}-{{ rangeEnd }} / 共 {{ displayCount }} 篇
               <span v-if="hasActiveFilters">({{ activeFiltersSummary }})</span>
             </p>
           </div>
 
           <div class="feed__toolbar">
             <label class="control-field control-field--search">
-              <span>Search</span>
-              <input v-model="keyword" type="search" placeholder="Title, excerpt, author, tag..." />
+              <span>搜索</span>
+              <input v-model="keyword" type="search" placeholder="标题、摘要、作者、标签..." />
             </label>
 
             <label class="control-field">
-              <span>Sort</span>
+              <span>排序</span>
               <select v-model="sortMode">
                 <option v-for="option in sortOptions" :key="option.value" :value="option.value">
                   {{ option.label }}
@@ -312,7 +312,7 @@ function isPostInDateRange(publishedAt: string) {
             </label>
 
             <label class="control-field">
-              <span>Per page</span>
+              <span>每页</span>
               <select v-model.number="pageSize">
                 <option v-for="size in pageSizeOptions" :key="size" :value="size">{{ size }}</option>
               </select>
@@ -320,20 +320,20 @@ function isPostInDateRange(publishedAt: string) {
           </div>
         </header>
 
-        <div v-if="loading" class="feed__state">Loading...</div>
+        <div v-if="loading" class="feed__state">加载中...</div>
         <div v-else-if="error" class="feed__state feed__state--error">{{ error }}</div>
 
         <div v-else>
           <div v-if="!filteredPosts.length" class="feed__state feed__state--empty">
-            <p>No articles match the current criteria.</p>
-            <button v-if="hasActiveFilters" type="button" class="empty-reset" @click="clearFilters">Clear filters</button>
+            <p>没有符合当前条件的文章。</p>
+            <button v-if="hasActiveFilters" type="button" class="empty-reset" @click="clearFilters">清空筛选</button>
           </div>
 
           <template v-else>
             <PostList class="feed__grid feed__grid--list" :posts="paginatedPosts" />
 
-            <nav v-if="totalPages > 1" class="pagination" aria-label="Pagination">
-              <button type="button" :disabled="currentPage === 1" @click="goToPage(currentPage - 1)">Previous</button>
+            <nav v-if="totalPages > 1" class="pagination" aria-label="分页">
+              <button type="button" :disabled="currentPage === 1" @click="goToPage(currentPage - 1)">上一页</button>
               <button
                 v-for="page in visiblePages"
                 :key="page"
@@ -343,7 +343,7 @@ function isPostInDateRange(publishedAt: string) {
               >
                 {{ page }}
               </button>
-              <button type="button" :disabled="currentPage === totalPages" @click="goToPage(currentPage + 1)">Next</button>
+              <button type="button" :disabled="currentPage === totalPages" @click="goToPage(currentPage + 1)">下一页</button>
             </nav>
           </template>
         </div>
@@ -368,7 +368,7 @@ function isPostInDateRange(publishedAt: string) {
 <style scoped lang="less">
 .article-page {
   width: 100%;
-  padding: 72px 20px 42px;
+  padding: 64px 20px 48px;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
@@ -413,9 +413,9 @@ function isPostInDateRange(publishedAt: string) {
 }
 
 .hero-stat {
-  border-radius: 16px;
+  border-radius: var(--radius-md);
   border: 1px solid var(--line-soft);
-  background: rgba(255, 255, 255, 0.78);
+  background: var(--surface);
   padding: 0.84rem 0.9rem;
   backdrop-filter: blur(8px);
 
@@ -485,8 +485,8 @@ function isPostInDateRange(publishedAt: string) {
   &__state {
     padding: 2rem;
     text-align: center;
-    border-radius: 18px;
-    background: rgba(255, 255, 255, 0.8);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
     border: 1px solid var(--line-soft);
     color: var(--ink-muted);
 
@@ -495,12 +495,12 @@ function isPostInDateRange(publishedAt: string) {
     }
 
     &--error {
-      background: #fff5f5;
+      background: var(--danger-bg);
       color: var(--danger-500);
     }
 
     &--empty {
-      background: #f7f9fc;
+      background: var(--bg-canvas-soft);
       color: var(--ink-main);
       display: flex;
       flex-direction: column;
@@ -531,8 +531,8 @@ function isPostInDateRange(publishedAt: string) {
   select {
     width: 100%;
     border: 1px solid var(--line-soft);
-    border-radius: 10px;
-    background: rgba(255, 255, 255, 0.88);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
     color: var(--ink-strong);
     padding: 0.55rem 0.65rem;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
@@ -547,9 +547,9 @@ function isPostInDateRange(publishedAt: string) {
 
 .empty-reset {
   border: 1px solid var(--line-soft);
-  background: #fff;
+  background: var(--surface-strong);
   color: var(--brand-500);
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   padding: 0.45rem 0.8rem;
   font-weight: 700;
   cursor: pointer;
@@ -565,9 +565,9 @@ function isPostInDateRange(publishedAt: string) {
 
   button {
     border: 1px solid var(--line-soft);
-    background: #fff;
+    background: var(--surface-strong);
     color: var(--ink-main);
-    border-radius: 10px;
+    border-radius: var(--radius-sm);
     padding: 0.4rem 0.75rem;
     cursor: pointer;
     font-weight: 600;
@@ -575,7 +575,7 @@ function isPostInDateRange(publishedAt: string) {
 
     &:disabled {
       cursor: not-allowed;
-      color: #a1a1aa;
+      color: var(--ink-muted);
       border-color: var(--line-soft);
     }
   }

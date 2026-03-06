@@ -20,6 +20,7 @@
   --warning-500: #e65100;
   --shadow-sm: 0 10px 24px rgba(0, 0, 0, 0.08);
   --shadow-md: 0 18px 46px rgba(0, 0, 0, 0.12);
+  --radius-sm: 10px;
   --radius-md: 14px;
   --radius-lg: 22px;
 }

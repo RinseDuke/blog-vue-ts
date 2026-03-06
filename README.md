@@ -1,63 +1,210 @@
-﻿# blog-vue-ts
+# blog-vue-ts
 
-一个基于 Vue 3 + Vite + TypeScript 的博客前端，包含首页、文章列表、文章详情、搜索和写作页。
+一个基于 Vue 3 + Vite + TypeScript 的现代博客前端单页应用，包含首页、文章列表、文章详情、全局搜索、富文本写作和个人主页。
 
-## Features
-- Vue 3 + Vite + TypeScript + Vue Router
-- 统一 posts 数据层（store/composable，支持缓存与并发去重）
-- 搜索能力模块化（搜索历史、相关性排序、统一下拉交互与模板）
-- 文章列表页支持筛选/排序/分页，并与 URL query 双向同步
-- 富文本写作页基于 Vditor
-- 支持 Mock / 真实 API 切换
-- 内置代码质量基线：ESLint + Vitest
+## 技术栈
 
-## Requirements
+| 分类 | 技术 | 版本 |
+|---|---|---|
+| 框架 | Vue 3 (Composition API + `<script setup>`) | ^3.5.18 |
+| 构建工具 | Vite | ^7.3.1 |
+| 语言 | TypeScript | ~5.8.0 |
+| 路由 | Vue Router (HTML5 History) | ^4.5.1 |
+| 状态管理 | Pinia (Setup Store 语法) | ^3.0.4 |
+| 富文本编辑器 | TipTap | ^3.20.0 |
+| Markdown | markdown-it + turndown (GFM) | 14.1 / 7.2 |
+| HTML 净化 | DOMPurify | ^3.3.0 |
+| CSS 预处理器 | Less | ^4.4.2 |
+| 代码检查 | ESLint + typescript-eslint + eslint-plugin-vue | ^10.0.2 |
+| 测试 | Vitest | ^4.0.18 |
+
+## 功能特性
+
+- **首页展示** -- 最新文章列表，支持加载/错误/重试状态
+- **文章列表** -- 标签筛选、日期预设（7d/30d/90d/365d/自定义）、多种排序（最新/最早/阅读量/标题）、分页，全部与 URL query 双向同步
+- **文章详情** -- 文章渲染（DOMPurify 净化 HTML）、评论系统
+- **评论系统** -- 嵌套回复、点赞（乐观更新 + 失败回滚）、骨架屏加载、内容举报
+- **全局搜索** -- 实时建议、相关性排序（标题/摘要/作者/标签多维评分）、搜索历史持久化、推荐文章
+- **富文本写作** -- 基于 TipTap 的 WYSIWYG 编辑器 + Markdown 源码模式双切换，支持图片/链接/表格/任务列表/下划线，草稿自动保存（500ms 防抖）、封面上传、标签管理（预设 + 自定义，最多 5 个）
+- **认证系统** -- 登录/登出，会话持久化（localStorage / sessionStorage），路由守卫保护写作页
+- **Mock / 真实 API 无缝切换** -- 通过环境变量控制，Mock 模式带模拟网络延迟
+- **统一数据层** -- Posts Store 支持缓存与并发请求去重
+
+## 环境要求
+
 - Node.js `^20.19.0` 或 `>=22.12.0`
 - npm
 
-## Quick Start
-1. `npm install`
-2. `npm run dev`
+## 快速开始
 
-## Scripts
-- `npm run dev` 启动本地开发服务
-- `npm run build` 生成生产构建（`dist/`）
-- `npm run preview` 预览生产构建
-- `npm run type-check` 运行类型检查（`vue-tsc`）
-- `npm run lint` 运行 ESLint
-- `npm run lint:fix` 自动修复可修复的 ESLint 问题
-- `npm run test` 启动 Vitest（watch 模式）
-- `npm run test:run` 运行 Vitest 单次测试
+```bash
+# 1. 安装依赖
+npm install
 
-## Environment
+# 2. 配置环境变量（可选，默认使用 Mock 数据）
+cp .env.example .env.local
+
+# 3. 启动开发服务器
+npm run dev
+```
+
+## 可用脚本
+
+| 命令 | 说明 |
+|---|---|
+| `npm run dev` | 启动本地开发服务器（HMR） |
+| `npm run build` | 并行执行类型检查 + 生产构建，产物输出到 `dist/` |
+| `npm run build-only` | 仅执行生产构建（跳过类型检查） |
+| `npm run preview` | 本地预览生产构建 |
+| `npm run type-check` | 运行 TypeScript 类型检查（`vue-tsc`） |
+| `npm run lint` | 运行 ESLint 检查 |
+| `npm run lint:fix` | 自动修复可修复的 ESLint 问题 |
+| `npm run test` | 启动 Vitest（watch 模式） |
+| `npm run test:run` | 运行 Vitest 单次测试 |
+
+## 环境变量
+
 | 变量 | 默认值 | 说明 |
-| --- | --- | --- |
+|---|---|---|
 | `VITE_API_BASE_URL` | 空 | 真实后端地址，例如 `https://api.example.com` |
 | `VITE_USE_MOCK` | `true` | 是否启用前端内置 Mock 数据 |
 
-## Data Source
-- Mock 数据：`src/mocks/posts.ts`
-- 服务层：`src/services/postService.ts`
-- 统一 posts store：`src/features/post/composables/usePostsStore.ts`
+当 `VITE_USE_MOCK` 不为 `'false'` 或 `VITE_API_BASE_URL` 为空时，自动进入 Mock 模式。
 
-接入真实后端时，保持接口数据结构与 `src/types/post.ts` 一致即可。
+## 项目结构
 
-## Project Structure
-- `src/views/` 页面视图
-- `src/components/` 跨页面组件
-- `src/features/post/` 文章域能力（store、utils、tests）
-- `src/features/search/` 搜索域能力（composables）
-- `src/router/` 路由
-- `src/services/` API 访问层
-- `src/mocks/` Mock 数据
-- `src/types/` 类型定义
+```
+src/
+├── App.vue                          # 根组件（全局布局、搜索、导航、页脚）
+├── main.ts                          # 应用入口（createApp、Pinia、Router）
+├── assets/                          # 静态资源与全局样式
+│   ├── base.css                     #   CSS Reset + 设计令牌（CSS Variables）
+│   └── main.css                     #   应用级全局样式
+├── components/                      # 跨页面可复用组件
+│   ├── Article.vue                  #   文章详情渲染器
+│   ├── comment/                     #   评论组件（表单、列表项、举报对话框）
+│   ├── navigation/                  #   顶部导航（品牌、搜索框、导航栏、页脚）
+│   ├── post/                        #   文章相关（卡片、列表、编辑器工具栏、发布面板、筛选器、状态栏）
+│   ├── search/                      #   搜索下拉内容、搜索框
+│   └── ui/                          #   通用 UI 组件（骨架屏加载器）
+├── features/                        # 按领域组织的功能模块
+│   ├── auth/stores/                 #   认证 Store（会话管理、登录/登出）
+│   ├── comment/stores/              #   评论 Store（加载、新增、点赞、举报）
+│   ├── post/                        #   文章域
+│   │   ├── composables/             #     usePostsStore、useDraft、useCoverUpload、useTagManager
+│   │   └── utils/                   #     文章搜索排序工具函数 + 单元测试
+│   └── search/composables/          #   搜索域（搜索、建议、历史、推荐文章）
+├── mocks/                           # 内置 Mock 数据
+│   ├── comments.ts                  #   评论模拟数据
+│   └── posts.ts                     #   文章模拟数据
+├── router/                          # 路由配置 + 认证守卫
+├── services/                        # API 访问层
+│   ├── apiClient.ts                 #   统一请求封装（Token 注入、错误处理、Mock 切换）
+│   ├── postService.ts               #   文章服务
+│   ├── commentService.ts            #   评论服务
+│   ├── profileService.ts            #   个人资料服务
+│   └── reportService.ts             #   举报服务
+├── types/                           # TypeScript 类型定义
+│   └── post.ts                      #   Post、Author、Comment、Report
+└── views/                           # 页面级视图组件
+    ├── HomeView.vue                 #   首页
+    ├── ArticleListView.vue          #   文章列表
+    ├── ArticleDetailView.vue        #   文章详情
+    ├── Search.vue                   #   搜索结果
+    ├── Write.vue                    #   写作页
+    ├── LoginView.vue                #   登录页
+    └── AboutView.vue                #   关于页 / 个人主页
+```
 
-## Tests
-- `src/features/post/utils/post.test.ts`：文章工具函数单测
-- `src/features/post/utils/articleListQuery.test.ts`：列表页 query state 单测
+## 路由
 
-## Architecture Notes
-- 代码库总览与模块职责见 `docs/CODEBASE_MAP.md`
+| 路径 | 名称 | 视图 | 需要认证 |
+|---|---|---|---|
+| `/` | `home` | HomeView | 否 |
+| `/article` | `article-list` | ArticleListView | 否 |
+| `/article/:slug` | `article-detail` | ArticleDetailView | 否 |
+| `/search` | `search` | Search | 否 |
+| `/write` | `write` | Write | 是 |
+| `/login` | `login` | LoginView | 否 |
+| `/about` | `about` | AboutView | 否 |
 
-## Build Output
-执行 `npm run build` 后产物输出到 `dist/`。
+## 数据层架构
+
+```
+组件 / 视图
+    ↓ 调用
+Pinia Store（composables）── 缓存 + 并发去重
+    ↓ 调用
+Services（API 访问层）
+    ↓ 判断
+isMockMode() ──→ 是 → 返回 Mock 数据（带模拟延迟）
+              └→ 否 → apiFetch() → 真实后端 API
+```
+
+- **Store 层**：Pinia Setup Store，`ensurePosts()` 实现加载一次 + 并发请求去重
+- **Service 层**：`apiFetch<T>()` 统一封装，自动注入 Bearer Token、处理错误码、返回类型安全的响应
+- **Mock 层**：`src/mocks/` 提供完整的模拟数据，`networkDelay()` 模拟网络延迟
+
+接入真实后端时，保持接口返回的数据结构与 `src/types/post.ts` 中的类型定义一致即可。
+
+## 核心类型
+
+```typescript
+interface Post {
+  id: string
+  slug: string
+  title: string
+  excerpt: string
+  coverImage?: string
+  content?: string
+  tags: string[]
+  author: Author
+  publishedAt: string
+  readMinutes: number
+  featured?: boolean
+  likes?: number
+}
+
+interface Comment {
+  id: string
+  postId: string
+  author: Author
+  content: string
+  createdAt: string
+  parentId?: string   // 支持嵌套回复
+  likes?: number
+}
+```
+
+完整类型定义见 `src/types/post.ts`。
+
+## 测试
+
+测试框架使用 Vitest，运行于 Node 环境，启用全局 API（无需手动 import `describe`/`it`/`expect`）。
+
+```bash
+# watch 模式
+npm run test
+
+# 单次运行
+npm run test:run
+```
+
+现有测试文件：
+
+| 文件 | 覆盖内容 |
+|---|---|
+| `src/features/post/utils/post.test.ts` | 文章相关性排序、日期排序、推荐文章生成 |
+| `src/features/post/utils/articleListQuery.test.ts` | 列表页 URL query state 解析与构建 |
+
+## 构建产物
+
+```bash
+npm run build
+```
+
+产物输出到 `dist/`，构建过程会并行执行 TypeScript 类型检查和 Vite 打包。
+
+## 架构文档
+
+更详细的模块职责与架构说明见 `docs/CODEBASE_MAP.md`。

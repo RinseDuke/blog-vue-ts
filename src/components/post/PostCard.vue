@@ -5,7 +5,7 @@
         <div class="post-card__meta">
           <span class="post-card__date">{{ formatPostDate(post.publishedAt) }}</span>
           <span class="post-card__dot" aria-hidden="true">|</span>
-          <span>{{ post.readMinutes }} min read</span>
+          <span>{{ post.readMinutes }} 分钟阅读</span>
         </div>
 
         <h3>{{ post.title }}</h3>

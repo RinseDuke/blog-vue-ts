@@ -79,7 +79,7 @@ const isScrollFromWriteEditor = (target: EventTarget | null) => {
   if (!(target instanceof Element)) return false
   return Boolean(
     target.closest(
-      '.write-page .editor-shell, .write-page .vditor, .write-page .vditor-content, .write-page .vditor-sv, .write-page .vditor-ir, .write-page .vditor-preview'
+      '.write-page .editor-shell, .write-page .tiptap-editor, .write-page .source-editor-wrap, .write-page .read-preview'
     )
   )
 }

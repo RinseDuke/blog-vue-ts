@@ -85,7 +85,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 
 // Tiptap imports
 import { useEditor, EditorContent } from '@tiptap/vue-3'
@@ -100,7 +100,7 @@ import { TableRow } from '@tiptap/extension-table-row'
 import { TableHeader } from '@tiptap/extension-table-header'
 import { TableCell } from '@tiptap/extension-table-cell'
 import TurndownService from 'turndown'
-// @ts-ignore - no types available
+// @ts-expect-error - no types available
 import { gfm } from 'turndown-plugin-gfm'
 import MarkdownIt from 'markdown-it'
 
@@ -341,8 +341,8 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   display: flex;
   flex-direction: column;
   min-height: calc(100vh - 78px);
-  padding-bottom: 44px;
-  background: #f5f7fa;
+  padding-bottom: 36px;
+  background: var(--bg-canvas);
 }
 
 /* ───────── Editor Shell ───────── */
@@ -351,8 +351,8 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   display: flex;
   flex-direction: column;
   width: 100%;
-  background: #fff;
-  border-bottom: 1px solid #eaeff6;
+  background: var(--surface-strong);
+  border-bottom: 1px solid var(--line-soft);
 }
 
 .editor-body {
@@ -372,13 +372,13 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   outline: none;
   font-size: clamp(1.45rem, 2.4vw, 1.9rem);
   font-weight: 700;
-  color: var(--ink-strong, #0f172a);
+  color: var(--ink-strong);
   line-height: 1.4;
   padding: 28px 0 10px;
   background: transparent;
 
   &::placeholder {
-    color: #b4bdd0;
+    color: var(--ink-muted);
     font-weight: 600;
   }
 }
@@ -395,10 +395,10 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   min-height: calc(100vh - 280px);
   font-size: 16px;
   line-height: 1.7;
-  color: #334155;
+  color: var(--ink-main);
 
   p.is-editor-empty:first-child::before {
-    color: #adb5bd;
+    color: var(--ink-muted);
     content: attr(data-placeholder);
     float: left;
     height: 0;
@@ -407,14 +407,14 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
 
   h1, h2, h3, h4, h5, h6 {
     line-height: 1.3;
-    color: #0f172a;
+    color: var(--ink-strong);
     margin-top: 1.5em;
     margin-bottom: 0.5em;
   }
 
   h2 {
     font-size: 1.5em;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid var(--line-soft);
     padding-bottom: 0.3em;
   }
 
@@ -426,18 +426,18 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   }
 
   blockquote {
-    border-left: 4px solid #cbd5e1;
+    border-left: 4px solid var(--line-strong);
     padding-left: 1rem;
-    color: #64748b;
+    color: var(--ink-muted);
     margin: 1em 0;
-    background: #f8fafc;
+    background: var(--bg-canvas-soft);
     padding: 0.5rem 1rem;
     border-radius: 0 4px 4px 0;
   }
 
   pre {
-    background: #0f172a;
-    color: #f8fafc;
+    background: var(--ink-strong);
+    color: var(--bg-canvas-soft);
     font-family: inherit;
     padding: 1rem;
     border-radius: 8px;
@@ -453,7 +453,7 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   }
 
   code {
-    background-color: #f1f5f9;
+    background-color: var(--bg-canvas-soft);
     padding: 0.2em 0.4em;
     border-radius: 4px;
     font-size: 0.9em;
@@ -463,7 +463,7 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
 
   hr {
     border: none;
-    border-top: 2px solid #e2e8f0;
+    border-top: 2px solid var(--line-soft);
     margin: 2rem 0;
   }
 
@@ -475,7 +475,7 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
     width: 100%;
 
     td, th {
-      border: 1px solid #cbd5e1;
+      border: 1px solid var(--line-strong);
       box-sizing: border-box;
       min-width: 1em;
       padding: 6px 8px;
@@ -486,7 +486,7 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
     }
 
     th {
-      background-color: #f8fafc;
+      background-color: var(--bg-canvas-soft);
       font-weight: 600;
       text-align: left;
     }
@@ -512,8 +512,8 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
   font-size: 14px;
   line-height: 1.75;
-  color: #1e293b;
-  background: #f8fafc;
+  color: var(--ink-strong);
+  background: var(--bg-canvas-soft);
   border-radius: 8px;
   padding: 20px;
   tab-size: 2;
@@ -522,11 +522,11 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   transition: background 0.2s;
 
   &::placeholder {
-    color: #94a3b8;
+    color: var(--ink-muted);
   }
 
   &:focus {
-    background: #f1f5f9;
+    background: var(--bg-canvas);
     box-shadow: inset 0 0 0 1.5px rgba(0, 113, 227, 0.15);
   }
 }
@@ -538,7 +538,7 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   padding-bottom: 40px;
   font-size: 16px;
   line-height: 1.7;
-  color: #334155;
+  color: var(--ink-main);
 
   &--empty {
     display: flex;
@@ -547,20 +547,20 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
     justify-content: center;
     min-height: calc(100vh - 280px);
     gap: 16px;
-    color: #94a3b8;
+    color: var(--ink-muted);
     font-size: 0.92rem;
   }
 
   :deep(h1), :deep(h2), :deep(h3), :deep(h4), :deep(h5), :deep(h6) {
     line-height: 1.3;
-    color: #0f172a;
+    color: var(--ink-strong);
     margin-top: 1.5em;
     margin-bottom: 0.5em;
   }
 
   :deep(h2) {
     font-size: 1.5em;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid var(--line-soft);
     padding-bottom: 0.3em;
   }
 
@@ -572,17 +572,17 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   }
 
   :deep(blockquote) {
-    border-left: 4px solid #cbd5e1;
-    color: #64748b;
+    border-left: 4px solid var(--line-strong);
+    color: var(--ink-muted);
     margin: 1em 0;
-    background: #f8fafc;
+    background: var(--bg-canvas-soft);
     padding: 0.5rem 1rem;
     border-radius: 0 4px 4px 0;
   }
 
   :deep(pre) {
-    background: #0f172a;
-    color: #f8fafc;
+    background: var(--ink-strong);
+    color: var(--bg-canvas-soft);
     padding: 1rem;
     border-radius: 8px;
     margin: 1em 0;
@@ -597,7 +597,7 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   }
 
   :deep(code) {
-    background-color: #f1f5f9;
+    background-color: var(--bg-canvas-soft);
     padding: 0.2em 0.4em;
     border-radius: 4px;
     font-size: 0.9em;
@@ -607,7 +607,7 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
 
   :deep(hr) {
     border: none;
-    border-top: 2px solid #e2e8f0;
+    border-top: 2px solid var(--line-soft);
     margin: 2rem 0;
   }
 
@@ -618,13 +618,13 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
     width: 100%;
 
     td, th {
-      border: 1px solid #cbd5e1;
+      border: 1px solid var(--line-strong);
       padding: 6px 8px;
       vertical-align: top;
     }
 
     th {
-      background-color: #f8fafc;
+      background-color: var(--bg-canvas-soft);
       font-weight: 600;
       text-align: left;
     }

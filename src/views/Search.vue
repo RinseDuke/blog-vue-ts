@@ -1,22 +1,22 @@
 <template>
   <section class="search">
     <header class="search__hero">
-      <p class="search__eyebrow">Search Results</p>
+      <p class="search__eyebrow">搜索结果</p>
       <h1>{{ displayQuery }}</h1>
-      <p class="search__hint">Search by title, excerpt, tags, or author.</p>
+      <p class="search__hint">可按标题、摘要、标签或作者搜索。</p>
 
       <div class="search__bar">
         <input
           v-model="searchInput"
           ref="inputEl"
           type="text"
-          placeholder="Search articles, tags, or author..."
+          placeholder="搜索文章、标签或作者..."
           autocomplete="off"
           @keyup.enter="triggerSearch"
           @focus="openDropdown"
           @input="openDropdown"
         />
-        <button type="button" class="search__submit" aria-label="Search" @click="triggerSearch">
+        <button type="button" class="search__submit" aria-label="搜索" @click="triggerSearch">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path
               d="M15.5 14h-.79l-.28-.27A6.5 6.5 0 1 0 14 15.5l.27.28v.79L20 22l2-2-6.5-6zM10 15.5A5.5 5.5 0 1 1 10 4a5.5 5.5 0 0 1 0 11.5z"
@@ -37,16 +37,16 @@
         />
       </div>
 
-      <p v-if="!loading && !error" class="search__meta">{{ filteredPosts.length }} matched post(s)</p>
+      <p v-if="!loading && !error" class="search__meta">{{ filteredPosts.length }} 篇匹配文章</p>
     </header>
 
     <section class="feed" aria-live="polite">
-      <div v-if="loading" class="feed__state">Searching...</div>
+      <div v-if="loading" class="feed__state">搜索中...</div>
       <div v-else-if="error" class="feed__state feed__state--error">{{ error }}</div>
 
       <div v-else>
         <div v-if="!filteredPosts.length" class="feed__state feed__state--empty">
-          <p>No matched content found. Try other keywords.</p>
+          <p>未找到匹配内容，请尝试其他关键词。</p>
         </div>
 
         <PostList v-else class="feed__grid feed__grid--list" :posts="filteredPosts" />
@@ -104,7 +104,7 @@ const { showDropdown, inputEl, dropdownEl, openDropdown, triggerSearch, selectSu
   },
 })
 
-const displayQuery = computed(() => searchInput.value.trim() || 'All posts')
+const displayQuery = computed(() => searchInput.value.trim() || '全部文章')
 
 onMounted(async () => {
   loadHistory()
@@ -112,7 +112,7 @@ onMounted(async () => {
   try {
     await ensurePosts()
   } catch (err) {
-    console.warn('Failed to preload posts for search page', err)
+    console.warn('搜索页预加载文章失败', err)
   }
 })
 
@@ -135,7 +135,7 @@ function formatSuggestionMeta(post: Post) {
 <style scoped lang="less">
 .search {
   width: 100%;
-  padding: 72px 20px 20px;
+  padding: 64px 20px 48px;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
@@ -182,7 +182,7 @@ function formatSuggestionMeta(post: Post) {
   max-width: 840px;
   background: rgba(255, 255, 255, 0.94);
   border: 1px solid var(--line-soft);
-  border-radius: 16px;
+  border-radius: var(--radius-md);
   box-shadow: var(--shadow-md);
   display: flex;
   flex-direction: column;
@@ -203,9 +203,9 @@ function formatSuggestionMeta(post: Post) {
   input {
     flex: 1;
     padding: 1rem 3.25rem 1rem 1.25rem;
-    border-radius: 16px;
+    border-radius: var(--radius-md);
     border: 1px solid var(--line-soft);
-    background: rgba(255, 255, 255, 0.88);
+    background: var(--surface);
     font-size: 1rem;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 
@@ -257,18 +257,18 @@ function formatSuggestionMeta(post: Post) {
   &__state {
     padding: 2rem;
     text-align: center;
-    border-radius: 18px;
+    border-radius: var(--radius-lg);
     border: 1px solid var(--line-soft);
-    background: rgba(255, 255, 255, 0.78);
+    background: var(--surface);
     color: var(--ink-muted);
 
     &--error {
-      background: #fff5f5;
+      background: var(--danger-bg);
       color: var(--danger-500);
     }
 
     &--empty {
-      background: #f7f9fc;
+      background: var(--bg-canvas-soft);
       color: var(--ink-main);
     }
   }

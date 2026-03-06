@@ -20,7 +20,7 @@ async function loadHomePosts(force = false) {
 
     await ensurePosts()
   } catch (err) {
-    console.warn('Failed to load home posts', err)
+    console.warn('首页文章加载失败', err)
   }
 }
 
@@ -32,15 +32,15 @@ onMounted(() => {
 <template>
   <section class="front">
     <section class="feed" aria-live="polite">
-      <div v-if="loading" class="feed__state">Loading posts...</div>
+      <div v-if="loading" class="feed__state">正在加载文章...</div>
       <div v-else-if="error" class="feed__state feed__state--error">
         <p>{{ error }}</p>
-        <button type="button" class="feed__retry" @click="loadHomePosts(true)">Retry</button>
+        <button type="button" class="feed__retry" @click="loadHomePosts(true)">重试</button>
       </div>
 
       <div v-else class="list-wrapper">
         <header class="feed__head">
-          <h2>Latest posts</h2>
+          <h2>最新文章</h2>
         </header>
         <PostList class="feed__grid feed__grid--list" :posts="latestPosts" />
       </div>
@@ -51,7 +51,7 @@ onMounted(() => {
 <style scoped lang="less">
 .front {
   width: 100%;
-  padding: 70px 20px 40px;
+  padding: 64px 20px 24px;
 }
 
 
@@ -83,9 +83,9 @@ onMounted(() => {
   &__state {
     padding: 2rem;
     text-align: center;
-    border-radius: 18px;
+    border-radius: var(--radius-lg);
     border: 1px solid var(--line-soft);
-    background: rgba(255, 255, 255, 0.74);
+    background: var(--surface);
     color: var(--ink-muted);
     display: flex;
     flex-direction: column;
@@ -97,16 +97,16 @@ onMounted(() => {
     }
 
     &--error {
-      background: #fff5f5;
+      background: var(--danger-bg);
       color: var(--danger-500);
     }
   }
 
   &__retry {
     border: 1px solid rgba(198, 40, 40, 0.35);
-    background: #fff;
+    background: var(--surface-strong);
     color: var(--danger-500);
-    border-radius: 10px;
+    border-radius: var(--radius-sm);
     padding: 0.45rem 0.85rem;
     font-weight: 700;
     cursor: pointer;
@@ -124,3 +124,4 @@ onMounted(() => {
 }
 
 </style>
+

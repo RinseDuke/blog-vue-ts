@@ -1,12 +1,12 @@
 <template>
   <footer class="footer">
-    <p>&copy; {{ new Date().getFullYear() }} Sign Blog</p>
+    <p>&copy; {{ new Date().getFullYear() }} Sign 博客</p>
   </footer>
 </template>
 
 <style scoped lang="less">
 .footer {
-  padding: 2.2rem 1.2rem 2.6rem;
+  padding: 1rem 1.2rem 1.2rem;
   text-align: center;
   color: var(--ink-muted);
   background: transparent;
@@ -18,3 +18,5 @@
   letter-spacing: 0.02em;
 }
 </style>
+
+

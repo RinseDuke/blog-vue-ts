@@ -5,7 +5,7 @@
         v-model="searchValue"
         ref="inputEl"
         type="text"
-        placeholder="Search articles..."
+        placeholder="搜索文章..."
         autocomplete="off"
         @keyup.enter="triggerSearch"
         @focus="openDropdown"
@@ -20,7 +20,7 @@
       <div v-show="showDropdown" ref="dropdownEl" class="top-search__dropdown" role="listbox">
         <SearchDropdownContent
           density="compact"
-          clear-history-label="Clear"
+          clear-history-label="清空"
           :show-recommended-read-minutes="true"
           :recommended-posts="recommendedPosts"
           :search-history="searchHistory"
@@ -73,7 +73,7 @@ const { showDropdown, inputEl, dropdownEl, openDropdown, triggerSearch, selectSu
 })
 
 function formatSuggestionMeta(post: Post) {
-  return `${post.author.name} - ${new Date(post.publishedAt).toLocaleDateString('en-US')}`
+  return `${post.author.name} - ${new Date(post.publishedAt).toLocaleDateString('zh-CN')}`
 }
 </script>
 

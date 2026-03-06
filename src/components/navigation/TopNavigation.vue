@@ -1,10 +1,9 @@
 <template>
   <nav class="navigation">
-    <RouterLink to="/">Home</RouterLink>
-    <RouterLink to="/article">Articles</RouterLink>
-    <RouterLink to="/write">Write</RouterLink>
-    <RouterLink to="/about">About</RouterLink>
-    <RouterLink v-if="!isLoggedIn" to="/login">Login</RouterLink>
+    <RouterLink to="/">首页</RouterLink>
+    <RouterLink to="/article">文章</RouterLink>
+    <RouterLink to="/write">写作</RouterLink>
+    <RouterLink to="/about">{{ isLoggedIn ? '个人中心' : '登录' }}</RouterLink>
   </nav>
 </template>
 

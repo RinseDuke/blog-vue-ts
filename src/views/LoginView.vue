@@ -1,75 +1,64 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { computed, ref } from 'vue'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
+import { useAuthStore } from '@/features/auth/stores/useAuthStore'
 
 const route = useRoute()
 const router = useRouter()
+const authStore = useAuthStore()
 
 const email = ref('')
 const password = ref('')
 const rememberMe = ref(true)
 const isSubmitting = ref(false)
 const errorMessage = ref('')
-const successMessage = ref('')
-
-let submitTimer: ReturnType<typeof setTimeout> | null = null
 
 const normalizedEmail = computed(() => email.value.trim().toLowerCase())
 const isEmailValid = computed(() => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail.value))
 const isPasswordValid = computed(() => password.value.length >= 6)
 const canSubmit = computed(() => isEmailValid.value && isPasswordValid.value && !isSubmitting.value)
+const registerLocation = computed(() => {
+  const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : ''
+  return redirect ? { name: 'register', query: { redirect } } : { name: 'register' }
+})
 
-function handleSubmit() {
+async function handleSubmit() {
   if (!canSubmit.value) {
     errorMessage.value = '请输入有效邮箱和至少 6 位密码。'
-    successMessage.value = ''
     return
   }
 
   isSubmitting.value = true
   errorMessage.value = ''
-  successMessage.value = ''
 
-  submitTimer = setTimeout(() => {
-    const payload = {
+  try {
+    await authStore.login({
       email: normalizedEmail.value,
+      password: password.value,
       rememberMe: rememberMe.value,
-      loggedAt: new Date().toISOString(),
-      token: `mock-token-${Date.now()}`,
-    }
+    })
 
-    if (rememberMe.value) {
-      localStorage.setItem('blog_auth_session_v1', JSON.stringify(payload))
-    } else {
-      sessionStorage.setItem('blog_auth_session_v1', JSON.stringify(payload))
-    }
-
+    const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/about'
+    await router.replace(redirect)
+  } catch (err) {
+    errorMessage.value = err instanceof Error ? err.message : '登录失败，请稍后重试。'
+  } finally {
     isSubmitting.value = false
-    successMessage.value = '登录成功，正在跳转...'
-
-    const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/'
-    window.location.href = router.resolve(redirect).href
-  }, 500)
+  }
 }
-
-onBeforeUnmount(() => {
-  if (!submitTimer) return
-  clearTimeout(submitTimer)
-  submitTimer = null
-})
 </script>
 
 <template>
   <section class="login-page">
     <div class="login-card">
-      <p class="login-card__eyebrow">Account</p>
+      <p class="login-card__eyebrow">账号</p>
       <h1>登录</h1>
-      <p class="login-card__hint">输入账号信息后即可进入系统。</p>
+      <p class="login-card__hint">使用已注册邮箱登录，未注册请先创建账号。</p>
 
       <form class="login-form" @submit.prevent="handleSubmit">
         <label class="field">
           <span>邮箱</span>
-          <input v-model="email" type="email" autocomplete="email" placeholder="you@example.com" />
+          <input v-model="email" type="email" autocomplete="email" placeholder="name@example.com" />
         </label>
 
         <label class="field">
@@ -83,14 +72,17 @@ onBeforeUnmount(() => {
         </label>
 
         <p v-if="errorMessage" class="feedback feedback--error">{{ errorMessage }}</p>
-        <p v-if="successMessage" class="feedback feedback--success">{{ successMessage }}</p>
 
         <button type="submit" class="submit-btn" :disabled="!canSubmit">
           {{ isSubmitting ? '登录中...' : '登录' }}
         </button>
       </form>
 
-      <p class="login-card__note">当前为前端模拟登录，后续可直接替换为真实接口。</p>
+      <p class="login-card__switch">
+        还没有账号？
+        <RouterLink :to="registerLocation">立即注册</RouterLink>
+      </p>
+      <p class="login-card__note">当前为本地模拟邮箱登录，注册完成后会自动进入个人中心。</p>
     </div>
   </section>
 </template>
@@ -129,14 +121,24 @@ onBeforeUnmount(() => {
   }
 
   &__hint,
-  &__note {
+  &__note,
+  &__switch {
     margin: 0;
     color: var(--ink-muted);
     font-size: 0.9rem;
   }
 
+  &__switch {
+    margin-top: 0.95rem;
+
+    a {
+      color: var(--brand-500);
+      font-weight: 700;
+    }
+  }
+
   &__note {
-    margin-top: 0.9rem;
+    margin-top: 0.65rem;
   }
 }
 
@@ -190,10 +192,6 @@ onBeforeUnmount(() => {
 
   &--error {
     color: var(--danger-500);
-  }
-
-  &--success {
-    color: var(--success-500);
   }
 }
 

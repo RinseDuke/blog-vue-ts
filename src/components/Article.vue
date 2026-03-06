@@ -36,7 +36,7 @@
         <div class="tags">
           <span v-for="tag in post.tags" :key="tag" class="tag">#{{ tag }}</span>
         </div>
-        <router-link to="/article" class="back-line">Back to articles</router-link>
+        <router-link to="/article" class="back-line">返回文章列表</router-link>
       </footer>
 
       <div class="article-actions">
@@ -110,7 +110,7 @@ function handleArticleLike() {
 
 const fallbackHtml = computed(() => {
   const excerpt = post.value?.excerpt ?? ''
-  return `<h3>Content unavailable</h3><p>${excerpt}</p>`
+  return `<h3>内容暂不可用</h3><p>${excerpt}</p>`
 })
 
 const safeHtml = computed(() => {
@@ -121,7 +121,7 @@ const safeHtml = computed(() => {
 async function loadPostBySlug(slug: string) {
   if (!slug) {
     post.value = null
-    error.value = 'Article not found'
+    error.value = '未找到文章'
     loading.value = false
     return
   }
@@ -133,16 +133,16 @@ async function loadPostBySlug(slug: string) {
     const fetchedPost = await fetchPostBySlug(slug)
     if (!fetchedPost) {
       post.value = null
-      error.value = 'Article not found'
+      error.value = '未找到文章'
       return
     }
 
     post.value = fetchedPost
     articleLikeCount.value = fetchedPost.likes ?? 0
-    document.title = `${fetchedPost.title} - Sign Blog`
+    document.title = `${fetchedPost.title} - Sign 博客`
   } catch (err) {
     post.value = null
-    error.value = err instanceof Error ? err.message : 'Failed to load article'
+    error.value = err instanceof Error ? err.message : '加载文章失败'
   } finally {
     loading.value = false
   }
@@ -167,7 +167,6 @@ function formatDate(dateString: string) {
   max-width: 860px;
   margin: 3.2rem auto 2.4rem;
   padding: 0 1.2rem;
-  font-family: 'Manrope', sans-serif;
 }
 
 .status-message {
@@ -183,7 +182,7 @@ function formatDate(dateString: string) {
 
 .article-content {
   border: 1px solid var(--line-soft);
-  border-radius: 24px;
+  border-radius: var(--radius-lg);
   background: rgba(255, 255, 255, 0.92);
   box-shadow: var(--shadow-sm);
   padding: clamp(1.25rem, 2.8vw, 2.2rem);
@@ -353,9 +352,9 @@ function formatDate(dateString: string) {
 
 
 .article-actions__btn--report:hover {
-  color: #c62828;
+  color: var(--danger-500);
   border-color: rgba(198, 40, 40, 0.3);
-  background: rgba(198, 40, 40, 0.04);
+  background: var(--danger-bg);
 }
 
 @media (max-width: 640px) {

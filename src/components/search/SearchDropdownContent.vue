@@ -2,8 +2,8 @@
   <div class="search-dropdown" :class="[`search-dropdown--${density}`]">
     <div class="search-dropdown__section">
       <div class="search-dropdown__header">
-        <span>Recommended</span>
-        <span class="search-dropdown__hint">Top reads by estimated reading time</span>
+        <span>推荐文章</span>
+        <span class="search-dropdown__hint">按预计阅读时长排序</span>
       </div>
       <ol class="search-dropdown__hot-list">
         <li v-for="(post, index) in recommendedPosts" :key="post.id">
@@ -11,7 +11,7 @@
             <span class="search-dropdown__rank" :data-top="index < 3">{{ index + 1 }}</span>
             <div class="search-dropdown__hot-text">
               <span class="search-dropdown__hot-title">{{ post.title }}</span>
-              <span v-if="showRecommendedReadMinutes" class="search-dropdown__hot-meta">{{ post.readMinutes }} min read</span>
+              <span v-if="showRecommendedReadMinutes" class="search-dropdown__hot-meta">{{ post.readMinutes }} 分钟阅读</span>
             </div>
           </button>
         </li>
@@ -20,7 +20,7 @@
 
     <div v-if="searchHistory.length" class="search-dropdown__section">
       <div class="search-dropdown__header">
-        <span>Search history</span>
+        <span>搜索历史</span>
         <button type="button" class="search-dropdown__link-btn" @click="emit('clearHistory')">
           {{ clearHistoryLabel }}
         </button>
@@ -34,8 +34,8 @@
 
     <div v-if="normalizedQuery && suggestionPosts.length" class="search-dropdown__section">
       <div class="search-dropdown__header">
-        <span>Suggestions</span>
-        <span class="search-dropdown__hint">Sorted by relevance</span>
+        <span>搜索建议</span>
+        <span class="search-dropdown__hint">按相关度排序</span>
       </div>
       <ul class="search-dropdown__suggestion-list">
         <li v-for="post in suggestionPosts" :key="post.id">
@@ -48,7 +48,7 @@
     </div>
 
     <div v-else-if="normalizedQuery" class="search-dropdown__section search-dropdown__section--empty">
-      <span>No result found. Try another keyword.</span>
+      <span>未找到结果，请尝试其他关键词。</span>
     </div>
   </div>
 </template>
@@ -69,7 +69,7 @@ interface SearchDropdownProps {
 
 const props = withDefaults(defineProps<SearchDropdownProps>(), {
   density: 'regular',
-  clearHistoryLabel: 'Clear history',
+  clearHistoryLabel: '清空历史',
   showRecommendedReadMinutes: false,
 })
 
@@ -80,7 +80,7 @@ const emit = defineEmits<{
 
 function formatSuggestionMeta(post: Post) {
   if (props.suggestionMetaFormatter) return props.suggestionMetaFormatter(post)
-  return `${post.author.name} - ${new Date(post.publishedAt).toLocaleDateString('en-US')}`
+  return `${post.author.name} - ${new Date(post.publishedAt).toLocaleDateString('zh-CN')}`
 }
 </script>
 

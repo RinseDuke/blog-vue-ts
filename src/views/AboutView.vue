@@ -1,24 +1,25 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '@/features/auth/stores/useAuthStore'
 import { profileService, type UserProfile } from '@/services/profileService'
 
 const authStore = useAuthStore()
+const router = useRouter()
 const { isLoggedIn } = storeToRefs(authStore)
 
 function handleLogout() {
   authStore.logout()
-  window.location.href = '/'
+  void router.replace('/about')
 }
 
 const profile = ref<UserProfile>({
   displayName: 'Sign',
   bio: '...',
-  location: 'Hangzhou',
+  location: '杭州',
   joinedAt: '2024-05-12',
-  lastActive: 'Today',
+  lastActive: '今天',
   avatarInitial: 'S',
 })
 
@@ -66,35 +67,35 @@ function enterEditMode() {
 }
 
 const stats = [
-  { label: 'Published', value: '36', helper: 'Last 30 days +4' },
-  { label: 'Total Reads', value: '128k', helper: 'Avg 3.5k / post' },
-  { label: 'Followers', value: '1,208', helper: 'This week +22' },
-  { label: 'Bookmarks', value: '412', helper: 'Saved 3.9k times' },
+  { label: '已发布', value: '36', helper: '近 30 天 +4' },
+  { label: '总阅读量', value: '128k', helper: '平均 3.5k / 篇' },
+  { label: '关注者', value: '1,208', helper: '本周 +22' },
+  { label: '收藏', value: '412', helper: '被收藏 3.9k 次' },
 ]
 
 const quickActions = [
-  { label: 'Write New Post', to: '/write' },
-  { label: 'Manage Posts', to: '/article' },
-  { label: 'Search Posts', to: '/search' },
+  { label: '写新文章', to: '/write' },
+  { label: '管理文章', to: '/article' },
+  { label: '搜索文章', to: '/search' },
 ]
 
 const highlights = [
-  { label: 'Writing Rhythm', value: '12-Day Consistency', detail: '3 drafts completed this week with stable output.' },
-  { label: 'Content Focus', value: 'Engineering - UX Design', detail: 'Most readers follow architecture and performance topics.' },
-  { label: 'Next Goal', value: '8 Posts Next Month', detail: 'Target: one deep article every 4 days.' },
+  { label: '创作节奏', value: '连续 12 天更新', detail: '本周完成 3 篇草稿，输出节奏稳定。' },
+  { label: '内容方向', value: '工程实践 - 体验设计', detail: '读者主要关注架构与性能相关主题。' },
+  { label: '下阶段目标', value: '下月发布 8 篇', detail: '目标：每 4 天产出 1 篇深度文章。' },
 ]
 
 const drafts = [
-  { title: 'Build a Maintainable Blog from Scratch', updatedAt: '2 hours ago', progress: '70%' },
-  { title: 'Vue 3 Complex Form Best Practices', updatedAt: 'Yesterday', progress: '45%' },
-  { title: 'Color Semantics in Design Systems', updatedAt: '3 days ago', progress: '20%' },
+  { title: '从零搭建可维护博客', updatedAt: '2 小时前', progress: '70%' },
+  { title: 'Vue 3 复杂表单最佳实践', updatedAt: '昨天', progress: '45%' },
+  { title: '设计系统中的色彩语义', updatedAt: '3 天前', progress: '20%' },
 ]
 
 const recentActivity = [
-  { label: 'Published "Frontend Structure Review"', time: 'Today 09:30' },
-  { label: 'Updated "Vue Router Advanced Patterns"', time: 'Yesterday 20:10' },
-  { label: 'Replied to 12 comments', time: 'Yesterday 16:40' },
-  { label: 'Gained 22 new followers', time: '2 days ago' },
+  { label: '发布《前端结构复盘》', time: '今天 09:30' },
+  { label: '更新《Vue Router 进阶模式》', time: '昨天 20:10' },
+  { label: '回复了 12 条评论', time: '昨天 16:40' },
+  { label: '新增 22 位关注者', time: '2 天前' },
 ]
 </script>
 
@@ -106,28 +107,28 @@ const recentActivity = [
         <div class="hero__info">
           <div class="avatar" aria-hidden="true">{{ profile.avatarInitial }}</div>
           <div class="hero__meta">
-            <p class="hero__eyebrow">Profile Center</p>
+            <p class="hero__eyebrow">个人中心</p>
             <h1>{{ profile.displayName }}</h1>
             <div class="hero__line">
               <span>{{ profile.location }}</span>
               <span class="hero__dot">|</span>
-              <span>Joined {{ profile.joinedAt }}</span>
+              <span>加入于 {{ profile.joinedAt }}</span>
               <span class="hero__dot">|</span>
-              <span>Active {{ profile.lastActive }}</span>
+              <span>最近活跃 {{ profile.lastActive }}</span>
             </div>
           </div>
         </div>
 
         <div class="hero__bio-section">
           <div class="bio-header">
-            <h3>About Me</h3>
-            <button v-if="isLoggedIn && !isEditingBio" class="edit-btn" @click="enterEditMode">Edit</button>
+            <h3>关于我</h3>
+            <button v-if="isLoggedIn && !isEditingBio" class="edit-btn" @click="enterEditMode">编辑</button>
           </div>
           <div v-if="isEditingBio" class="bio-edit-mode">
             <textarea v-model="editedBio" class="bio-textarea" rows="4" :disabled="isSaving"></textarea>
             <div class="bio-edit-actions">
-              <button class="bio-btn bio-btn--save" :disabled="isSaving" @click="saveBio">{{ isSaving ? 'Saving...' : 'Save' }}</button>
-              <button class="bio-btn bio-btn--cancel" :disabled="isSaving" @click="cancelEdit">Cancel</button>
+              <button class="bio-btn bio-btn--save" :disabled="isSaving" @click="saveBio">{{ isSaving ? '保存中...' : '保存' }}</button>
+              <button class="bio-btn bio-btn--cancel" :disabled="isSaving" @click="cancelEdit">取消</button>
             </div>
           </div>
           <div v-else class="hero__bio">
@@ -143,7 +144,7 @@ const recentActivity = [
           {{ action.label }}
         </RouterLink>
         <button v-if="isLoggedIn" type="button" class="action-btn action-btn--logout" @click="handleLogout">
-          Logout
+          退出登录
         </button>
       </div>
 
@@ -166,14 +167,14 @@ const recentActivity = [
       <section class="content-grid">
         <article class="panel content-panel">
           <header class="content-panel__head">
-            <h3>Draft Progress</h3>
-            <span class="pill">3 In Progress</span>
+            <h3>草稿进度</h3>
+            <span class="pill">进行中 3 篇</span>
           </header>
           <div class="content-panel__list">
             <div v-for="draft in drafts" :key="draft.title" class="list-row">
               <div>
                 <p class="list-row__title">{{ draft.title }}</p>
-                <p class="list-row__meta">Updated {{ draft.updatedAt }}</p>
+                <p class="list-row__meta">更新于 {{ draft.updatedAt }}</p>
               </div>
               <span class="list-row__value">{{ draft.progress }}</span>
             </div>
@@ -182,8 +183,8 @@ const recentActivity = [
 
         <article class="panel content-panel">
           <header class="content-panel__head">
-            <h3>Recent Activity</h3>
-            <span class="pill pill--accent">High This Week</span>
+            <h3>最近动态</h3>
+            <span class="pill pill--accent">本周活跃</span>
           </header>
           <div class="content-panel__list">
             <div v-for="item in recentActivity" :key="item.label" class="list-row">
@@ -197,23 +198,13 @@ const recentActivity = [
   </section>
 </template>
 
-<style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap');
-
+<style scoped lang="less">
 .profile-page {
-  --ink: #1d1d1f;
-  --muted: #6e6e73;
-  --line: rgba(0, 0, 0, 0.08);
-  --card: rgba(255, 255, 255, 0.82);
-  --accent: #0071e3;
-  --accent-soft: rgba(0, 113, 227, 0.12);
   position: relative;
   overflow: hidden;
   min-height: 100%;
-  padding: 44px 24px 96px;
-  color: var(--ink);
-  background: linear-gradient(180deg, #ffffff 0%, #f7f7f9 100%);
-  font-family: 'Manrope', sans-serif;
+  padding: 64px 20px 48px;
+  color: var(--ink-strong);
 }
 
 .profile-page__shape {
@@ -228,11 +219,11 @@ const recentActivity = [
 }
 
 .panel {
-  border: 1px solid var(--line);
-  border-radius: 20px;
-  background: var(--card);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
   backdrop-filter: blur(10px);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-sm);
 }
 
 .panel--hero {
@@ -262,7 +253,7 @@ const recentActivity = [
   font-size: 2rem;
   font-weight: 800;
   color: #fff;
-  background: linear-gradient(145deg, #2f8fff 0%, #0071e3 100%);
+  background: linear-gradient(145deg, var(--brand-400) 0%, var(--brand-500) 100%);
   box-shadow: 0 10px 20px rgba(0, 113, 227, 0.28);
 }
 
@@ -278,14 +269,14 @@ const recentActivity = [
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--accent);
+  color: var(--brand-500);
 }
 
 .hero__bio-section {
   flex: 1;
   min-width: 280px;
   padding-left: 2.4rem;
-  border-left: 1px solid var(--line);
+  border-left: 1px solid var(--line-soft);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -302,7 +293,7 @@ const recentActivity = [
   margin: 0;
   font-size: 0.88rem;
   font-weight: 700;
-  color: var(--ink);
+  color: var(--ink-strong);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -310,7 +301,7 @@ const recentActivity = [
 .edit-btn {
   background: none;
   border: none;
-  color: var(--accent);
+  color: var(--brand-500);
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
@@ -320,7 +311,7 @@ const recentActivity = [
 }
 
 .edit-btn:hover {
-  background-color: var(--accent-soft);
+  background-color: var(--brand-100);
 }
 
 .bio-edit-mode {
@@ -332,21 +323,22 @@ const recentActivity = [
 .bio-textarea {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-soft);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.5);
   font-family: inherit;
   font-size: 0.95rem;
   line-height: 1.6;
   resize: vertical;
-  color: var(--ink);
+  color: var(--ink-strong);
   transition: border-color 0.2s ease, background-color 0.2s ease;
 }
 
 .bio-textarea:focus {
   outline: none;
-  border-color: var(--accent);
-  background: #fff;
+  border-color: rgba(0, 113, 227, 0.35);
+  box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.1);
+  background: var(--surface-strong);
 }
 
 .bio-edit-actions {
@@ -370,35 +362,36 @@ const recentActivity = [
 }
 
 .bio-btn--save {
-  background-color: var(--accent);
+  background-color: var(--brand-500);
   color: #fff;
   border: none;
 }
 
-.bio-btn--save:hover {
-  background-color: #005bb5;
+.bio-btn--save:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(0, 113, 227, 0.24);
 }
 
 .bio-btn--cancel {
   background-color: transparent;
-  color: var(--muted);
-  border: 1px solid var(--line);
+  color: var(--ink-muted);
+  border: 1px solid var(--line-soft);
 }
 
-.bio-btn--cancel:hover {
-  background-color: #f5f5f7;
-  color: var(--ink);
+.bio-btn--cancel:hover:not(:disabled) {
+  background-color: var(--bg-canvas);
+  color: var(--ink-strong);
 }
 
 .hero__bio p {
   margin: 0;
   line-height: 1.68;
-  color: var(--muted);
+  color: var(--ink-muted);
 }
 
 .bio-skeleton {
   height: 14px;
-  background: var(--line);
+  background: var(--line-soft);
   border-radius: 4px;
   margin-bottom: 8px;
   animation: pulse 1.5s infinite ease-in-out;
@@ -418,7 +411,7 @@ const recentActivity = [
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  color: var(--muted);
+  color: var(--ink-muted);
   font-size: 0.9rem;
 }
 
@@ -436,32 +429,32 @@ const recentActivity = [
 }
 
 .action-btn {
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-soft);
   border-radius: 999px;
   padding: 0.62rem 1.25rem;
   text-decoration: none;
-  color: var(--ink);
-  background: rgba(255, 255, 255, 0.88);
+  color: var(--ink-strong);
+  background: var(--surface);
   font-weight: 600;
   transition: transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
 }
 
 .action-btn:hover {
   transform: translateY(-1px);
-  border-color: rgba(31, 122, 99, 0.45);
-  background: #fff;
+  border-color: rgba(0, 113, 227, 0.35);
+  background: var(--surface-strong);
 }
 
 .action-btn--logout {
-  color: var(--muted);
+  color: var(--ink-muted);
   border-color: rgba(198, 40, 40, 0.25);
   cursor: pointer;
 }
 
 .action-btn--logout:hover {
-  color: #c62828;
+  color: var(--danger-500);
   border-color: rgba(198, 40, 40, 0.45);
-  background: #fff5f5;
+  background: var(--danger-bg);
 }
 
 .stats {
@@ -495,7 +488,7 @@ const recentActivity = [
 .stat-card__label {
   margin: 0;
   font-size: 0.88rem;
-  color: var(--muted);
+  color: var(--ink-muted);
 }
 
 .stat-card__value {
@@ -507,7 +500,7 @@ const recentActivity = [
 
 .stat-card__helper {
   margin: 0;
-  color: var(--accent);
+  color: var(--brand-500);
   font-size: 0.83rem;
   font-weight: 600;
 }
@@ -538,7 +531,7 @@ const recentActivity = [
 
 .highlight-card__label {
   margin: 0;
-  color: var(--muted);
+  color: var(--ink-muted);
   font-size: 0.86rem;
 }
 
@@ -549,7 +542,7 @@ const recentActivity = [
 
 .highlight-card__detail {
   margin: 0;
-  color: var(--muted);
+  color: var(--ink-muted);
   line-height: 1.6;
 }
 
@@ -590,8 +583,8 @@ const recentActivity = [
   border-radius: 999px;
   font-size: 0.78rem;
   font-weight: 700;
-  color: var(--accent);
-  background: var(--accent-soft);
+  color: var(--brand-500);
+  background: var(--brand-100);
 }
 
 .pill--accent {
@@ -610,27 +603,27 @@ const recentActivity = [
   justify-content: space-between;
   gap: 1rem;
   padding: 0.72rem 0.82rem;
-  border-radius: 12px;
-  border: 1px solid rgba(23, 33, 45, 0.08);
-  background: #f9fbfa;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line-soft);
+  background: var(--bg-canvas-soft);
 }
 
 .list-row__title {
   margin: 0;
   font-size: 0.95rem;
   font-weight: 600;
-  color: var(--ink);
+  color: var(--ink-strong);
 }
 
 .list-row__meta {
   margin: 0.2rem 0 0;
-  color: var(--muted);
+  color: var(--ink-muted);
   font-size: 0.84rem;
 }
 
 .list-row__value {
   font-size: 0.9rem;
-  color: var(--accent);
+  color: var(--brand-500);
   font-weight: 700;
 }
 
@@ -662,7 +655,7 @@ const recentActivity = [
 
 @media (max-width: 760px) {
   .profile-page {
-    padding: 30px 16px 72px;
+    padding: 40px 16px 48px;
   }
 
   .panel--hero {
@@ -670,7 +663,7 @@ const recentActivity = [
     flex-direction: column;
     gap: 1.5rem;
   }
-  
+
   .hero__info {
     flex-direction: column;
     text-align: center;
@@ -680,7 +673,7 @@ const recentActivity = [
     padding-left: 0;
     padding-top: 1.5rem;
     border-left: none;
-    border-top: 1px solid var(--line);
+    border-top: 1px solid var(--line-soft);
     text-align: center;
   }
 
@@ -717,3 +710,8 @@ const recentActivity = [
   }
 }
 </style>
+
+
+
+
+

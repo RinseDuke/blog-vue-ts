@@ -1,9 +1,9 @@
 <template>
   <RouterLink to="/" class="brand">
-    <img src="@/assets/logo.svg" alt="Blog Logo" />
+    <img src="@/assets/logo.svg" alt="博客 Logo" />
     <span class="brand__text">
       <strong>Sign</strong>
-      <em>Blog Lab</em>
+      <em>博客实验室</em>
     </span>
   </RouterLink>
 </template>

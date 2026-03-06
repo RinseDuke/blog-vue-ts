@@ -53,7 +53,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 
-const props = defineProps<{
+defineProps<{
   wordCount: number
   currentModeLabel: string
   viewMode: string
@@ -123,13 +123,13 @@ onBeforeUnmount(() => {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 20px;
-    height: 44px;
-    background: #fff;
-    border-top: 1px solid #e0e6ef;
-    box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.04);
-    font-size: 0.82rem;
-    color: #64748b;
+    padding: 0 16px;
+    height: 36px;
+    background: var(--surface-strong);
+    border-top: 1px solid var(--line-soft);
+    box-shadow: 0 -1px 6px rgba(0, 0, 0, 0.03);
+    font-size: 0.78rem;
+    color: var(--ink-muted);
     flex-shrink: 0;
 }
 
@@ -137,16 +137,16 @@ onBeforeUnmount(() => {
 .status-bar__right {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
 }
 
 .sb-btn {
     background: none;
     border: none;
     cursor: pointer;
-    font-size: 0.82rem;
-    color: #64748b;
-    padding: 2px 3px;
+    font-size: 0.78rem;
+    color: var(--ink-muted);
+    padding: 1px 2px;
     display: inline-flex;
     align-items: center;
     gap: 3px;
@@ -180,9 +180,9 @@ onBeforeUnmount(() => {
     bottom: calc(100% + 10px);
     left: 0;
     min-width: 160px;
-    background: #fff;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
+    background: var(--surface-strong);
+    border: 1px solid var(--line-soft);
+    border-radius: var(--radius-sm);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.10), 0 2px 6px rgba(0, 0, 0, 0.04);
     padding: 4px;
     z-index: 200;
@@ -191,20 +191,20 @@ onBeforeUnmount(() => {
 .mode-menu__item {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     width: 100%;
-    padding: 9px 12px;
+    padding: 7px 10px;
     border: none;
     background: none;
     border-radius: 7px;
     cursor: pointer;
-    font-size: 0.84rem;
-    color: #334155;
+    font-size: 0.8rem;
+    color: var(--ink-main);
     transition: background 0.14s, color 0.14s;
     white-space: nowrap;
 
     &:hover {
-        background: #f1f5f9;
+        background: var(--bg-canvas-soft);
     }
 
     &--active {
@@ -248,8 +248,8 @@ onBeforeUnmount(() => {
 
 .sb-sep {
     width: 1px;
-    height: 13px;
-    background: #dce2ec;
+    height: 11px;
+    background: var(--line-soft);
     display: block;
 }
 
@@ -258,17 +258,17 @@ onBeforeUnmount(() => {
 }
 
 .sb-dot {
-    color: #b0b8c8;
+    color: var(--line-strong);
     font-weight: 700;
 }
 
 .sb-draft svg {
-    color: #94a3b8;
+    color: var(--ink-muted);
 }
 
 .sb-saved {
-    font-size: 0.76rem;
-    color: #94a3b8;
+    font-size: 0.72rem;
+    color: var(--ink-muted);
 }
 
 .sb-publish {
@@ -276,8 +276,8 @@ onBeforeUnmount(() => {
     color: #fff;
     border: none;
     border-radius: 6px;
-    padding: 4px 20px;
-    font-size: 0.82rem;
+    padding: 3px 16px;
+    font-size: 0.78rem;
     font-weight: 600;
     cursor: pointer;
     transition: background 0.16s, transform 0.12s;
@@ -293,13 +293,13 @@ onBeforeUnmount(() => {
 
 @media (max-width: 768px) {
     .status-bar {
-        padding: 0 10px;
-        height: 40px;
+        padding: 0 8px;
+        height: 32px;
     }
 
     .status-bar__left,
     .status-bar__right {
-        gap: 5px;
+        gap: 4px;
     }
 
     .sb-saved {

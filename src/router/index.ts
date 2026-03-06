@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
+import ProfileEntryView from '../views/ProfileEntryView.vue'
 import { useAuthStore } from '@/features/auth/stores/useAuthStore'
 
 const router = createRouter({
@@ -13,7 +14,7 @@ const router = createRouter({
     {
       path: '/about',
       name: 'about',
-      component: () => import('../views/AboutView.vue'),
+      component: ProfileEntryView,
     },
     {
       path: '/write',
@@ -41,17 +42,27 @@ const router = createRouter({
       name: 'login',
       component: () => import('../views/LoginView.vue'),
     },
+    {
+      path: '/register',
+      name: 'register',
+      component: () => import('../views/RegisterView.vue'),
+    },
   ],
 })
 
 router.beforeEach((to, _from, next) => {
-  if (to.meta.requiresAuth) {
-    const auth = useAuthStore()
-    if (!auth.isLoggedIn) {
-      next({ name: 'login', query: { redirect: to.fullPath } })
-      return
-    }
+  const auth = useAuthStore()
+
+  if ((to.name === 'login' || to.name === 'register') && auth.isLoggedIn) {
+    next({ name: 'about' })
+    return
   }
+
+  if (to.meta.requiresAuth && !auth.isLoggedIn) {
+    next({ name: 'about', query: { redirect: to.fullPath } })
+    return
+  }
+
   next()
 })
 

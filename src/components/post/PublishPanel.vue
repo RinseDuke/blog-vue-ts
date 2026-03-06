@@ -101,8 +101,8 @@ function handleAddCustomTag() {
 
 <style scoped lang="less">
 .publish-panel {
-    border-top: 1px solid #eaeff6;
-    background: #fff;
+    border-top: 1px solid var(--line-soft);
+    background: var(--surface-strong);
     width: 100%;
 }
 
@@ -116,7 +116,7 @@ function handleAddCustomTag() {
 .publish-panel__title {
     font-size: 1rem;
     font-weight: 700;
-    color: var(--ink-strong, #0f172a);
+    color: var(--ink-strong);
     margin-bottom: 18px;
 }
 
@@ -144,9 +144,9 @@ function handleAddCustomTag() {
     justify-content: center;
     width: 168px;
     height: 112px;
-    border: 1.5px dashed #c4cdd9;
-    border-radius: 10px;
-    background: #fafbfd;
+    border: 1.5px dashed var(--line-strong);
+    border-radius: var(--radius-sm);
+    background: var(--bg-canvas-soft);
     cursor: pointer;
     gap: 6px;
     transition: border-color 0.18s, background 0.18s, transform 0.18s;
@@ -163,21 +163,21 @@ function handleAddCustomTag() {
 }
 
 .cover-placeholder__icon {
-    color: #94a3b8;
+    color: var(--ink-muted);
 }
 
 .cover-placeholder__text {
     font-size: 0.76rem;
-    color: #94a3b8;
+    color: var(--ink-muted);
 }
 
 .cover-preview {
     position: relative;
     width: 168px;
     height: 112px;
-    border-radius: 10px;
+    border-radius: var(--radius-sm);
     overflow: hidden;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--line-soft);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 
     &__img {
@@ -287,7 +287,7 @@ function handleAddCustomTag() {
     padding: 3px 0;
 
     &::placeholder {
-        color: #9ea8ba;
+        color: var(--ink-muted);
     }
 }
 
