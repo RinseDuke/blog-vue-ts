@@ -1,14 +1,16 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import type { Comment } from '@/types/post'
+import { useAuthStore } from '@/features/auth/stores/useAuthStore'
 import {
     fetchCommentsByPostId,
     createComment,
-    likeComment as likeCommentApi,
+    setCommentLike as setCommentLikeApi,
     type CreateCommentPayload,
 } from '@/services/commentService'
 
 export const useCommentStore = defineStore('comments', () => {
+    const authStore = useAuthStore()
     const commentsByPost = ref<Record<string, Comment[]>>({})
     const loading = ref(false)
     const error = ref<string | null>(null)
@@ -47,6 +49,13 @@ export const useCommentStore = defineStore('comments', () => {
     }
 
     async function likeComment(postId: string, commentId: string) {
+        if (!authStore.isLoggedIn) {
+            const authError = new Error('请先登录后再点赞评论')
+            error.value = authError.message
+            throw authError
+        }
+
+        error.value = null
         const wasLiked = likedCommentIds.value.has(commentId)
         const delta = wasLiked ? -1 : 1
 
@@ -67,8 +76,12 @@ export const useCommentStore = defineStore('comments', () => {
         }
 
         try {
-            await likeCommentApi(commentId)
-        } catch {
+            const serverLikes = await setCommentLikeApi(commentId, !wasLiked)
+            const target = comments?.find((c) => c.id === commentId)
+            if (target) {
+                target.likes = serverLikes
+            }
+        } catch (err: unknown) {
             // Rollback on failure
             if (wasLiked) {
                 likedCommentIds.value.add(commentId)
@@ -79,6 +92,8 @@ export const useCommentStore = defineStore('comments', () => {
             if (target) {
                 target.likes = Math.max(0, (target.likes ?? 0) - delta)
             }
+            error.value = err instanceof Error ? err.message : 'Failed to update comment like'
+            throw err
         }
     }
 

@@ -136,6 +136,23 @@ function buildSession(email: string, rememberMe: boolean): AuthSession {
   }
 }
 
+export function readStoredAuthSession(): AuthSession | null {
+  try {
+    const raw = localStorage.getItem(AUTH_KEY) ?? sessionStorage.getItem(AUTH_KEY)
+    if (!raw) return null
+
+    const parsed = JSON.parse(raw) as AuthSession
+    if (!parsed?.token || !parsed?.email) return null
+
+    return {
+      ...parsed,
+      email: normalizeEmail(parsed.email),
+    }
+  } catch {
+    return null
+  }
+}
+
 export const useAuthStore = defineStore('auth', () => {
   const session = ref<AuthSession | null>(null)
 
@@ -152,23 +169,10 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   function loadSession() {
-    try {
-      const raw = localStorage.getItem(AUTH_KEY) ?? sessionStorage.getItem(AUTH_KEY)
-      if (!raw) {
-        session.value = null
-        return
-      }
-
-      const parsed = JSON.parse(raw) as AuthSession
-      if (parsed?.token && parsed?.email) {
-        session.value = {
-          ...parsed,
-          email: normalizeEmail(parsed.email),
-        }
-        return
-      }
-    } catch {
-      // Ignore invalid persisted session data.
+    const storedSession = readStoredAuthSession()
+    if (storedSession) {
+      session.value = storedSession
+      return
     }
 
     session.value = null
@@ -227,7 +231,8 @@ export const useAuthStore = defineStore('auth', () => {
 
     const email = normalizeEmail(payload.email)
     const users = readRegisteredUsers()
-    const verificationRequests = pruneExpiredVerificationRequests(readVerificationRequests())
+    const storedVerificationRequests = readVerificationRequests()
+    const verificationRequests = pruneExpiredVerificationRequests(storedVerificationRequests)
 
     if (users.some((item) => item.email === email)) {
       throw new Error('该邮箱已注册，请直接登录。')
@@ -236,7 +241,8 @@ export const useAuthStore = defineStore('auth', () => {
     const verificationRequest = verificationRequests.find((item) => item.email === email)
     if (!verificationRequest) {
       persistVerificationRequests(verificationRequests)
-      throw new Error('请先发送邮箱验证码。')
+      const hadExpiredRequest = storedVerificationRequests.some((item) => item.email === email)
+      throw new Error(hadExpiredRequest ? '验证码已过期，请重新发送。' : '请先发送邮箱验证码。')
     }
 
     if (verificationRequest.code !== payload.verificationCode.trim()) {

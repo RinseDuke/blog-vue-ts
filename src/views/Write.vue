@@ -69,12 +69,16 @@
       />
     </div>
 
+    <p v-if="publishError" class="write-page__feedback write-page__feedback--error">{{ publishError }}</p>
+
     <!-- ─── Bottom Status Bar ─── -->
     <StatusBar 
       :word-count="wordCount"
       :current-mode-label="currentModeLabel"
       :view-mode="viewMode"
       :save-label="saveLabel"
+      :is-publishing="isPublishing"
+      :publish-label="publishLabel"
       @change-mode="setViewMode"
       @clear-draft="onClearDraft"
       @save-draft="saveDraftNow"
@@ -86,6 +90,7 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 // Tiptap imports
 import { useEditor, EditorContent } from '@tiptap/vue-3'
@@ -107,12 +112,17 @@ import MarkdownIt from 'markdown-it'
 // Composables
 import { useDraft } from '@/features/post/composables/useDraft'
 import { useCoverUpload } from '@/features/post/composables/useCoverUpload'
+import { usePostsStore } from '@/features/post/composables/usePostsStore'
 import { useTagManager } from '@/features/post/composables/useTagManager'
 
 // Custom Components
 import EditorToolbar from '@/components/post/EditorToolbar.vue'
 import PublishPanel from '@/components/post/PublishPanel.vue'
 import StatusBar from '@/components/post/StatusBar.vue'
+import { createPost } from '@/services/postService'
+
+const router = useRouter()
+const postsStore = usePostsStore()
 
 // ── Markdown/HTML Tools ──
 const turndownService = new TurndownService({ headingStyle: 'atx' })
@@ -135,7 +145,7 @@ function onDirtyAndAutosave() {
 }
 
 const {
-  coverInputRef, coverFile, coverPreviewUrl,
+  coverInputRef, coverPreviewUrl,
   triggerCoverInput, handleCoverSelect, removeCover, restoreCoverFromUrl,
 } = useCoverUpload(onDirtyAndAutosave)
 
@@ -148,6 +158,8 @@ const {
 const title = ref('')
 const markdown = ref('')
 const viewMode = ref<ViewMode>(readViewMode())
+const isPublishing = ref(false)
+const publishError = ref('')
 
 
 // ── Tiptap Editor Initialization ──
@@ -201,6 +213,7 @@ const MODE_LABELS: Record<ViewMode, string> = {
 }
 
 const currentModeLabel = computed(() => MODE_LABELS[viewMode.value])
+const publishLabel = computed(() => (isPublishing.value ? '发布中...' : '发布'))
 
 // Rendered HTML for read-only preview
 const renderedHtml = computed(() => mdParser.render(markdown.value))
@@ -251,6 +264,7 @@ function saveDraftNow() {
 
 function onClearDraft() {
   if (!window.confirm('确定要清空当前草稿吗？此操作不可撤销。')) return
+  publishError.value = ''
   title.value = ''
   markdown.value = ''
   clearTags()
@@ -275,24 +289,39 @@ function onExportMarkdown() {
   URL.revokeObjectURL(url)
 }
 
-function onPublish() {
+async function onPublish() {
   const content = markdown.value
   const finalTitle = title.value.trim()
+  publishError.value = ''
 
-  if (!finalTitle) { alert('请先填写标题'); return }
-  if (!content.trim()) { alert('正文不能为空'); return }
-  if (selectedTags.value.length === 0) { alert('请至少添加一个标签'); return }
+  if (!finalTitle) { publishError.value = '请先填写标题。'; return }
+  if (!content.trim()) { publishError.value = '正文不能为空。'; return }
+  if (selectedTags.value.length === 0) { publishError.value = '请至少添加一个标签。'; return }
+  if (isPublishing.value) return
 
-  saveDraftNow()
-  console.log('Publish payload:', {
-    title: finalTitle,
-    markdown: content,
-    html: editor.value?.getHTML(),
-    tags: selectedTags.value,
-    coverFile: coverFile.value,
-    updatedAt: new Date().toISOString(),
-  })
-  alert('已输出到控制台，下一步可接入发布 API')
+  isPublishing.value = true
+
+  try {
+    const html = viewMode.value === 'live' && editor.value ? editor.value.getHTML() : renderedHtml.value
+    const createdPost = await createPost({
+      title: finalTitle,
+      markdown: content,
+      html,
+      tags: selectedTags.value,
+      coverImage: coverPreviewUrl.value,
+    })
+
+    cancelPendingAutosave()
+    clearPersistedDraft()
+    await postsStore.refreshPosts().catch((err) => {
+      console.warn('发布后刷新文章缓存失败', err)
+    })
+    await router.replace({ name: 'article-detail', params: { slug: createdPost.slug } })
+  } catch (err) {
+    publishError.value = err instanceof Error ? err.message : '发布失败，请稍后重试。'
+  } finally {
+    isPublishing.value = false
+  }
 }
 
 // ── View mode ──
@@ -343,6 +372,19 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   min-height: calc(100vh - 78px);
   padding-bottom: 36px;
   background: var(--bg-canvas);
+}
+
+.write-page__feedback {
+  max-width: 820px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0.8rem 24px 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.write-page__feedback--error {
+  color: var(--danger-500);
 }
 
 /* ───────── Editor Shell ───────── */

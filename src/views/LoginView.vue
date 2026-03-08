@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/features/auth/stores/useAuthStore'
+import { resolveAuthRedirect } from '@/features/auth/utils/redirect'
 
 const route = useRoute()
 const router = useRouter()
@@ -38,8 +39,7 @@ async function handleSubmit() {
       rememberMe: rememberMe.value,
     })
 
-    const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/about'
-    await router.replace(redirect)
+    await router.replace(resolveAuthRedirect(route.query.redirect))
   } catch (err) {
     errorMessage.value = err instanceof Error ? err.message : '登录失败，请稍后重试。'
   } finally {

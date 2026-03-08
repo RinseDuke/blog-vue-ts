@@ -37,15 +37,17 @@
     <div class="status-bar__right">
       <button type="button" class="sb-btn" @click="$emit('clear-draft')">删除</button>
       <span class="sb-dot">·</span>
-      <button type="button" class="sb-btn sb-draft" @click="$emit('save-draft')">
+      <button type="button" class="sb-btn sb-draft" :disabled="isPublishing" @click="$emit('save-draft')">
         草稿
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
           <path d="M19.35 10.04A7.49 7.49 0 0 0 12 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 0 0 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/>
         </svg>
       </button>
       <span v-if="saveLabel" class="sb-saved">{{ saveLabel }}</span>
-      <button type="button" class="sb-btn" @click="$emit('export-markdown')">预期</button>
-      <button type="button" class="sb-publish" @click="$emit('publish')">发布</button>
+      <button type="button" class="sb-btn" :disabled="isPublishing" @click="$emit('export-markdown')">导出</button>
+      <button type="button" class="sb-publish" :disabled="isPublishing" @click="$emit('publish')">
+        {{ publishLabel }}
+      </button>
     </div>
   </footer>
 </template>
@@ -58,6 +60,8 @@ defineProps<{
   currentModeLabel: string
   viewMode: string
   saveLabel: string
+  isPublishing?: boolean
+  publishLabel?: string
 }>()
 
 const emit = defineEmits<{
@@ -154,6 +158,11 @@ onBeforeUnmount(() => {
 
     &:hover {
         color: var(--brand-500);
+    }
+
+    &:disabled {
+        cursor: not-allowed;
+        color: var(--line-strong);
     }
 }
 
@@ -288,6 +297,11 @@ onBeforeUnmount(() => {
 
     &:active {
         transform: scale(0.97);
+    }
+
+    &:disabled {
+        cursor: not-allowed;
+        background: #9ca3af;
     }
 }
 

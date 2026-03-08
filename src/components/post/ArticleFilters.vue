@@ -114,7 +114,7 @@ function selectTag(tag: string) {
 
 <style scoped lang="less">
 .filter-box {
-  background: rgba(255, 255, 255, 0.84);
+  background: var(--surface-overlay);
   border-radius: var(--radius-lg);
   border: 1px solid var(--line-soft);
   box-shadow: var(--shadow-sm);
@@ -186,7 +186,7 @@ function selectTag(tag: string) {
 
 .tag-chip {
   border: 1px solid var(--line-soft);
-  background: rgba(255, 255, 255, 0.85);
+  background: var(--surface-strong);
   color: var(--ink-main);
   padding: 0.35rem 0.7rem;
   border-radius: 999px;
@@ -239,6 +239,7 @@ function selectTag(tag: string) {
     border: 1px solid var(--line-soft);
     border-radius: var(--radius-sm);
     padding: 0.5rem 0.6rem;
+    background: var(--surface-strong);
     color: var(--ink-strong);
   }
 }

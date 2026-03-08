@@ -3,8 +3,14 @@
 :root {
   --bg-canvas: #f5f5f7;
   --bg-canvas-soft: #fbfbfd;
+  --bg-orb: rgba(255, 255, 255, 0.9);
   --surface: rgba(255, 255, 255, 0.88);
   --surface-strong: #ffffff;
+  --surface-frost: rgba(255, 255, 255, 0.74);
+  --surface-hover: rgba(255, 255, 255, 0.82);
+  --surface-overlay: rgba(255, 255, 255, 0.94);
+  --card-top: rgba(255, 255, 255, 0.98);
+  --card-bottom: rgba(255, 255, 255, 0.92);
   --ink-strong: #1d1d1f;
   --ink-main: #2d2d32;
   --ink-muted: #6e6e73;
@@ -25,6 +31,34 @@
   --radius-lg: 22px;
 }
 
+:root[data-theme='dark'] {
+  --bg-canvas: #0d1117;
+  --bg-canvas-soft: #151b23;
+  --bg-orb: rgba(74, 122, 173, 0.2);
+  --surface: rgba(19, 25, 34, 0.84);
+  --surface-strong: #18202b;
+  --surface-frost: rgba(16, 21, 29, 0.78);
+  --surface-hover: rgba(255, 255, 255, 0.08);
+  --surface-overlay: rgba(19, 25, 34, 0.94);
+  --card-top: rgba(24, 32, 43, 0.98);
+  --card-bottom: rgba(18, 25, 34, 0.92);
+  --ink-strong: #f3f6fb;
+  --ink-main: #d9e0ea;
+  --ink-muted: #95a3b8;
+  --line-soft: rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(255, 255, 255, 0.16);
+  --brand-500: #69b4ff;
+  --brand-400: #93cbff;
+  --brand-100: rgba(105, 180, 255, 0.14);
+  --danger-500: #ff8f87;
+  --danger-bg: rgba(255, 143, 135, 0.12);
+  --success-500: #4fd18f;
+  --success-bg: rgba(79, 209, 143, 0.12);
+  --warning-500: #ffb15e;
+  --shadow-sm: 0 16px 36px rgba(0, 0, 0, 0.36);
+  --shadow-md: 0 26px 60px rgba(0, 0, 0, 0.42);
+}
+
 *,
 *::before,
 *::after {
@@ -41,7 +75,7 @@ body {
 body {
   color: var(--ink-main);
   background:
-    radial-gradient(900px 400px at 14% -10%, rgba(255, 255, 255, 0.9), transparent 62%),
+    radial-gradient(900px 400px at 14% -10%, var(--bg-orb), transparent 62%),
     linear-gradient(180deg, var(--bg-canvas-soft) 0%, var(--bg-canvas) 100%);
   line-height: 1.55;
   font-family: 'Manrope', sans-serif;
@@ -50,6 +84,7 @@ body {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background 0.24s ease, color 0.24s ease;
 }
 
 img {
@@ -67,4 +102,74 @@ textarea {
 ::selection {
   background: var(--brand-100);
   color: var(--ink-strong);
+}
+
+html[data-theme='dark'] .topbar {
+  background: var(--surface-frost) !important;
+}
+
+html[data-theme='dark'] .navigation {
+  background: var(--surface-frost) !important;
+}
+
+html[data-theme='dark'] .navigation a.router-link-active {
+  background: var(--surface-strong) !important;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.24);
+}
+
+html[data-theme='dark'] .navigation a:hover {
+  background: var(--surface-hover) !important;
+}
+
+html[data-theme='dark'] .search-box input,
+html[data-theme='dark'] .search__bar input,
+html[data-theme='dark'] .login-card .field input,
+html[data-theme='dark'] .register-card .field input,
+html[data-theme='dark'] .comment-form__input,
+html[data-theme='dark'] .report-form__detail,
+html[data-theme='dark'] .bio-textarea {
+  background: var(--surface-strong) !important;
+}
+
+html[data-theme='dark'] .top-search__dropdown,
+html[data-theme='dark'] .search__dropdown,
+html[data-theme='dark'] .search-dropdown__hot-item,
+html[data-theme='dark'] .search-dropdown__chip,
+html[data-theme='dark'] .search-dropdown__suggestion-item,
+html[data-theme='dark'] .article-content,
+html[data-theme='dark'] .article-actions__btn,
+html[data-theme='dark'] .comment-section__state,
+html[data-theme='dark'] .comment-section__login-gate,
+html[data-theme='dark'] .report-dialog,
+html[data-theme='dark'] .login-card,
+html[data-theme='dark'] .register-card {
+  background: var(--surface-overlay) !important;
+}
+
+html[data-theme='dark'] .post-card {
+  background: linear-gradient(180deg, var(--card-top), var(--card-bottom)) !important;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28) !important;
+}
+
+html[data-theme='dark'] .search-dropdown__rank {
+  background: #243042;
+  color: var(--ink-main);
+}
+
+html[data-theme='dark'] .search-dropdown__rank[data-top='true'] {
+  background: var(--brand-500);
+  color: #071019;
+}
+
+html[data-theme='dark'] .comment-section__state--error {
+  background: var(--danger-bg) !important;
+}
+
+html[data-theme='dark'] .comment-section__state--empty {
+  background: rgba(255, 255, 255, 0.04) !important;
+}
+
+html[data-theme='dark'] .comment-form__btn--cancel,
+html[data-theme='dark'] .report-form__btn--cancel {
+  background: var(--surface-strong) !important;
 }

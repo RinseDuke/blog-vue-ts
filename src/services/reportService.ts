@@ -1,8 +1,18 @@
 import type { Report, ReportReason, ReportTargetType } from '@/types/post'
+import { readStoredAuthSession } from '@/features/auth/stores/useAuthStore'
 import { apiFetch, isMockMode, networkDelay } from './apiClient'
 
 const mockReports: Report[] = []
 let nextReportId = 1
+
+function requireAuthSession() {
+    const session = readStoredAuthSession()
+    if (!session) {
+        throw new Error('请先登录后再提交举报')
+    }
+
+    return session
+}
 
 export interface CreateReportPayload {
     targetType: ReportTargetType
@@ -14,6 +24,7 @@ export interface CreateReportPayload {
 export async function submitReport(payload: CreateReportPayload): Promise<Report> {
     if (isMockMode()) {
         await networkDelay(200)
+        const session = requireAuthSession()
 
         const report: Report = {
             id: `report-${nextReportId++}`,
@@ -21,7 +32,7 @@ export async function submitReport(payload: CreateReportPayload): Promise<Report
             targetId: payload.targetId,
             reason: payload.reason,
             detail: payload.detail,
-            reportedBy: 'current-user',
+            reportedBy: `user-${session.email}`,
             createdAt: new Date().toISOString(),
             status: 'pending',
         }

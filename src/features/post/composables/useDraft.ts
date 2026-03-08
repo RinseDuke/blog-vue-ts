@@ -1,4 +1,5 @@
 import { ref } from 'vue'
+import { readStoredAuthSession } from '@/features/auth/stores/useAuthStore'
 
 export interface DraftPayload {
   title: string
@@ -11,6 +12,32 @@ export interface DraftPayload {
 const DRAFT_KEY = 'blog_write_draft_v1'
 const AUTOSAVE_DELAY = 500
 
+function getDraftStorageKey() {
+  const session = readStoredAuthSession()
+  return session ? `${DRAFT_KEY}:${session.email}` : DRAFT_KEY
+}
+
+function parseDraft(raw: string | null): DraftPayload | null {
+  if (!raw) return null
+
+  try {
+    const parsed = JSON.parse(raw) as Partial<DraftPayload>
+    if (typeof parsed.markdown !== 'string') return null
+
+    return {
+      title: typeof parsed.title === 'string' ? parsed.title : '',
+      markdown: parsed.markdown,
+      tags: Array.isArray(parsed.tags)
+        ? (parsed.tags as unknown[]).filter((t): t is string => typeof t === 'string')
+        : [],
+      coverDataUrl: typeof parsed.coverDataUrl === 'string' ? parsed.coverDataUrl : null,
+      updatedAt: typeof parsed.updatedAt === 'string' ? parsed.updatedAt : new Date().toISOString(),
+    }
+  } catch {
+    return null
+  }
+}
+
 export function useDraft() {
   const lastSavedAt = ref<string | null>(null)
   const isDirty = ref(false)
@@ -18,33 +45,40 @@ export function useDraft() {
   let autosaveTimer: ReturnType<typeof setTimeout> | null = null
 
   function readDraft(): DraftPayload | null {
-    try {
-      const raw = localStorage.getItem(DRAFT_KEY)
-      if (!raw) return null
-      const parsed = JSON.parse(raw) as Partial<DraftPayload>
-      if (typeof parsed.markdown !== 'string') return null
-      return {
-        title: typeof parsed.title === 'string' ? parsed.title : '',
-        markdown: parsed.markdown,
-        tags: Array.isArray(parsed.tags)
-          ? (parsed.tags as unknown[]).filter((t): t is string => typeof t === 'string')
-          : [],
-        coverDataUrl: typeof parsed.coverDataUrl === 'string' ? parsed.coverDataUrl : null,
-        updatedAt: typeof parsed.updatedAt === 'string' ? parsed.updatedAt : new Date().toISOString(),
-      }
-    } catch {
-      return null
+    const scopedKey = getDraftStorageKey()
+    const scopedDraft = parseDraft(localStorage.getItem(scopedKey))
+    if (scopedDraft) {
+      return scopedDraft
     }
+
+    if (scopedKey !== DRAFT_KEY) {
+      const legacyDraft = parseDraft(localStorage.getItem(DRAFT_KEY))
+      if (legacyDraft) {
+        localStorage.setItem(scopedKey, JSON.stringify(legacyDraft))
+        localStorage.removeItem(DRAFT_KEY)
+        return legacyDraft
+      }
+    }
+
+    return null
   }
 
   function persistDraft(payload: DraftPayload) {
-    localStorage.setItem(DRAFT_KEY, JSON.stringify(payload))
+    const storageKey = getDraftStorageKey()
+    localStorage.setItem(storageKey, JSON.stringify(payload))
+    if (storageKey !== DRAFT_KEY) {
+      localStorage.removeItem(DRAFT_KEY)
+    }
     lastSavedAt.value = payload.updatedAt
     isDirty.value = false
   }
 
   function clearPersistedDraft() {
-    localStorage.removeItem(DRAFT_KEY)
+    const storageKey = getDraftStorageKey()
+    localStorage.removeItem(storageKey)
+    if (storageKey !== DRAFT_KEY) {
+      localStorage.removeItem(DRAFT_KEY)
+    }
     lastSavedAt.value = null
     isDirty.value = false
   }

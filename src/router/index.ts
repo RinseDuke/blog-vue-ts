@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import ProfileEntryView from '../views/ProfileEntryView.vue'
 import { useAuthStore } from '@/features/auth/stores/useAuthStore'
+import { resolveAuthRedirect } from '@/features/auth/utils/redirect'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -54,7 +55,7 @@ router.beforeEach((to, _from, next) => {
   const auth = useAuthStore()
 
   if ((to.name === 'login' || to.name === 'register') && auth.isLoggedIn) {
-    next({ name: 'about' })
+    next(resolveAuthRedirect(to.query.redirect))
     return
   }
 

@@ -10,6 +10,7 @@ import TopFooter from '@/components/navigation/TopFooter.vue'
 import TopHeaderLayout from '@/components/navigation/TopHeaderLayout.vue'
 import TopSearchBox from '@/components/search/TopSearchBox.vue'
 import TopNavigation from '@/components/navigation/TopNavigation.vue'
+import TopThemeToggle from '@/components/navigation/TopThemeToggle.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -114,6 +115,7 @@ onUnmounted(() => {
         @clear-history="clearHistory"
       />
       <TopNavigation />
+      <TopThemeToggle />
     </TopHeaderLayout>
 
     <main class="page">

@@ -1,15 +1,19 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
+import { storeToRefs } from 'pinia'
+import { useRoute, useRouter } from 'vue-router'
 import type { Comment } from '@/types/post'
+import { useAuthStore } from '@/features/auth/stores/useAuthStore'
 import CommentForm from './CommentForm.vue'
 import ReportDialog from './ReportDialog.vue'
 
-defineProps<{
+const props = defineProps<{
   comment: Comment
   replies: Comment[]
   submitting?: boolean
   depth?: number
-  liked?: boolean
+  canReply?: boolean
+  isLiked?: (commentId: string) => boolean
 }>()
 
 const emit = defineEmits<{
@@ -17,8 +21,16 @@ const emit = defineEmits<{
   (e: 'like', commentId: string): void
 }>()
 
+const route = useRoute()
+const router = useRouter()
+const { isLoggedIn } = storeToRefs(useAuthStore())
 const showReplyForm = ref(false)
 const showReport = ref(false)
+const commentLiked = computed(() => props.isLiked?.(props.comment.id) ?? false)
+const loginLocation = computed(() => ({
+  name: 'about',
+  query: { redirect: route.fullPath },
+}))
 
 function formatTime(iso: string) {
   const date = new Date(iso)
@@ -38,6 +50,15 @@ function formatTime(iso: string) {
 function handleReply(payload: { content: string; parentId?: string }) {
   emit('reply', { content: payload.content, parentId: payload.parentId! })
   showReplyForm.value = false
+}
+
+async function handleReportClick() {
+  if (!isLoggedIn.value) {
+    await router.push(loginLocation.value)
+    return
+  }
+
+  showReport.value = true
 }
 </script>
 
@@ -64,7 +85,8 @@ function handleReply(payload: { content: string; parentId?: string }) {
       <button
         type="button"
         class="comment-item__action-btn"
-        :class="{ 'comment-item__action-btn--liked': liked }"
+        :class="{ 'comment-item__action-btn--liked': commentLiked }"
+        :title="isLoggedIn ? undefined : '登录后可点赞评论'"
         @click="emit('like', comment.id)"
       >
         <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
@@ -74,7 +96,7 @@ function handleReply(payload: { content: string; parentId?: string }) {
       </button>
 
       <button
-        v-if="(depth ?? 0) < 1"
+        v-if="canReply && (depth ?? 0) < 1"
         type="button"
         class="comment-item__action-btn"
         @click="showReplyForm = !showReplyForm"
@@ -88,7 +110,8 @@ function handleReply(payload: { content: string; parentId?: string }) {
       <button
         type="button"
         class="comment-item__action-btn comment-item__action-btn--report"
-        @click="showReport = true"
+        :title="isLoggedIn ? undefined : '登录后可举报评论'"
+        @click="handleReportClick"
       >
         <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
@@ -114,7 +137,8 @@ function handleReply(payload: { content: string; parentId?: string }) {
         :replies="[]"
         :submitting="submitting"
         :depth="(depth ?? 0) + 1"
-        :liked="liked"
+        :can-reply="canReply"
+        :is-liked="isLiked"
         @reply="(p) => emit('reply', p)"
         @like="(id) => emit('like', id)"
       />

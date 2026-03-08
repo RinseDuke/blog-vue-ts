@@ -44,6 +44,7 @@
           type="button"
           class="article-actions__btn"
           :class="{ 'article-actions__btn--liked': articleLiked }"
+          :title="isLoggedIn ? undefined : '登录后可点赞文章'"
           @click="handleArticleLike"
         >
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
@@ -54,7 +55,8 @@
         <button
           type="button"
           class="article-actions__btn article-actions__btn--report"
-          @click="showArticleReport = true"
+          :title="isLoggedIn ? undefined : '登录后可举报文章'"
+          @click="handleArticleReport"
         >
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
@@ -63,6 +65,7 @@
           <span>举报文章</span>
         </button>
       </div>
+      <p v-if="actionError" class="article-actions__error">{{ actionError }}</p>
 
       <ReportDialog
         v-if="showArticleReport"
@@ -78,34 +81,73 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { storeToRefs } from 'pinia'
+import { useRoute, useRouter } from 'vue-router'
 import DOMPurify from 'dompurify'
 import type { Post } from '@/types/post'
-import { fetchPostBySlug, likePost } from '@/services/postService'
+import { useAuthStore } from '@/features/auth/stores/useAuthStore'
+import { fetchPostBySlug, setPostLike } from '@/services/postService'
 import { formatPostDate } from '@/features/post/utils/post'
 import CommentSection from '@/components/comment/CommentSection.vue'
 import ReportDialog from '@/components/comment/ReportDialog.vue'
 import SkeletonLoader from '@/components/ui/SkeletonLoader.vue'
 
 const route = useRoute()
+const router = useRouter()
+const { isLoggedIn } = storeToRefs(useAuthStore())
 const post = ref<Post | null>(null)
 const loading = ref(true)
 const error = ref<string | null>(null)
+const actionError = ref<string | null>(null)
 const articleLiked = ref(false)
 const articleLikeCount = ref(0)
 const showArticleReport = ref(false)
+const likedPostIds = ref<Set<string>>(new Set())
+const loginLocation = computed(() => ({
+  name: 'about',
+  query: { redirect: route.fullPath },
+}))
 
-function handleArticleLike() {
+async function handleArticleLike() {
+  if (!isLoggedIn.value || !post.value) {
+    await router.push(loginLocation.value)
+    return
+  }
+
+  actionError.value = null
   const wasLiked = articleLiked.value
   articleLiked.value = !wasLiked
   articleLikeCount.value += wasLiked ? -1 : 1
 
-  if (!wasLiked && post.value) {
-    likePost(post.value.id).catch(() => {
-      articleLiked.value = wasLiked
-      articleLikeCount.value += wasLiked ? 1 : -1
-    })
+  if (wasLiked) {
+    likedPostIds.value.delete(post.value.id)
+  } else {
+    likedPostIds.value.add(post.value.id)
   }
+
+  try {
+    articleLikeCount.value = await setPostLike(post.value.id, !wasLiked)
+  } catch (err: unknown) {
+    articleLiked.value = wasLiked
+    articleLikeCount.value += wasLiked ? 1 : -1
+
+    if (wasLiked) {
+      likedPostIds.value.add(post.value.id)
+    } else {
+      likedPostIds.value.delete(post.value.id)
+    }
+
+    actionError.value = err instanceof Error ? err.message : '更新点赞失败'
+  }
+}
+
+async function handleArticleReport() {
+  if (!isLoggedIn.value) {
+    await router.push(loginLocation.value)
+    return
+  }
+
+  showArticleReport.value = true
 }
 
 const fallbackHtml = computed(() => {
@@ -128,6 +170,7 @@ async function loadPostBySlug(slug: string) {
 
   loading.value = true
   error.value = null
+  actionError.value = null
 
   try {
     const fetchedPost = await fetchPostBySlug(slug)
@@ -138,6 +181,7 @@ async function loadPostBySlug(slug: string) {
     }
 
     post.value = fetchedPost
+    articleLiked.value = likedPostIds.value.has(fetchedPost.id)
     articleLikeCount.value = fetchedPost.likes ?? 0
     document.title = `${fetchedPost.title} - Sign 博客`
   } catch (err) {
@@ -322,6 +366,13 @@ function formatDate(dateString: string) {
   gap: 0.75rem;
   margin-top: 1.5rem;
   padding-top: 1rem;
+}
+
+.article-actions__error {
+  margin: 0.6rem 0 0;
+  color: var(--danger-500);
+  font-size: 0.88rem;
+  font-weight: 600;
 }
 
 .article-actions__btn {

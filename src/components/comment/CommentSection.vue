@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
+import { useAuthStore } from '@/features/auth/stores/useAuthStore'
 import { useCommentStore } from '@/features/comment/stores/useCommentStore'
 import CommentItem from './CommentItem.vue'
 import CommentForm from './CommentForm.vue'
@@ -10,10 +12,18 @@ const props = defineProps<{
   postId: string
 }>()
 
+const route = useRoute()
+const router = useRouter()
+const authStore = useAuthStore()
 const commentStore = useCommentStore()
+const { isLoggedIn } = storeToRefs(authStore)
 const { loading, error, submitting } = storeToRefs(commentStore)
 
 const comments = computed(() => commentStore.getComments(props.postId))
+const loginLocation = computed(() => ({
+  name: 'about',
+  query: { redirect: route.fullPath },
+}))
 
 const topLevelComments = computed(() =>
   comments.value.filter((c) => !c.parentId)
@@ -37,8 +47,17 @@ async function handleSubmit(payload: { content: string; parentId?: string }) {
   }
 }
 
-function handleLike(commentId: string) {
-  void commentStore.likeComment(props.postId, commentId)
+async function handleLike(commentId: string) {
+  if (!isLoggedIn.value) {
+    await router.push(loginLocation.value)
+    return
+  }
+
+  try {
+    await commentStore.likeComment(props.postId, commentId)
+  } catch {
+    // error is already set in store
+  }
 }
 
 onMounted(() => {
@@ -52,7 +71,11 @@ onMounted(() => {
       <h3>评论 <span v-if="commentCount" class="comment-section__count">{{ commentCount }}</span></h3>
     </header>
 
-    <CommentForm :submitting="submitting" @submit="handleSubmit" />
+    <CommentForm v-if="isLoggedIn" :submitting="submitting" @submit="handleSubmit" />
+    <div v-else class="comment-section__login-gate">
+      <p>登录后才能发表评论和回复。</p>
+      <RouterLink class="comment-section__login-link" :to="loginLocation">前往登录</RouterLink>
+    </div>
 
     <div v-if="loading" class="comment-section__skeletons">
       <SkeletonLoader v-for="i in 3" :key="i" variant="comment" />
@@ -70,7 +93,8 @@ onMounted(() => {
         :comment="comment"
         :replies="getReplies(comment.id)"
         :submitting="submitting"
-        :liked="commentStore.isCommentLiked(comment.id)"
+        :can-reply="isLoggedIn"
+        :is-liked="commentStore.isCommentLiked"
         @reply="handleSubmit"
         @like="handleLike"
       />
@@ -140,10 +164,43 @@ onMounted(() => {
   flex-direction: column;
 }
 
+.comment-section__login-gate {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  padding: 1rem 1.1rem;
+  border-radius: 14px;
+  border: 1px solid var(--line-soft);
+  background: rgba(255, 255, 255, 0.82);
+  color: var(--ink-muted);
+
+  p {
+    margin: 0;
+  }
+}
+
+.comment-section__login-link {
+  flex-shrink: 0;
+  padding: 0.5rem 0.9rem;
+  border-radius: 999px;
+  background: var(--brand-500);
+  color: #fff;
+  font-weight: 700;
+  text-decoration: none;
+}
+
 .comment-section__skeletons {
   display: flex;
   flex-direction: column;
   gap: 1rem;
   padding: 0.5rem 0;
+}
+
+@media (max-width: 640px) {
+  .comment-section__login-gate {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 </style>

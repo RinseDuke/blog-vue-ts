@@ -2,6 +2,7 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/features/auth/stores/useAuthStore'
+import { resolveAuthRedirect } from '@/features/auth/utils/redirect'
 
 const route = useRoute()
 const router = useRouter()
@@ -27,8 +28,17 @@ const isEmailValid = computed(() => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized
 const isPasswordValid = computed(() => password.value.length >= 6)
 const isConfirmValid = computed(() => confirmPassword.value === password.value && confirmPassword.value.length > 0)
 const isVerificationCodeValid = computed(() => /^\d{6}$/.test(verificationCode.value.trim()))
+const hasSentCodeForCurrentEmail = computed(
+  () => !!lastSentEmail.value && lastSentEmail.value === normalizedEmail.value
+)
 const canSubmit = computed(
-  () => isEmailValid.value && isPasswordValid.value && isConfirmValid.value && isVerificationCodeValid.value && !isSubmitting.value
+  () =>
+    isEmailValid.value &&
+    isPasswordValid.value &&
+    isConfirmValid.value &&
+    isVerificationCodeValid.value &&
+    hasSentCodeForCurrentEmail.value &&
+    !isSubmitting.value
 )
 const canSendCode = computed(() => isEmailValid.value && !isSendingCode.value && resendCountdown.value === 0 && !isSubmitting.value)
 const sendCodeLabel = computed(() => {
@@ -132,8 +142,7 @@ async function handleSubmit() {
       verificationCode: verificationCode.value,
     })
 
-    const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/about'
-    await router.replace(redirect)
+    await router.replace(resolveAuthRedirect(route.query.redirect))
   } catch (err) {
     errorMessage.value = err instanceof Error ? err.message : '注册失败，请稍后重试。'
   } finally {
