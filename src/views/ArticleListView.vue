@@ -259,12 +259,6 @@ function isPostInDateRange(publishedAt: string) {
 <template>
   <section class="article-page">
     <header class="article-page__hero">
-      <p class="article-page__eyebrow">文章</p>
-      <h1>文章总览</h1>
-      <p class="article-page__hint">
-        快速搜索、筛选与排序文章，已支持更大规模的内容管理。
-      </p>
-
       <div class="article-page__stats">
         <article class="hero-stat">
           <p>文章总数</p>
@@ -378,38 +372,12 @@ function isPostInDateRange(publishedAt: string) {
   max-width: 1200px;
   width: 100%;
   margin: 0 auto;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-
-  h1 {
-    margin: 0;
-    font-size: clamp(2rem, 3.4vw, 2.8rem);
-    color: var(--ink-strong);
-    letter-spacing: -0.02em;
-  }
-}
-
-.article-page__eyebrow {
-  margin: 0;
-  color: var(--brand-500);
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  font-size: 0.78rem;
-}
-
-.article-page__hint {
-  margin: 0;
-  color: var(--ink-muted);
 }
 
 .article-page__stats {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.75rem;
-  margin-top: 0.25rem;
 }
 
 .hero-stat {

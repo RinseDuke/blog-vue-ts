@@ -1,6 +1,6 @@
 <template>
   <div class="search-dropdown" :class="[`search-dropdown--${density}`]">
-    <div class="search-dropdown__section">
+    <div v-if="!normalizedQuery && recommendedPosts.length" class="search-dropdown__section">
       <div class="search-dropdown__header">
         <span>推荐文章</span>
         <span class="search-dropdown__hint">按预计阅读时长排序</span>
@@ -18,7 +18,7 @@
       </ol>
     </div>
 
-    <div v-if="searchHistory.length" class="search-dropdown__section">
+    <div v-if="!normalizedQuery && searchHistory.length" class="search-dropdown__section">
       <div class="search-dropdown__header">
         <span>搜索历史</span>
         <button type="button" class="search-dropdown__link-btn" @click="emit('clearHistory')">
