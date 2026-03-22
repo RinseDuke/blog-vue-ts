@@ -1,3 +1,4 @@
+<!-- 写作页编辑器工具栏 -->
 <template>
   <div class="editor-toolbar" v-if="editor">
     <div class="toolbar-group">
@@ -250,8 +251,8 @@ function addLink() {
   flex-wrap: wrap;
   gap: 8px;
   padding: 8px 0;
-  border-bottom: 1px solid #eaeff6;
-  background: #fff;
+  border-bottom: 1px solid var(--line-soft);
+  background: var(--surface-strong);
   position: sticky;
   top: 0;
   z-index: 10;
@@ -266,7 +267,7 @@ function addLink() {
 .toolbar-divider {
   width: 1px;
   height: 24px;
-  background-color: #e2e8f0;
+  background-color: var(--line-soft);
   margin: 0 4px;
 }
 
@@ -277,12 +278,12 @@ function addLink() {
   justify-content: center;
   width: 52px;
   height: 52px;
-  border: none;
+  border: 1px solid transparent;
   background: transparent;
   border-radius: 6px;
-  color: #64748b;
+  color: var(--ink-muted);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
   gap: 4px;
 
   svg {
@@ -290,18 +291,22 @@ function addLink() {
   }
 
   &:hover:not(:disabled) {
-    background-color: #f1f5f9;
-    color: var(--brand-500, #2563eb);
+    background-color: var(--bg-canvas-soft);
+    border-color: var(--line-soft);
+    color: var(--brand-500);
   }
 
   &.is-active {
-    background-color: #eff6ff;
-    color: var(--brand-500, #2563eb);
+    background-color: var(--brand-100);
+    border-color: var(--brand-100);
+    color: var(--brand-500);
+    box-shadow: inset 0 0 0 1px var(--brand-100);
   }
 
   &:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+    color: var(--line-strong);
   }
 }
 

@@ -1,13 +1,18 @@
+<!-- 个人中心页：展示个人资料、活动动态、草稿进度、关注情况和快捷入口 -->
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '@/features/auth/stores/useAuthStore'
+import { usePostsStore } from '@/features/post/composables/usePostsStore'
 import { profileService, type UserProfile } from '@/services/profileService'
 
 const authStore = useAuthStore()
+const postsStore = usePostsStore()
 const router = useRouter()
-const { isLoggedIn } = storeToRefs(authStore)
+const { isLoggedIn, userEmail } = storeToRefs(authStore)
+const { posts } = storeToRefs(postsStore)
+const { ensurePosts } = postsStore
 
 function handleLogout() {
   authStore.logout()
@@ -15,12 +20,15 @@ function handleLogout() {
 }
 
 const profile = ref<UserProfile>({
+  id: 'local-user',
+  username: 'sign',
+  email: 'sign@profile.local',
   displayName: 'Sign',
-  bio: '...',
-  location: '杭州',
-  joinedAt: '2024-05-12',
+  bio: '专注前端工程、界面设计与写作流程，把复杂工作拆成可执行的步骤。',
+  joinedAt: '2024/05/12',
   lastActive: '今天',
   avatarInitial: 'S',
+  visibility: 'public',
 })
 
 const isLoadingProfile = ref(true)
@@ -28,29 +36,86 @@ const isEditingBio = ref(false)
 const isSaving = ref(false)
 const editedBio = ref('')
 
+const draftEntries = [
+  { title: '从零搭建可维护博客', updatedAt: '2 小时前', progress: 70, status: '结构完成，准备补案例' },
+  { title: 'Vue 3 复杂表单最佳实践', updatedAt: '昨天', progress: 45, status: '表单校验章节补写中' },
+  { title: '设计系统中的色彩语义', updatedAt: '3 天前', progress: 20, status: '提纲已整理，等待扩写' },
+]
+
+const activityFeed = [
+  {
+    type: '更新草稿',
+    title: '从零搭建可维护博客',
+    detail: '补齐了搜索链路、主题切换和资料页改版这三部分内容。',
+    time: '今天 09:30',
+  },
+  {
+    type: '发布文章',
+    title: '前端结构复盘',
+    detail: '整理了最近一轮页面收口、权限校验和状态同步的改动。',
+    time: '昨天 20:10',
+  },
+  {
+    type: '回复评论',
+    title: '评论区互动',
+    detail: '集中回复了 12 条关于暗色模式、搜索体验和个人中心布局的问题。',
+    time: '昨天 16:40',
+  },
+]
+
+const creatorShortcuts = [
+  { label: '开始创作', to: '/write', accent: true },
+  { label: '管理文章', to: '/about/articles', accent: false },
+]
+
+const overviewMetrics = computed(() => [
+  { label: '文章', value: posts.value.length, helper: '当前站内内容' },
+  { label: '草稿', value: draftEntries.length, helper: '等待继续完善' },
+  { label: '收藏', value: 2, helper: '已加入书签' },
+  { label: '关注', value: 1, helper: '创作者订阅' },
+])
+
+const relationshipMetrics = [
+  { label: '关注了', value: 1 },
+  { label: '关注者', value: 0 },
+]
+
+const accountFacts = computed(() => [
+  { label: '账号邮箱', value: profile.value.email || userEmail.value || '未绑定' },
+  { label: '用户名', value: profile.value.username || '未设置' },
+  { label: '可见性', value: profile.value.visibility === 'private' ? '仅自己可见' : '公开' },
+  { label: '加入时间', value: profile.value.joinedAt },
+  { label: '最近活跃', value: profile.value.lastActive },
+])
+
 onMounted(async () => {
-  try {
-    const data = await profileService.getProfile()
-    profile.value = data
-    editedBio.value = data.bio
-  } catch (e) {
-    console.error('Failed to load profile', e)
-  } finally {
-    isLoadingProfile.value = false
+  const [profileResult, postsResult] = await Promise.allSettled([profileService.getProfile(), ensurePosts()])
+
+  if (profileResult.status === 'fulfilled') {
+    profile.value = profileResult.value
+    editedBio.value = profileResult.value.bio
+  } else {
+    console.error('Failed to load profile', profileResult.reason)
   }
+
+  if (postsResult.status === 'rejected') {
+    console.warn('Failed to preload posts for profile view', postsResult.reason)
+  }
+
+  isLoadingProfile.value = false
 })
 
 async function saveBio() {
   if (!editedBio.value.trim() || isSaving.value) return
-  
+
   isSaving.value = true
+
   try {
     const updated = await profileService.updateBio(editedBio.value)
     profile.value = updated
     isEditingBio.value = false
-  } catch (e) {
-    console.error('Failed to save bio', e)
-    // Here you would typically show a toast notification
+  } catch (err) {
+    console.error('Failed to save bio', err)
   } finally {
     isSaving.value = false
   }
@@ -65,340 +130,712 @@ function enterEditMode() {
   editedBio.value = profile.value.bio
   isEditingBio.value = true
 }
-
-const stats = [
-  { label: '已发布', value: '36', helper: '近 30 天 +4' },
-  { label: '总阅读量', value: '128k', helper: '平均 3.5k / 篇' },
-  { label: '关注者', value: '1,208', helper: '本周 +22' },
-  { label: '收藏', value: '412', helper: '被收藏 3.9k 次' },
-]
-
-const quickActions = [
-  { label: '写新文章', to: '/write' },
-  { label: '管理文章', to: '/article' },
-  { label: '搜索文章', to: '/search' },
-]
-
-const highlights = [
-  { label: '创作节奏', value: '连续 12 天更新', detail: '本周完成 3 篇草稿，输出节奏稳定。' },
-  { label: '内容方向', value: '工程实践 - 体验设计', detail: '读者主要关注架构与性能相关主题。' },
-  { label: '下阶段目标', value: '下月发布 8 篇', detail: '目标：每 4 天产出 1 篇深度文章。' },
-]
-
-const drafts = [
-  { title: '从零搭建可维护博客', updatedAt: '2 小时前', progress: '70%' },
-  { title: 'Vue 3 复杂表单最佳实践', updatedAt: '昨天', progress: '45%' },
-  { title: '设计系统中的色彩语义', updatedAt: '3 天前', progress: '20%' },
-]
-
-const recentActivity = [
-  { label: '发布《前端结构复盘》', time: '今天 09:30' },
-  { label: '更新《Vue Router 进阶模式》', time: '昨天 20:10' },
-  { label: '回复了 12 条评论', time: '昨天 16:40' },
-  { label: '新增 22 位关注者', time: '2 天前' },
-]
 </script>
 
 <template>
   <section class="profile-page">
-    <div class="profile-page__shape" aria-hidden="true"></div>
     <div class="profile-page__inner">
-      <header class="hero panel panel--hero">
-        <div class="hero__info">
-          <div class="avatar" aria-hidden="true">{{ profile.avatarInitial }}</div>
-          <div class="hero__meta">
-            <p class="hero__eyebrow">个人中心</p>
-            <h1>{{ profile.displayName }}</h1>
-            <div class="hero__line">
-              <span>{{ profile.location }}</span>
-              <span class="hero__dot">|</span>
-              <span>加入于 {{ profile.joinedAt }}</span>
-              <span class="hero__dot">|</span>
-              <span>最近活跃 {{ profile.lastActive }}</span>
+      <header class="profile-hero panel">
+        <div class="profile-hero__banner">
+          <span class="profile-hero__location">
+            {{ profile.visibility === 'private' ? '仅自己可见' : '公开资料' }}
+          </span>
+        </div>
+
+        <div class="profile-hero__body">
+          <div class="profile-hero__identity">
+            <div class="profile-avatar" aria-hidden="true">{{ profile.avatarInitial }}</div>
+
+            <div class="profile-hero__meta">
+              <h1>{{ profile.displayName }}</h1>
+              <p class="profile-hero__account">@{{ profile.username }}</p>
+              <div class="profile-hero__facts">
+                <span>加入于 {{ profile.joinedAt }}</span>
+                <span class="profile-hero__dot">•</span>
+                <span>最近活跃 {{ profile.lastActive }}</span>
+              </div>
+              <p class="profile-hero__caption">创作者档案</p>
             </div>
+          </div>
+
+          <div class="profile-hero__actions">
+            <RouterLink to="/write" class="hero-btn hero-btn--primary">开始创作</RouterLink>
+            <button v-if="isLoggedIn" type="button" class="hero-btn hero-btn--secondary" @click="handleLogout">
+              退出登录
+            </button>
           </div>
         </div>
 
-        <div class="hero__bio-section">
-          <div class="bio-header">
-            <h3>关于我</h3>
-            <button v-if="isLoggedIn && !isEditingBio" class="edit-btn" @click="enterEditMode">编辑</button>
-          </div>
-          <div v-if="isEditingBio" class="bio-edit-mode">
-            <textarea v-model="editedBio" class="bio-textarea" rows="4" :disabled="isSaving"></textarea>
-            <div class="bio-edit-actions">
-              <button class="bio-btn bio-btn--save" :disabled="isSaving" @click="saveBio">{{ isSaving ? '保存中...' : '保存' }}</button>
-              <button class="bio-btn bio-btn--cancel" :disabled="isSaving" @click="cancelEdit">取消</button>
-            </div>
-          </div>
-          <div v-else class="hero__bio">
-            <div v-if="isLoadingProfile" class="bio-skeleton"></div>
-            <div v-if="isLoadingProfile" class="bio-skeleton short"></div>
-            <p v-else>{{ profile.bio }}</p>
-          </div>
+        <div class="profile-hero__stats">
+          <article v-for="item in overviewMetrics" :key="item.label" class="metric-card">
+            <p class="metric-card__value">{{ item.value }}</p>
+            <p class="metric-card__label">{{ item.label }}</p>
+            <p class="metric-card__helper">{{ item.helper }}</p>
+          </article>
         </div>
       </header>
 
-      <div class="hero__actions-bar">
-        <RouterLink v-for="action in quickActions" :key="action.label" class="action-btn" :to="action.to">
-          {{ action.label }}
-        </RouterLink>
-        <button v-if="isLoggedIn" type="button" class="action-btn action-btn--logout" @click="handleLogout">
-          退出登录
-        </button>
-      </div>
-
-      <section class="stats">
-        <article v-for="item in stats" :key="item.label" class="panel stat-card">
-          <p class="stat-card__label">{{ item.label }}</p>
-          <p class="stat-card__value">{{ item.value }}</p>
-          <p class="stat-card__helper">{{ item.helper }}</p>
-        </article>
-      </section>
-
-      <section class="highlights">
-        <article v-for="item in highlights" :key="item.label" class="panel highlight-card">
-          <p class="highlight-card__label">{{ item.label }}</p>
-          <h3>{{ item.value }}</h3>
-          <p class="highlight-card__detail">{{ item.detail }}</p>
-        </article>
-      </section>
-
-      <section class="content-grid">
-        <article class="panel content-panel">
-          <header class="content-panel__head">
-            <h3>草稿进度</h3>
-            <span class="pill">进行中 3 篇</span>
-          </header>
-          <div class="content-panel__list">
-            <div v-for="draft in drafts" :key="draft.title" class="list-row">
+      <div class="profile-layout">
+        <section class="profile-main">
+          <article class="panel section-card">
+            <header class="section-card__head">
               <div>
-                <p class="list-row__title">{{ draft.title }}</p>
-                <p class="list-row__meta">更新于 {{ draft.updatedAt }}</p>
+                <p class="section-card__eyebrow">动态</p>
+                <h2>我的动态</h2>
               </div>
-              <span class="list-row__value">{{ draft.progress }}</span>
-            </div>
-          </div>
-        </article>
+              <span class="section-card__hint">最近更新</span>
+            </header>
 
-        <article class="panel content-panel">
-          <header class="content-panel__head">
-            <h3>最近动态</h3>
-            <span class="pill pill--accent">本周活跃</span>
-          </header>
-          <div class="content-panel__list">
-            <div v-for="item in recentActivity" :key="item.label" class="list-row">
-              <p class="list-row__title">{{ item.label }}</p>
-              <span class="list-row__meta">{{ item.time }}</span>
+            <div class="activity-list">
+              <article v-for="item in activityFeed" :key="`${item.type}-${item.title}`" class="activity-item">
+                <div class="activity-item__head">
+                  <span class="activity-item__badge">{{ item.type }}</span>
+                  <time class="activity-item__time">{{ item.time }}</time>
+                </div>
+                <h3>{{ item.title }}</h3>
+                <p>{{ item.detail }}</p>
+              </article>
             </div>
-          </div>
-        </article>
-      </section>
+          </article>
+
+          <article class="panel section-card">
+            <header class="section-card__head">
+              <div>
+                <p class="section-card__eyebrow">创作</p>
+                <h2>草稿进度</h2>
+              </div>
+              <RouterLink to="/write" class="section-card__link">继续编辑</RouterLink>
+            </header>
+
+            <div class="draft-list">
+              <article v-for="draft in draftEntries" :key="draft.title" class="draft-item">
+                <div class="draft-item__head">
+                  <div>
+                    <h3>{{ draft.title }}</h3>
+                    <p>{{ draft.status }}</p>
+                  </div>
+                  <span class="draft-item__time">{{ draft.updatedAt }}</span>
+                </div>
+
+                <div class="draft-item__progress">
+                  <span :style="{ width: `${draft.progress}%` }"></span>
+                </div>
+
+                <div class="draft-item__footer">
+                  <span>完成度 {{ draft.progress }}%</span>
+                </div>
+              </article>
+            </div>
+          </article>
+        </section>
+
+        <aside class="profile-side">
+          <article class="panel side-card side-card--creator">
+            <header class="side-card__head">
+              <div>
+                <p class="section-card__eyebrow">创作中心</p>
+                <h3>保持输出节奏</h3>
+              </div>
+              <span class="side-card__tag">草稿 {{ draftEntries.length }}</span>
+            </header>
+
+            <p class="side-card__text">把灵感、草稿和已发布内容收口在一个工作台里，继续完成下一篇文章。</p>
+
+            <div class="side-card__actions">
+              <RouterLink
+                v-for="action in creatorShortcuts"
+                :key="action.label"
+                :to="action.to"
+                class="side-action"
+                :class="{ 'side-action--primary': action.accent }"
+              >
+                {{ action.label }}
+              </RouterLink>
+            </div>
+          </article>
+
+          <article class="panel side-card">
+            <header class="side-card__head side-card__head--tight">
+              <div>
+                <p class="section-card__eyebrow">资料</p>
+                <h3>个人简介</h3>
+              </div>
+              <button v-if="isLoggedIn && !isEditingBio" type="button" class="edit-btn" @click="enterEditMode">
+                编辑个人资料
+              </button>
+            </header>
+
+            <div v-if="isEditingBio" class="bio-edit-mode">
+              <textarea v-model="editedBio" class="bio-textarea" rows="4" :disabled="isSaving"></textarea>
+              <div class="bio-edit-actions">
+                <button class="bio-btn bio-btn--save" :disabled="isSaving" @click="saveBio">
+                  {{ isSaving ? '保存中...' : '保存' }}
+                </button>
+                <button class="bio-btn bio-btn--cancel" :disabled="isSaving" @click="cancelEdit">取消</button>
+              </div>
+            </div>
+
+            <div v-else class="bio-block">
+              <template v-if="isLoadingProfile">
+                <div class="bio-skeleton"></div>
+                <div class="bio-skeleton bio-skeleton--short"></div>
+              </template>
+              <p v-else>{{ profile.bio }}</p>
+            </div>
+
+            <dl class="fact-list">
+              <div v-for="fact in accountFacts" :key="fact.label" class="fact-list__row">
+                <dt>{{ fact.label }}</dt>
+                <dd>{{ fact.value }}</dd>
+              </div>
+            </dl>
+          </article>
+
+          <article class="panel side-card">
+            <header class="side-card__head side-card__head--tight">
+              <div>
+                <p class="section-card__eyebrow">关系</p>
+                <h3>关注情况</h3>
+              </div>
+            </header>
+
+            <div class="relationship-grid">
+              <div v-for="item in relationshipMetrics" :key="item.label" class="relationship-stat">
+                <p>{{ item.label }}</p>
+                <strong>{{ item.value }}</strong>
+              </div>
+            </div>
+          </article>
+        </aside>
+      </div>
     </div>
   </section>
 </template>
 
 <style scoped lang="less">
 .profile-page {
-  position: relative;
-  overflow: hidden;
-  min-height: 100%;
+  width: 100%;
   padding: 64px 20px 48px;
   color: var(--ink-strong);
 }
 
-.profile-page__shape {
-  display: none;
-}
-
 .profile-page__inner {
-  width: min(1040px, 100%);
+  width: min(1120px, 100%);
   margin: 0 auto;
-  position: relative;
-  z-index: 1;
 }
 
 .panel {
   border: 1px solid var(--line-soft);
   border-radius: var(--radius-lg);
-  background: var(--surface);
-  backdrop-filter: blur(10px);
+  background: linear-gradient(180deg, var(--card-top), var(--card-bottom));
   box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(12px);
 }
 
-.panel--hero {
+.profile-hero {
+  overflow: hidden;
+}
+
+.profile-hero__banner {
+  min-height: 164px;
+  padding: 1.25rem 1.5rem;
   display: flex;
-  align-items: stretch;
+  justify-content: flex-end;
+  align-items: flex-start;
+  background:
+    radial-gradient(circle at 16% 22%, rgba(47, 143, 255, 0.22), transparent 30%),
+    radial-gradient(circle at 84% 18%, rgba(255, 255, 255, 0.16), transparent 24%),
+    linear-gradient(135deg, rgba(47, 143, 255, 0.18), rgba(0, 113, 227, 0.04)),
+    linear-gradient(180deg, var(--surface-overlay), var(--surface-frost));
+  position: relative;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.profile-hero__banner::before,
+.profile-hero__banner::after {
+  content: '';
+  position: absolute;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.profile-hero__banner::before {
+  width: 240px;
+  height: 240px;
+  right: -72px;
+  bottom: -120px;
+}
+
+.profile-hero__banner::after {
+  width: 160px;
+  height: 160px;
+  left: 18%;
+  top: -70px;
+}
+
+.profile-hero__location {
+  position: relative;
+  z-index: 1;
+  padding: 0.48rem 0.82rem;
+  border-radius: 999px;
+  border: 1px solid var(--line-soft);
+  background: var(--surface-strong);
+  color: var(--ink-main);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.profile-hero__body {
+  display: flex;
   justify-content: space-between;
-  gap: 2rem;
+  align-items: flex-end;
+  gap: 1.2rem;
+  padding: 0 1.75rem 1.25rem;
+  margin-top: -64px;
+  position: relative;
+  z-index: 1;
   flex-wrap: wrap;
-  padding: 2.2rem 2.4rem;
-  animation: rise-in 0.55s ease both;
 }
 
-.hero__info {
+.profile-hero__identity {
   display: flex;
-  align-items: center;
-  gap: 1.5rem;
+  align-items: flex-end;
+  gap: 1.35rem;
   min-width: 280px;
-  flex: 1;
 }
 
-.avatar {
-  width: 86px;
-  height: 86px;
-  border-radius: 24px;
+.profile-avatar {
+  width: 140px;
+  height: 140px;
+  border-radius: var(--radius-lg);
+  border: 6px solid var(--surface-strong);
+  background:
+    radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.3), transparent 28%),
+    linear-gradient(145deg, var(--brand-400) 0%, var(--brand-500) 100%);
   display: grid;
   place-items: center;
-  font-size: 2rem;
-  font-weight: 800;
   color: #fff;
-  background: linear-gradient(145deg, var(--brand-400) 0%, var(--brand-500) 100%);
-  box-shadow: 0 10px 20px rgba(0, 113, 227, 0.28);
+  font-size: 3rem;
+  font-weight: 800;
+  box-shadow: 0 18px 36px rgba(0, 113, 227, 0.22);
 }
 
-.hero__meta h1 {
-  margin: 0.1rem 0 0.8rem;
+.profile-hero__meta {
+  padding-bottom: 0.25rem;
+}
+
+.profile-hero__meta h1 {
+  margin: 0;
   font-size: clamp(2rem, 4vw, 2.7rem);
-  line-height: 1.1;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
 }
 
-.hero__eyebrow {
-  margin: 0;
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--brand-500);
+.profile-hero__account {
+  margin: 0.55rem 0 0;
+  color: var(--ink-muted);
+  font-size: 1rem;
 }
 
-.hero__bio-section {
-  flex: 1;
-  min-width: 280px;
-  padding-left: 2.4rem;
-  border-left: 1px solid var(--line-soft);
+.profile-hero__facts {
+  margin-top: 0.55rem;
   display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.bio-header {
-  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0.6rem;
+  gap: 0.45rem;
+  color: var(--ink-muted);
+  font-size: 0.92rem;
 }
 
-.bio-header h3 {
-  margin: 0;
+.profile-hero__caption {
+  margin: 0.7rem 0 0;
+  color: var(--ink-muted);
   font-size: 0.88rem;
   font-weight: 700;
+}
+
+.profile-hero__dot {
+  opacity: 0.45;
+}
+
+.profile-hero__actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.hero-btn {
+  padding: 0.78rem 1.3rem;
+  border-radius: 999px;
+  border: 1px solid var(--line-soft);
+  text-decoration: none;
+  font-weight: 700;
+  transition: transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+  cursor: pointer;
+}
+
+.hero-btn:hover {
+  transform: translateY(-1px);
+}
+
+.hero-btn--primary {
+  background: var(--brand-500);
+  color: #fff;
+  border-color: var(--brand-500);
+}
+
+.hero-btn--secondary {
+  background: var(--surface-strong);
+  color: var(--ink-main);
+}
+
+.hero-btn--secondary:hover {
+  border-color: rgba(0, 113, 227, 0.26);
+  background: var(--surface-hover);
+}
+
+.profile-hero__stats {
+  padding: 0 1.75rem 1.6rem;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.metric-card {
+  padding: 1rem 1rem 0.95rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line-soft);
+  background: var(--surface-strong);
+}
+
+.metric-card__value {
+  margin: 0;
+  font-size: 1.55rem;
+  font-weight: 800;
   color: var(--ink-strong);
+}
+
+.metric-card__label {
+  margin: 0.18rem 0 0;
+  color: var(--ink-main);
+  font-weight: 700;
+}
+
+.metric-card__helper {
+  margin: 0.32rem 0 0;
+  color: var(--ink-muted);
+  font-size: 0.82rem;
+}
+
+.profile-layout {
+  margin-top: 1rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(300px, 0.9fr);
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.profile-main,
+.profile-side {
+  display: grid;
+  gap: 1rem;
+}
+
+.section-card,
+.side-card {
+  padding: 1.3rem;
+}
+
+.section-card__head,
+.side-card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.side-card__head--tight {
+  margin-bottom: 0.9rem;
+}
+
+.section-card__eyebrow {
+  margin: 0;
+  color: var(--brand-500);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+}
+
+.section-card__head h2,
+.side-card__head h3 {
+  margin: 0.22rem 0 0;
+  color: var(--ink-strong);
+}
+
+.section-card__hint,
+.side-card__tag,
+.section-card__link {
+  color: var(--ink-muted);
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.section-card__link {
+  color: var(--brand-500);
+  text-decoration: none;
+}
+
+.activity-list,
+.draft-list {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.activity-item,
+.draft-item {
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line-soft);
+  background: var(--surface-strong);
+}
+
+.activity-item__head,
+.draft-item__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.activity-item__badge {
+  padding: 0.26rem 0.62rem;
+  border-radius: 999px;
+  background: var(--brand-100);
+  color: var(--brand-500);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.activity-item__time,
+.draft-item__time {
+  color: var(--ink-muted);
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+.activity-item h3,
+.draft-item h3 {
+  margin: 0.72rem 0 0.35rem;
+  color: var(--ink-strong);
+  font-size: 1.12rem;
+}
+
+.activity-item p,
+.draft-item p {
+  margin: 0;
+  color: var(--ink-muted);
+  line-height: 1.65;
+}
+
+.draft-item__progress {
+  margin-top: 0.9rem;
+  width: 100%;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--line-soft);
+  overflow: hidden;
+}
+
+.draft-item__progress span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--brand-400), var(--brand-500));
+}
+
+.draft-item__footer {
+  margin-top: 0.58rem;
+  color: var(--brand-500);
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.side-card--creator {
+  background:
+    radial-gradient(circle at top left, rgba(0, 113, 227, 0.14), transparent 52%),
+    linear-gradient(180deg, var(--card-top), var(--card-bottom));
+}
+
+.side-card__text {
+  margin: 0;
+  color: var(--ink-muted);
+  line-height: 1.68;
+}
+
+.side-card__actions {
+  margin-top: 1rem;
+  display: grid;
+  gap: 0.72rem;
+}
+
+.side-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  border-radius: 999px;
+  border: 1px solid var(--line-soft);
+  background: var(--surface-strong);
+  color: var(--ink-strong);
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.side-action--primary {
+  background: var(--brand-500);
+  color: #fff;
+  border-color: var(--brand-500);
 }
 
 .edit-btn {
-  background: none;
-  border: none;
+  border: 1px solid var(--line-soft);
+  background: var(--surface-strong);
   color: var(--brand-500);
-  font-size: 0.85rem;
-  font-weight: 600;
+  border-radius: 999px;
+  padding: 0.55rem 0.8rem;
+  font-size: 0.82rem;
+  font-weight: 700;
   cursor: pointer;
-  padding: 0.2rem 0.5rem;
-  border-radius: 4px;
-  transition: background-color 0.2s ease;
 }
 
-.edit-btn:hover {
-  background-color: var(--brand-100);
+.bio-block p {
+  margin: 0;
+  color: var(--ink-muted);
+  line-height: 1.7;
 }
 
 .bio-edit-mode {
-  display: flex;
-  flex-direction: column;
+  display: grid;
   gap: 0.8rem;
 }
 
 .bio-textarea {
   width: 100%;
-  padding: 0.75rem;
+  min-height: 110px;
   border: 1px solid var(--line-soft);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.5);
-  font-family: inherit;
-  font-size: 0.95rem;
-  line-height: 1.6;
-  resize: vertical;
+  border-radius: var(--radius-md);
+  background: var(--surface-strong);
   color: var(--ink-strong);
-  transition: border-color 0.2s ease, background-color 0.2s ease;
+  padding: 0.85rem 0.95rem;
+  line-height: 1.7;
+  resize: vertical;
 }
 
 .bio-textarea:focus {
   outline: none;
   border-color: rgba(0, 113, 227, 0.35);
   box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.1);
-  background: var(--surface-strong);
 }
 
 .bio-edit-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 0.5rem;
+  gap: 0.55rem;
 }
 
 .bio-btn {
-  padding: 0.4rem 0.9rem;
-  border-radius: 6px;
-  font-size: 0.85rem;
-  font-weight: 600;
+  border-radius: 10px;
+  padding: 0.6rem 0.95rem;
+  font-size: 0.84rem;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s ease;
 }
 
 .bio-btn:disabled {
-  opacity: 0.6;
+  opacity: 0.65;
   cursor: not-allowed;
 }
 
 .bio-btn--save {
-  background-color: var(--brand-500);
-  color: #fff;
   border: none;
-}
-
-.bio-btn--save:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(0, 113, 227, 0.24);
+  background: var(--brand-500);
+  color: #fff;
 }
 
 .bio-btn--cancel {
-  background-color: transparent;
-  color: var(--ink-muted);
   border: 1px solid var(--line-soft);
-}
-
-.bio-btn--cancel:hover:not(:disabled) {
-  background-color: var(--bg-canvas);
-  color: var(--ink-strong);
-}
-
-.hero__bio p {
-  margin: 0;
-  line-height: 1.68;
-  color: var(--ink-muted);
+  background: var(--surface-strong);
+  color: var(--ink-main);
 }
 
 .bio-skeleton {
   height: 14px;
+  border-radius: 999px;
   background: var(--line-soft);
-  border-radius: 4px;
-  margin-bottom: 8px;
-  animation: pulse 1.5s infinite ease-in-out;
+  animation: pulse 1.5s ease-in-out infinite;
 }
 
-.bio-skeleton.short {
-  width: 60%;
+.bio-skeleton--short {
+  width: 62%;
+  margin-top: 0.5rem;
+}
+
+.fact-list {
+  margin: 1rem 0 0;
+  display: grid;
+  gap: 0.7rem;
+}
+
+.fact-list__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.8rem;
+  padding-top: 0.7rem;
+  border-top: 1px dashed var(--line-soft);
+}
+
+.fact-list__row dt,
+.fact-list__row dd {
+  margin: 0;
+}
+
+.fact-list__row dt {
+  color: var(--ink-muted);
+}
+
+.fact-list__row dd {
+  color: var(--ink-strong);
+  text-align: right;
+  font-weight: 600;
+}
+
+.relationship-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.relationship-stat {
+  padding: 1rem 0.9rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line-soft);
+  background: var(--surface-strong);
+  text-align: center;
+}
+
+.relationship-stat p {
+  margin: 0;
+  color: var(--ink-muted);
+}
+
+.relationship-stat strong {
+  display: block;
+  margin-top: 0.35rem;
+  color: var(--ink-strong);
+  font-size: 1.6rem;
 }
 
 @keyframes pulse {
@@ -407,311 +844,63 @@ const recentActivity = [
   100% { opacity: 0.6; }
 }
 
-.hero__line {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  color: var(--ink-muted);
-  font-size: 0.9rem;
-}
-
-.hero__dot {
-  opacity: 0.45;
-}
-
-.hero__actions-bar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.7rem;
-  margin-top: 1.2rem;
-  animation: rise-in 0.55s ease both;
-  animation-delay: 0.05s;
-}
-
-.action-btn {
-  border: 1px solid var(--line-soft);
-  border-radius: 999px;
-  padding: 0.62rem 1.25rem;
-  text-decoration: none;
-  color: var(--ink-strong);
-  background: var(--surface);
-  font-weight: 600;
-  transition: transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
-}
-
-.action-btn:hover {
-  transform: translateY(-1px);
-  border-color: rgba(0, 113, 227, 0.35);
-  background: var(--surface-strong);
-}
-
-.action-btn--logout {
-  color: var(--ink-muted);
-  border-color: rgba(198, 40, 40, 0.25);
-  cursor: pointer;
-}
-
-.action-btn--logout:hover {
-  color: var(--danger-500);
-  border-color: rgba(198, 40, 40, 0.45);
-  background: var(--danger-bg);
-}
-
-.stats {
-  margin-top: 1rem;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.85rem;
-}
-
-.stat-card {
-  padding: 1rem 1.1rem;
-  animation: rise-in 0.55s ease both;
-}
-
-.stat-card:nth-child(1) {
-  animation-delay: 0.08s;
-}
-
-.stat-card:nth-child(2) {
-  animation-delay: 0.12s;
-}
-
-.stat-card:nth-child(3) {
-  animation-delay: 0.16s;
-}
-
-.stat-card:nth-child(4) {
-  animation-delay: 0.2s;
-}
-
-.stat-card__label {
-  margin: 0;
-  font-size: 0.88rem;
-  color: var(--ink-muted);
-}
-
-.stat-card__value {
-  margin: 0.4rem 0 0.2rem;
-  font-size: 1.6rem;
-  line-height: 1;
-  font-weight: 800;
-}
-
-.stat-card__helper {
-  margin: 0;
-  color: var(--brand-500);
-  font-size: 0.83rem;
-  font-weight: 600;
-}
-
-.highlights {
-  margin-top: 0.95rem;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.85rem;
-}
-
-.highlight-card {
-  padding: 1.15rem 1.15rem 1.1rem;
-  animation: rise-in 0.55s ease both;
-}
-
-.highlight-card:nth-child(1) {
-  animation-delay: 0.24s;
-}
-
-.highlight-card:nth-child(2) {
-  animation-delay: 0.28s;
-}
-
-.highlight-card:nth-child(3) {
-  animation-delay: 0.32s;
-}
-
-.highlight-card__label {
-  margin: 0;
-  color: var(--ink-muted);
-  font-size: 0.86rem;
-}
-
-.highlight-card h3 {
-  margin: 0.45rem 0 0.35rem;
-  font-size: 1.3rem;
-}
-
-.highlight-card__detail {
-  margin: 0;
-  color: var(--ink-muted);
-  line-height: 1.6;
-}
-
-.content-grid {
-  margin-top: 1rem;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.9rem;
-}
-
-.content-panel {
-  padding: 1.2rem;
-  animation: rise-in 0.55s ease both;
-}
-
-.content-panel:nth-child(1) {
-  animation-delay: 0.36s;
-}
-
-.content-panel:nth-child(2) {
-  animation-delay: 0.4s;
-}
-
-.content-panel__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0.85rem;
-}
-
-.content-panel__head h3 {
-  margin: 0;
-  font-size: 1.08rem;
-}
-
-.pill {
-  padding: 0.24rem 0.66rem;
-  border-radius: 999px;
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: var(--brand-500);
-  background: var(--brand-100);
-}
-
-.pill--accent {
-  color: #694e10;
-  background: rgba(226, 183, 98, 0.26);
-}
-
-.content-panel__list {
-  display: grid;
-  gap: 0.62rem;
-}
-
-.list-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0.72rem 0.82rem;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--line-soft);
-  background: var(--bg-canvas-soft);
-}
-
-.list-row__title {
-  margin: 0;
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--ink-strong);
-}
-
-.list-row__meta {
-  margin: 0.2rem 0 0;
-  color: var(--ink-muted);
-  font-size: 0.84rem;
-}
-
-.list-row__value {
-  font-size: 0.9rem;
-  color: var(--brand-500);
-  font-weight: 700;
-}
-
-@keyframes rise-in {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
+@media (max-width: 1024px) {
+  .profile-layout {
+    grid-template-columns: 1fr;
   }
 }
 
-@media (max-width: 980px) {
-  .stats {
+@media (max-width: 820px) {
+  .profile-hero__stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .highlights {
-    grid-template-columns: 1fr;
+  .profile-hero__body {
+    align-items: flex-start;
   }
 
-  .content-grid {
-    grid-template-columns: 1fr;
+  .profile-hero__identity {
+    align-items: center;
   }
 }
 
-@media (max-width: 760px) {
+@media (max-width: 640px) {
   .profile-page {
-    padding: 40px 16px 48px;
+    padding: 40px 14px 40px;
   }
 
-  .panel--hero {
-    padding: 1.5rem;
+  .profile-hero__body {
+    margin-top: -48px;
+    padding: 0 1rem 1rem;
+  }
+
+  .profile-hero__identity {
     flex-direction: column;
-    gap: 1.5rem;
+    align-items: flex-start;
   }
 
-  .hero__info {
-    flex-direction: column;
-    text-align: center;
+  .profile-avatar {
+    width: 112px;
+    height: 112px;
+    font-size: 2.2rem;
   }
 
-  .hero__bio-section {
-    padding-left: 0;
-    padding-top: 1.5rem;
-    border-left: none;
-    border-top: 1px solid var(--line-soft);
-    text-align: center;
+  .profile-hero__stats {
+    grid-template-columns: 1fr;
+    padding: 0 1rem 1rem;
   }
 
-  .hero__line {
-    justify-content: center;
-  }
-
-  .hero__actions-bar {
+  .profile-hero__actions {
     width: 100%;
   }
 
-  .action-btn {
+  .hero-btn {
     flex: 1;
     text-align: center;
   }
-}
 
-@media (max-width: 520px) {
-  .stats {
+  .relationship-grid {
     grid-template-columns: 1fr;
   }
 }
-
-@media (prefers-reduced-motion: reduce) {
-  .panel--hero,
-  .stat-card,
-  .highlight-card,
-  .content-panel {
-    animation: none;
-  }
-
-  .action-btn {
-    transition: none;
-  }
-}
 </style>
-
-
-
-
-

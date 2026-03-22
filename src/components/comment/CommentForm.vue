@@ -1,3 +1,4 @@
+<!-- 评论表单：提交新评论或回复 -->
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 

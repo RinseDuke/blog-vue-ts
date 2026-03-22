@@ -1,3 +1,4 @@
+<!-- 首页：展示最新文章列表，支持加载/错误/重试三态 -->
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'

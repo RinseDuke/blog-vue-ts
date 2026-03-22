@@ -3,7 +3,6 @@ import { useAuthStore } from '@/features/auth/stores/useAuthStore'
 
 const AUTH_KEY = 'blog_auth_session_v1'
 const USERS_KEY = 'blog_auth_users_v1'
-const VERIFY_CODES_KEY = 'blog_auth_email_codes_v1'
 
 interface StorageLike {
   getItem: (key: string) => string | null
@@ -29,7 +28,7 @@ function createStorageMock(): StorageLike {
   }
 }
 
-describe('useAuthStore email verification flow', () => {
+describe('useAuthStore backend-aligned auth flow', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.stubGlobal('localStorage', createStorageMock())
@@ -40,51 +39,48 @@ describe('useAuthStore email verification flow', () => {
     vi.unstubAllGlobals()
   })
 
-  it('reports expired verification codes separately from missing ones', async () => {
-    const sentAt = new Date(Date.now() - 10 * 60 * 1000).toISOString()
-    const expiresAt = new Date(Date.now() - 5 * 60 * 1000).toISOString()
-
-    localStorage.setItem(
-      VERIFY_CODES_KEY,
-      JSON.stringify([
-        {
-          email: 'tester@example.com',
-          code: '123456',
-          sentAt,
-          expiresAt,
-        },
-      ])
-    )
-
+  it('registers and logs in with username credentials', async () => {
     const store = useAuthStore()
-
-    await expect(
-      store.register({
-        email: 'tester@example.com',
-        password: '123456',
-        rememberMe: true,
-        verificationCode: '123456',
-      })
-    ).rejects.toThrow('验证码已过期，请重新发送。')
-  })
-
-  it('registers and logs in after a valid verification code', async () => {
-    const store = useAuthStore()
-    const result = await store.sendVerificationCode('tester@example.com')
 
     await store.register({
+      username: 'tester_user',
+      nickname: 'Tester',
       email: 'tester@example.com',
-      password: '123456',
+      password: 'SecurePass123',
       rememberMe: true,
-      verificationCode: result.debugCode,
+      visibility: 'public',
     })
 
     expect(store.isLoggedIn).toBe(true)
     expect(store.userEmail).toBe('tester@example.com')
+    expect(store.userId).toContain('user-')
     expect(localStorage.getItem(AUTH_KEY)).toContain('tester@example.com')
-    expect(localStorage.getItem(VERIFY_CODES_KEY)).toBeNull()
     expect(JSON.parse(localStorage.getItem(USERS_KEY) ?? '[]')).toEqual(
-      expect.arrayContaining([expect.objectContaining({ email: 'tester@example.com' })])
+      expect.arrayContaining([expect.objectContaining({ username: 'tester_user', email: 'tester@example.com' })])
     )
+  })
+
+  it('rejects duplicate usernames during registration', async () => {
+    const store = useAuthStore()
+
+    await store.register({
+      username: 'tester_user',
+      nickname: 'Tester',
+      email: 'tester@example.com',
+      password: 'SecurePass123',
+      rememberMe: true,
+      visibility: 'public',
+    })
+
+    await expect(
+      store.register({
+        username: 'tester_user',
+        nickname: 'Tester 2',
+        email: 'tester2@example.com',
+        password: 'SecurePass456',
+        rememberMe: true,
+        visibility: 'public',
+      })
+    ).rejects.toThrow('该用户名已存在，请更换后重试。')
   })
 })

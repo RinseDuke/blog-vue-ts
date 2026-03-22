@@ -1,3 +1,4 @@
+<!-- 搜索框下拉面板内容 -->
 <template>
   <div class="search-dropdown" :class="[`search-dropdown--${density}`]">
     <div v-if="!normalizedQuery && recommendedPosts.length" class="search-dropdown__section">

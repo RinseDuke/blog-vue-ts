@@ -1,5 +1,6 @@
 import type { Post } from '@/types/post'
 import {
+  buildTagOptions,
   buildRecommendedPosts,
   calculatePostRelevance,
   rankPostsByRelevance,
@@ -39,7 +40,7 @@ describe('post utils', () => {
     expect(sorted.map((item) => item.id)).toEqual(['2', '1'])
   })
 
-  it('calculatePostRelevance gives higher score when title/tag matches', () => {
+  it('calculatePostRelevance gives higher score when title matches than excerpt-only matches', () => {
     const query = 'vue'
     const titleMatch = createPost({
       id: '1',
@@ -115,5 +116,32 @@ describe('post utils', () => {
     })
 
     expect(recommended.map((item) => item.id)).toEqual(['4', '2', '3'])
+  })
+
+  it('buildTagOptions aggregates and sorts tags by frequency', () => {
+    const posts = [
+      createPost({
+        id: '1',
+        slug: 'p1',
+        title: 'A',
+        tags: ['Vue', 'TypeScript', 'Vue'],
+        publishedAt: '2024-01-01T00:00:00.000Z',
+        readMinutes: 3,
+      }),
+      createPost({
+        id: '2',
+        slug: 'p2',
+        title: 'B',
+        tags: ['TypeScript', '工程化'],
+        publishedAt: '2024-01-02T00:00:00.000Z',
+        readMinutes: 3,
+      }),
+    ]
+
+    expect(buildTagOptions(posts)).toEqual([
+      { name: 'TypeScript', count: 2 },
+      { name: 'Vue', count: 2 },
+      { name: '工程化', count: 1 },
+    ])
   })
 })

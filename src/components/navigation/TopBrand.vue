@@ -1,3 +1,4 @@
+<!-- 顶部品牌标识 -->
 <template>
   <RouterLink to="/" class="brand">
     <img src="@/assets/logo.svg" alt="博客 Logo" />

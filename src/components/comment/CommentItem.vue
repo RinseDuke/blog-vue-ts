@@ -1,3 +1,4 @@
+<!-- 单条评论：显示评论内容、点赞按钮、回复入口 -->
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'

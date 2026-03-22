@@ -1,39 +1,67 @@
+/**
+ * 认证 Store
+ * 管理用户会话（登录/注册/登出），兼容 Mock 模式与真实后端。
+ */
+
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
+import { apiFetch, isMockMode } from '@/services/apiClient'
 
 const AUTH_KEY = 'blog_auth_session_v1'
 const USERS_KEY = 'blog_auth_users_v1'
-const VERIFY_CODES_KEY = 'blog_auth_email_codes_v1'
-const CODE_TTL_MS = 5 * 60 * 1000
+
+export interface AuthUser {
+  id: string
+  username: string
+  nickname: string
+  email: string
+  avatar?: string
+  bio?: string
+  visibility: 'public' | 'private'
+}
 
 export interface AuthSession {
   email: string
   rememberMe: boolean
   loggedAt: string
   token: string
+  user: AuthUser
 }
 
-interface RegisteredUser {
-  email: string
+interface RegisteredUser extends AuthUser {
   password: string
   createdAt: string
 }
 
-interface AuthCredentials {
+interface BackendUser {
+  id: string
+  username: string
+  nickname: string
   email: string
+  avatar?: string | null
+  bio?: string | null
+  created_at?: string | null
+  last_login_at?: string | null
+  visibility?: 'public' | 'private'
+}
+
+interface LoginResponse {
+  token: string
+  user: BackendUser
+}
+
+interface AuthCredentials {
+  username: string
   password: string
   rememberMe: boolean
 }
 
 interface RegisterPayload extends AuthCredentials {
-  verificationCode: string
-}
-
-interface EmailVerificationRequest {
+  nickname: string
   email: string
-  code: string
-  sentAt: string
-  expiresAt: string
+  avatar?: string
+  bio?: string
+  visibility?: 'public' | 'private'
 }
 
 function wait(ms = 400) {
@@ -44,26 +72,48 @@ function normalizeEmail(email: string) {
   return email.trim().toLowerCase()
 }
 
+function normalizeUsername(username: string) {
+  return username.trim()
+}
+
+function buildLegacyUser(email: string): AuthUser {
+  const fallbackName = email.split('@')[0]?.trim() || 'sign'
+
+  return {
+    id: `user-${email}`,
+    username: fallbackName,
+    nickname: fallbackName,
+    email,
+    visibility: 'public',
+  }
+}
+
+function mapBackendUser(user: BackendUser): AuthUser {
+  const normalizedEmail = normalizeEmail(user.email)
+
+  return {
+    id: user.id,
+    username: normalizeUsername(user.username),
+    nickname: user.nickname?.trim() || normalizeUsername(user.username),
+    email: normalizedEmail,
+    avatar: user.avatar ?? undefined,
+    bio: user.bio ?? undefined,
+    visibility: user.visibility ?? 'public',
+  }
+}
+
 function isRegisteredUser(value: unknown): value is RegisteredUser {
   if (!value || typeof value !== 'object') return false
 
   const user = value as Partial<RegisteredUser>
-  return typeof user.email === 'string' && typeof user.password === 'string' && typeof user.createdAt === 'string'
-}
-
-function isEmailVerificationRequest(value: unknown): value is EmailVerificationRequest {
-  if (!value || typeof value !== 'object') return false
-
-  const request = value as Partial<EmailVerificationRequest>
   return (
-    typeof request.email === 'string' &&
-    typeof request.code === 'string' &&
-    typeof request.sentAt === 'string' &&
-    typeof request.expiresAt === 'string'
+    typeof user.email === 'string' &&
+    typeof user.password === 'string' &&
+    typeof user.createdAt === 'string'
   )
 }
 
-function readRegisteredUsers() {
+function readRegisteredUsers(): RegisteredUser[] {
   try {
     const raw = localStorage.getItem(USERS_KEY)
     if (!raw) return []
@@ -71,11 +121,24 @@ function readRegisteredUsers() {
     const parsed = JSON.parse(raw) as unknown
     if (!Array.isArray(parsed)) return []
 
-    return parsed.filter(isRegisteredUser).map((user) => ({
-      email: normalizeEmail(user.email),
-      password: user.password,
-      createdAt: user.createdAt,
-    }))
+    return parsed.filter(isRegisteredUser).map((user) => {
+      const email = normalizeEmail(user.email)
+      const legacy = buildLegacyUser(email)
+
+      const normalizedUser: RegisteredUser = {
+        ...legacy,
+        ...user,
+        id: typeof user.id === 'string' ? user.id : legacy.id,
+        username: normalizeUsername(typeof user.username === 'string' ? user.username : legacy.username),
+        nickname: typeof user.nickname === 'string' ? user.nickname.trim() || legacy.nickname : legacy.nickname,
+        email,
+        avatar: typeof user.avatar === 'string' ? user.avatar : undefined,
+        bio: typeof user.bio === 'string' ? user.bio : undefined,
+        visibility: user.visibility === 'private' ? 'private' : 'public',
+      }
+
+      return normalizedUser
+    })
   } catch {
     return []
   }
@@ -85,54 +148,13 @@ function persistRegisteredUsers(users: RegisteredUser[]) {
   localStorage.setItem(USERS_KEY, JSON.stringify(users))
 }
 
-function readVerificationRequests() {
-  try {
-    const raw = localStorage.getItem(VERIFY_CODES_KEY)
-    if (!raw) return []
-
-    const parsed = JSON.parse(raw) as unknown
-    if (!Array.isArray(parsed)) return []
-
-    return parsed.filter(isEmailVerificationRequest).map((request) => ({
-      email: normalizeEmail(request.email),
-      code: request.code,
-      sentAt: request.sentAt,
-      expiresAt: request.expiresAt,
-    }))
-  } catch {
-    return []
-  }
-}
-
-function persistVerificationRequests(requests: EmailVerificationRequest[]) {
-  if (!requests.length) {
-    localStorage.removeItem(VERIFY_CODES_KEY)
-    return
-  }
-
-  localStorage.setItem(VERIFY_CODES_KEY, JSON.stringify(requests))
-}
-
-function pruneExpiredVerificationRequests(requests: EmailVerificationRequest[]) {
-  const now = Date.now()
-  return requests.filter((request) => new Date(request.expiresAt).getTime() > now)
-}
-
-function clearVerificationRequest(email: string) {
-  const nextRequests = pruneExpiredVerificationRequests(readVerificationRequests()).filter((item) => item.email !== email)
-  persistVerificationRequests(nextRequests)
-}
-
-function generateVerificationCode() {
-  return String(Math.floor(100000 + Math.random() * 900000))
-}
-
-function buildSession(email: string, rememberMe: boolean): AuthSession {
+function buildSession(user: AuthUser, rememberMe: boolean, token?: string): AuthSession {
   return {
-    email,
+    email: user.email,
     rememberMe,
     loggedAt: new Date().toISOString(),
-    token: `mock-token-${Date.now()}`,
+    token: token ?? `mock-token-${Date.now()}`,
+    user,
   }
 }
 
@@ -141,16 +163,49 @@ export function readStoredAuthSession(): AuthSession | null {
     const raw = localStorage.getItem(AUTH_KEY) ?? sessionStorage.getItem(AUTH_KEY)
     if (!raw) return null
 
-    const parsed = JSON.parse(raw) as AuthSession
-    if (!parsed?.token || !parsed?.email) return null
+    const parsed = JSON.parse(raw) as Partial<AuthSession> & {
+      email?: string
+      user?: Partial<AuthUser>
+    }
+
+    if (!parsed?.token) return null
+
+    const normalizedEmail = normalizeEmail(parsed.user?.email ?? parsed.email ?? '')
+    if (!normalizedEmail) return null
+
+    const fallbackUser = buildLegacyUser(normalizedEmail)
+    const user: AuthUser = {
+      ...fallbackUser,
+      ...(parsed.user ?? {}),
+      id: typeof parsed.user?.id === 'string' ? parsed.user.id : fallbackUser.id,
+      username: normalizeUsername(parsed.user?.username ?? fallbackUser.username),
+      nickname: typeof parsed.user?.nickname === 'string'
+        ? parsed.user.nickname.trim() || fallbackUser.nickname
+        : fallbackUser.nickname,
+      email: normalizedEmail,
+      avatar: typeof parsed.user?.avatar === 'string' ? parsed.user.avatar : undefined,
+      bio: typeof parsed.user?.bio === 'string' ? parsed.user.bio : undefined,
+      visibility: parsed.user?.visibility === 'private' ? 'private' : 'public',
+    }
 
     return {
-      ...parsed,
-      email: normalizeEmail(parsed.email),
+      email: normalizedEmail,
+      rememberMe: Boolean(parsed.rememberMe),
+      loggedAt: typeof parsed.loggedAt === 'string' ? parsed.loggedAt : new Date().toISOString(),
+      token: parsed.token,
+      user,
     }
   } catch {
     return null
   }
+}
+
+export function requireAuthSession(errorMessage: string) {
+  const session = readStoredAuthSession()
+  if (!session) {
+    throw new Error(errorMessage)
+  }
+  return session
 }
 
 export const useAuthStore = defineStore('auth', () => {
@@ -158,6 +213,9 @@ export const useAuthStore = defineStore('auth', () => {
 
   const isLoggedIn = computed(() => session.value !== null)
   const userEmail = computed(() => session.value?.email ?? '')
+  const userId = computed(() => session.value?.user.id ?? '')
+  const username = computed(() => session.value?.user.username ?? '')
+  const displayName = computed(() => session.value?.user.nickname ?? '')
 
   function persistSession(nextSession: AuthSession) {
     localStorage.removeItem(AUTH_KEY)
@@ -181,83 +239,102 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function login(payload: AuthCredentials) {
-    await wait()
-
-    const email = normalizeEmail(payload.email)
-    const user = readRegisteredUsers().find((item) => item.email === email)
-
-    if (!user) {
-      throw new Error('账号不存在，请先注册。')
+    const normalizedUsername = normalizeUsername(payload.username)
+    if (!normalizedUsername) {
+      throw new Error('请输入用户名。')
     }
 
-    if (user.password !== payload.password) {
-      throw new Error('邮箱或密码错误。')
+    if (isMockMode()) {
+      await wait()
+
+      const registeredUsers = readRegisteredUsers()
+      const user = registeredUsers.find((item) =>
+        item.username === normalizedUsername || item.email === normalizeEmail(normalizedUsername)
+      )
+
+      if (!user) {
+        throw new Error('账号不存在，请先注册。')
+      }
+
+      if (user.password !== payload.password) {
+        throw new Error('用户名或密码错误。')
+      }
+
+      persistSession(buildSession(user, payload.rememberMe))
+      return
     }
 
-    persistSession(buildSession(email, payload.rememberMe))
+    const data = await apiFetch<LoginResponse>('/login', {
+      method: 'POST',
+      body: JSON.stringify({
+        username: normalizedUsername,
+        password: payload.password,
+      }),
+    })
+
+    persistSession(buildSession(mapBackendUser(data.user), payload.rememberMe, data.token))
   }
 
-  async function sendVerificationCode(email: string) {
-    await wait()
-
-    const normalizedEmail = normalizeEmail(email)
-    const users = readRegisteredUsers()
-    if (users.some((item) => item.email === normalizedEmail)) {
-      throw new Error('该邮箱已注册，请直接登录。')
-    }
-
-    const nextRequest: EmailVerificationRequest = {
-      email: normalizedEmail,
-      code: generateVerificationCode(),
-      sentAt: new Date().toISOString(),
-      expiresAt: new Date(Date.now() + CODE_TTL_MS).toISOString(),
-    }
-
-    const requests = pruneExpiredVerificationRequests(readVerificationRequests()).filter(
-      (item) => item.email !== normalizedEmail
-    )
-    persistVerificationRequests([...requests, nextRequest])
-
-    console.info(`[Mock] 邮箱验证码已发送至 ${normalizedEmail}: ${nextRequest.code}`)
-
-    return {
-      expiresAt: nextRequest.expiresAt,
-      debugCode: nextRequest.code,
-    }
+  async function sendVerificationCode() {
+    throw new Error('当前后端规范未提供邮箱验证码接口。')
   }
 
   async function register(payload: RegisterPayload) {
-    await wait(500)
+    const normalizedUsername = normalizeUsername(payload.username)
+    const normalizedEmail = normalizeEmail(payload.email)
+    const visibility: RegisteredUser['visibility'] = payload.visibility === 'private' ? 'private' : 'public'
 
-    const email = normalizeEmail(payload.email)
-    const users = readRegisteredUsers()
-    const storedVerificationRequests = readVerificationRequests()
-    const verificationRequests = pruneExpiredVerificationRequests(storedVerificationRequests)
-
-    if (users.some((item) => item.email === email)) {
-      throw new Error('该邮箱已注册，请直接登录。')
+    if (!normalizedUsername) {
+      throw new Error('请输入用户名。')
     }
 
-    const verificationRequest = verificationRequests.find((item) => item.email === email)
-    if (!verificationRequest) {
-      persistVerificationRequests(verificationRequests)
-      const hadExpiredRequest = storedVerificationRequests.some((item) => item.email === email)
-      throw new Error(hadExpiredRequest ? '验证码已过期，请重新发送。' : '请先发送邮箱验证码。')
+    if (isMockMode()) {
+      await wait(500)
+
+      const users = readRegisteredUsers()
+      if (users.some((item) => item.username === normalizedUsername)) {
+        throw new Error('该用户名已存在，请更换后重试。')
+      }
+
+      if (users.some((item) => item.email === normalizedEmail)) {
+        throw new Error('该邮箱已注册，请直接登录。')
+      }
+
+      const nextUser: RegisteredUser = {
+        id: `user-${Date.now()}`,
+        username: normalizedUsername,
+        nickname: payload.nickname.trim(),
+        email: normalizedEmail,
+        password: payload.password,
+        avatar: payload.avatar,
+        bio: payload.bio,
+        visibility,
+        createdAt: new Date().toISOString(),
+      }
+
+      persistRegisteredUsers([...users, nextUser])
+      persistSession(buildSession(nextUser, payload.rememberMe))
+      return
     }
 
-    if (verificationRequest.code !== payload.verificationCode.trim()) {
-      throw new Error('验证码错误，请重新输入。')
-    }
+    await apiFetch<BackendUser>('/register', {
+      method: 'POST',
+      body: JSON.stringify({
+        username: normalizedUsername,
+        nickname: payload.nickname.trim(),
+        password: payload.password,
+        email: normalizedEmail,
+        avatar: payload.avatar,
+        bio: payload.bio,
+        visibility,
+      }),
+    })
 
-    const nextUser: RegisteredUser = {
-      email,
+    await login({
+      username: normalizedUsername,
       password: payload.password,
-      createdAt: new Date().toISOString(),
-    }
-
-    persistRegisteredUsers([...users, nextUser])
-    clearVerificationRequest(email)
-    persistSession(buildSession(email, payload.rememberMe))
+      rememberMe: payload.rememberMe,
+    })
   }
 
   function logout() {
@@ -272,6 +349,9 @@ export const useAuthStore = defineStore('auth', () => {
     session,
     isLoggedIn,
     userEmail,
+    userId,
+    username,
+    displayName,
     loadSession,
     login,
     sendVerificationCode,

@@ -146,11 +146,6 @@ html[data-theme='dark'] .register-card {
   background: var(--surface-overlay) !important;
 }
 
-html[data-theme='dark'] .post-card {
-  background: linear-gradient(180deg, var(--card-top), var(--card-bottom)) !important;
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28) !important;
-}
-
 html[data-theme='dark'] .search-dropdown__rank {
   background: #243042;
   color: var(--ink-main);

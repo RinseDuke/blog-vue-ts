@@ -27,6 +27,8 @@ function createStorageMock(): StorageLike {
 }
 
 function setSession(email: string) {
+  const username = email.split('@')[0]
+
   localStorage.setItem(
     AUTH_KEY,
     JSON.stringify({
@@ -34,6 +36,13 @@ function setSession(email: string) {
       rememberMe: true,
       loggedAt: '2026-03-07T10:00:00.000Z',
       token: `mock-token-${email}`,
+      user: {
+        id: `user-${email}`,
+        username,
+        nickname: username,
+        email,
+        visibility: 'public',
+      },
     })
   )
 }
@@ -57,6 +66,7 @@ describe('profileService auth scope', () => {
 
     await expect(profileService.getProfile()).resolves.toEqual(
       expect.objectContaining({
+        username: 'alice',
         displayName: 'alice',
         avatarInitial: 'A',
       })
@@ -67,7 +77,7 @@ describe('profileService auth scope', () => {
     setSession('bob@example.com')
     await expect(profileService.getProfile()).resolves.toEqual(
       expect.objectContaining({
-        displayName: 'bob',
+        username: 'bob',
         bio: '专注前端工程、界面设计与写作流程，把复杂工作拆成可执行的步骤。',
       })
     )
@@ -75,7 +85,7 @@ describe('profileService auth scope', () => {
     setSession('alice@example.com')
     await expect(profileService.getProfile()).resolves.toEqual(
       expect.objectContaining({
-        displayName: 'alice',
+        username: 'alice',
         bio: 'alice bio',
       })
     )

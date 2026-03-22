@@ -1,3 +1,8 @@
+/**
+ * Vite 构建配置
+ * 定义路径别名和插件。
+ */
+
 import { fileURLToPath, URL } from 'node:url'
 
 import { defineConfig } from 'vite'
@@ -16,13 +21,17 @@ function patchNodeWebStorage() {
   if (typeof g.navigator !== 'undefined') {
     try {
       delete g.navigator
-    } catch {}
+    } catch {
+      // Ignore non-configurable globals in restricted runtimes.
+    }
   }
 
   if (typeof g.localStorage !== 'undefined' && typeof g.localStorage?.getItem !== 'function') {
     try {
       delete g.localStorage
-    } catch {}
+    } catch {
+      // Ignore non-configurable globals in restricted runtimes.
+    }
   }
 }
 

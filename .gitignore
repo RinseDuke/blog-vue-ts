@@ -28,3 +28,7 @@ coverage
 *.sw?
 
 *.tsbuildinfo
+
+# AI Instructions
+CLAUDE.md
+AGENTS.md

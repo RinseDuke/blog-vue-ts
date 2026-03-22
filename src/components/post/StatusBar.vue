@@ -1,3 +1,4 @@
+<!-- 编辑器底部状态栏 -->
 <template>
   <footer class="status-bar">
     <div class="status-bar__left">
@@ -5,8 +6,15 @@
       <i class="sb-sep" />
 
       <!-- Mode Switcher Button -->
-      <div class="mode-switcher" ref="switcherRef">
-        <button type="button" class="sb-btn sb-mode-btn" @click="toggleMenu">
+      <div class="mode-switcher" ref="switcherRef" @keydown.esc.stop="menuOpen = false">
+        <button
+          type="button"
+          class="sb-btn sb-mode-btn"
+          aria-haspopup="menu"
+          :aria-expanded="menuOpen"
+          aria-controls="write-mode-menu"
+          @click="toggleMenu"
+        >
           {{ currentModeLabel }}
           <svg class="sb-mode-arrow" :class="{ 'sb-mode-arrow--open': menuOpen }" width="10" height="6" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="1,5 5,1 9,5"/>
@@ -15,11 +23,13 @@
 
         <!-- Dropdown Menu -->
         <Transition name="mode-menu">
-          <div v-if="menuOpen" class="mode-menu">
+          <div v-if="menuOpen" id="write-mode-menu" class="mode-menu" role="menu">
             <button
               v-for="mode in modes"
               :key="mode.value"
               type="button"
+              role="menuitemradio"
+              :aria-checked="mode.value === viewMode"
               :class="['mode-menu__item', { 'mode-menu__item--active': mode.value === viewMode }]"
               @click="selectMode(mode.value)"
             >

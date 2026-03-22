@@ -1,3 +1,4 @@
+<!-- 文章列表：循环渲染 PostCard -->
 <template>
   <div class="post-list">
     <PostCard v-for="post in posts" :key="post.id" :post="post" />

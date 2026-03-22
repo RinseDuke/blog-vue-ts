@@ -1,3 +1,8 @@
+/**
+ * Mock 文章数据
+ * 提供内置的示例文章，Mock 模式下作为默认数据源。
+ */
+
 import type { Post } from '@/types/post'
 
 interface MockPostSeed extends Omit<Post, 'content'> {

@@ -1,3 +1,8 @@
+/**
+ * Mock 评论数据
+ * 提供内置的示例评论，Mock 模式下作为默认数据源。
+ */
+
 import type { Comment } from '@/types/post'
 
 export const mockComments: Comment[] = [

@@ -1,3 +1,4 @@
+<!-- 顶部导航链接列表 -->
 <template>
   <nav class="navigation">
     <RouterLink to="/">首页</RouterLink>

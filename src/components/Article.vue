@@ -1,4 +1,5 @@
-﻿<template>
+<!-- 文章详情组件：按后端 blogs 模型渲染正文 -->
+<template>
   <div class="article-container">
     <div v-if="loading" class="article-content" style="padding: 2rem">
       <SkeletonLoader variant="article-detail" />
@@ -7,6 +8,13 @@
 
     <article v-else-if="post" class="article-content">
       <header class="article-header">
+        <div class="article-header__meta">
+          <span class="article-badge">{{ post.status === 'draft' ? '草稿' : '文章' }}</span>
+          <span class="article-badge article-badge--ghost">
+            {{ post.visibility === 'private' ? '仅自己可见' : '公开' }}
+          </span>
+        </div>
+
         <h1 class="article-title">{{ post.title }}</h1>
         <p class="article-excerpt">{{ post.excerpt }}</p>
 
@@ -20,135 +28,41 @@
             />
             <div>
               <span class="author-name">{{ post.author.name }}</span>
-              <span class="publish-date">{{ formatDate(post.publishedAt) }}</span>
+              <span class="publish-date">
+                发布于 {{ formatDate(post.publishedAt) }}
+                <template v-if="post.updatedAt"> · 更新于 {{ formatDate(post.updatedAt) }}</template>
+              </span>
             </div>
           </div>
         </div>
       </header>
 
-      <figure v-if="post.coverImage" class="cover-image-container">
-        <img :src="post.coverImage" :alt="post.title" />
-      </figure>
-
       <div class="article-body" v-html="safeHtml"></div>
 
+      <div class="feature-note">
+        当前详情页已按后端博客模型收口，点赞、评论、举报等互动能力待后端接口补充后再接回。
+      </div>
+
       <footer class="article-footer">
-        <div class="tags">
-          <span v-for="tag in post.tags" :key="tag" class="tag">#{{ tag }}</span>
-        </div>
         <router-link to="/article" class="back-line">返回文章列表</router-link>
       </footer>
-
-      <div class="article-actions">
-        <button
-          type="button"
-          class="article-actions__btn"
-          :class="{ 'article-actions__btn--liked': articleLiked }"
-          :title="isLoggedIn ? undefined : '登录后可点赞文章'"
-          @click="handleArticleLike"
-        >
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
-          </svg>
-          <span>{{ articleLikeCount }}</span>
-        </button>
-        <button
-          type="button"
-          class="article-actions__btn article-actions__btn--report"
-          :title="isLoggedIn ? undefined : '登录后可举报文章'"
-          @click="handleArticleReport"
-        >
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
-            <line x1="4" y1="22" x2="4" y2="15" />
-          </svg>
-          <span>举报文章</span>
-        </button>
-      </div>
-      <p v-if="actionError" class="article-actions__error">{{ actionError }}</p>
-
-      <ReportDialog
-        v-if="showArticleReport"
-        target-type="post"
-        :target-id="post.id"
-        @close="showArticleReport = false"
-      />
-
-      <CommentSection :post-id="post.id" />
     </article>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { storeToRefs } from 'pinia'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import DOMPurify from 'dompurify'
 import type { Post } from '@/types/post'
-import { useAuthStore } from '@/features/auth/stores/useAuthStore'
-import { fetchPostBySlug, setPostLike } from '@/services/postService'
+import { fetchPostById } from '@/services/postService'
 import { formatPostDate } from '@/features/post/utils/post'
-import CommentSection from '@/components/comment/CommentSection.vue'
-import ReportDialog from '@/components/comment/ReportDialog.vue'
 import SkeletonLoader from '@/components/ui/SkeletonLoader.vue'
 
 const route = useRoute()
-const router = useRouter()
-const { isLoggedIn } = storeToRefs(useAuthStore())
 const post = ref<Post | null>(null)
 const loading = ref(true)
 const error = ref<string | null>(null)
-const actionError = ref<string | null>(null)
-const articleLiked = ref(false)
-const articleLikeCount = ref(0)
-const showArticleReport = ref(false)
-const likedPostIds = ref<Set<string>>(new Set())
-const loginLocation = computed(() => ({
-  name: 'about',
-  query: { redirect: route.fullPath },
-}))
-
-async function handleArticleLike() {
-  if (!isLoggedIn.value || !post.value) {
-    await router.push(loginLocation.value)
-    return
-  }
-
-  actionError.value = null
-  const wasLiked = articleLiked.value
-  articleLiked.value = !wasLiked
-  articleLikeCount.value += wasLiked ? -1 : 1
-
-  if (wasLiked) {
-    likedPostIds.value.delete(post.value.id)
-  } else {
-    likedPostIds.value.add(post.value.id)
-  }
-
-  try {
-    articleLikeCount.value = await setPostLike(post.value.id, !wasLiked)
-  } catch (err: unknown) {
-    articleLiked.value = wasLiked
-    articleLikeCount.value += wasLiked ? 1 : -1
-
-    if (wasLiked) {
-      likedPostIds.value.add(post.value.id)
-    } else {
-      likedPostIds.value.delete(post.value.id)
-    }
-
-    actionError.value = err instanceof Error ? err.message : '更新点赞失败'
-  }
-}
-
-async function handleArticleReport() {
-  if (!isLoggedIn.value) {
-    await router.push(loginLocation.value)
-    return
-  }
-
-  showArticleReport.value = true
-}
 
 const fallbackHtml = computed(() => {
   const excerpt = post.value?.excerpt ?? ''
@@ -160,8 +74,8 @@ const safeHtml = computed(() => {
   return DOMPurify.sanitize(raw)
 })
 
-async function loadPostBySlug(slug: string) {
-  if (!slug) {
+async function loadPostById(id: string) {
+  if (!id) {
     post.value = null
     error.value = '未找到文章'
     loading.value = false
@@ -170,10 +84,9 @@ async function loadPostBySlug(slug: string) {
 
   loading.value = true
   error.value = null
-  actionError.value = null
 
   try {
-    const fetchedPost = await fetchPostBySlug(slug)
+    const fetchedPost = await fetchPostById(id)
     if (!fetchedPost) {
       post.value = null
       error.value = '未找到文章'
@@ -181,8 +94,6 @@ async function loadPostBySlug(slug: string) {
     }
 
     post.value = fetchedPost
-    articleLiked.value = likedPostIds.value.has(fetchedPost.id)
-    articleLikeCount.value = fetchedPost.likes ?? 0
     document.title = `${fetchedPost.title} - Sign 博客`
   } catch (err) {
     post.value = null
@@ -193,10 +104,10 @@ async function loadPostBySlug(slug: string) {
 }
 
 watch(
-  () => route.params.slug,
+  () => route.params.id,
   (value) => {
-    const slug = typeof value === 'string' ? value : ''
-    void loadPostBySlug(slug)
+    const id = typeof value === 'string' ? value : ''
+    void loadPostById(id)
   },
   { immediate: true }
 )
@@ -236,75 +147,88 @@ function formatDate(dateString: string) {
   margin-bottom: 2rem;
   border-bottom: 1px solid var(--line-soft);
   padding-bottom: 1.5rem;
+}
 
-  .article-title {
-    font-size: clamp(2rem, 4.5vw, 3rem);
-    font-weight: 800;
-    line-height: 1.12;
-    color: var(--ink-strong);
-    letter-spacing: -0.02em;
-    margin: 0 0 1rem;
-  }
+.article-header__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-bottom: 1rem;
+}
 
-  .article-excerpt {
-    font-size: clamp(1.02rem, 2vw, 1.2rem);
-    color: var(--ink-main);
-    margin: 0;
-  }
+.article-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0.3rem 0.72rem;
+  border-radius: 999px;
+  background: var(--brand-500);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.article-badge--ghost {
+  background: var(--surface-strong);
+  color: var(--ink-main);
+  border: 1px solid var(--line-soft);
+}
+
+.article-title {
+  font-size: clamp(2rem, 4.5vw, 3rem);
+  font-weight: 800;
+  line-height: 1.12;
+  color: var(--ink-strong);
+  letter-spacing: -0.02em;
+  margin: 0 0 1rem;
+}
+
+.article-excerpt {
+  font-size: clamp(1.02rem, 2vw, 1.2rem);
+  color: var(--ink-main);
+  margin: 0;
 }
 
 .article-meta {
   margin-top: 1.5rem;
-
-  .author-info {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-  }
-
-  .author-avatar {
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 1px solid var(--line-soft);
-  }
-
-  .author-name {
-    display: block;
-    font-weight: 700;
-    color: var(--ink-strong);
-  }
-
-  .publish-date {
-    font-size: 0.84rem;
-    color: var(--ink-muted);
-  }
 }
 
-.cover-image-container {
-  margin: 2rem 0;
-
-  img {
-    width: 100%;
-    border-radius: 16px;
-    border: 1px solid var(--line-soft);
-  }
+.author-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
-.article-content {
-  line-height: 1.76;
-  color: var(--ink-main);
-  font-size: 1.02rem;
+.author-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--line-soft);
+}
+
+.author-name {
+  display: block;
+  font-weight: 700;
+  color: var(--ink-strong);
+}
+
+.publish-date {
+  font-size: 0.84rem;
+  color: var(--ink-muted);
 }
 
 .article-body {
-  p {
+  line-height: 1.76;
+  color: var(--ink-main);
+  font-size: 1.02rem;
+
+  :deep(p) {
     margin-bottom: 1.3rem;
   }
 
-  h2,
-  h3 {
+  :deep(h2),
+  :deep(h3) {
     font-weight: 800;
     color: var(--ink-strong);
     margin-top: 2rem;
@@ -312,7 +236,7 @@ function formatDate(dateString: string) {
     letter-spacing: -0.01em;
   }
 
-  blockquote {
+  :deep(blockquote) {
     margin: 1.8rem 0;
     padding: 1rem 1.2rem;
     border-left: 3px solid rgba(0, 113, 227, 0.42);
@@ -322,90 +246,32 @@ function formatDate(dateString: string) {
   }
 }
 
+.feature-note {
+  margin-top: 2rem;
+  padding: 0.95rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--line-strong);
+  background: var(--bg-canvas-soft);
+  color: var(--ink-muted);
+  line-height: 1.65;
+}
+
 .article-footer {
-  margin-top: 3rem;
+  margin-top: 2rem;
   padding-top: 1.5rem;
   border-top: 1px solid var(--line-soft);
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 0.8rem;
-  flex-wrap: wrap;
-
-  .tags {
-    display: flex;
-    gap: 0.45rem;
-    flex-wrap: wrap;
-
-    .tag {
-      border: 1px solid var(--line-soft);
-      padding: 0.28rem 0.62rem;
-      border-radius: 999px;
-      color: var(--ink-muted);
-      font-size: 0.8rem;
-      font-weight: 600;
-      background: rgba(255, 255, 255, 0.9);
-    }
-  }
-
-  .back-line {
-    color: var(--brand-500);
-    text-decoration: none;
-    font-weight: 700;
-
-    &:hover {
-      text-decoration: none;
-      opacity: 0.8;
-    }
-  }
+  justify-content: flex-end;
 }
 
-.article-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-top: 1.5rem;
-  padding-top: 1rem;
-}
-
-.article-actions__error {
-  margin: 0.6rem 0 0;
-  color: var(--danger-500);
-  font-size: 0.88rem;
-  font-weight: 600;
-}
-
-.article-actions__btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.5rem 0.9rem;
-  border-radius: 10px;
-  border: 1px solid var(--line-soft);
-  background: rgba(255, 255, 255, 0.9);
-  color: var(--ink-muted);
-  font-weight: 600;
-  font-size: 0.88rem;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.article-actions__btn:hover:enabled {
+.back-line {
   color: var(--brand-500);
-  border-color: rgba(0, 113, 227, 0.3);
-  background: rgba(0, 113, 227, 0.04);
-}
+  text-decoration: none;
+  font-weight: 700;
 
-.article-actions__btn--liked {
-  color: var(--brand-500);
-  border-color: rgba(0, 113, 227, 0.3);
-}
-
-
-.article-actions__btn--report:hover {
-  color: var(--danger-500);
-  border-color: rgba(198, 40, 40, 0.3);
-  background: var(--danger-bg);
+  &:hover {
+    opacity: 0.8;
+  }
 }
 
 @media (max-width: 640px) {

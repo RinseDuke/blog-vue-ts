@@ -45,6 +45,8 @@ function createDraft(title: string): DraftPayload {
     markdown: `# ${title}`,
     tags: ['Vue'],
     coverDataUrl: null,
+    status: 'published',
+    visibility: 'public',
     updatedAt: '2026-03-07T10:00:00.000Z',
   }
 }
@@ -56,6 +58,7 @@ describe('useDraft auth scope', () => {
   })
 
   afterEach(() => {
+    vi.useRealTimers()
     vi.unstubAllGlobals()
   })
 
@@ -87,5 +90,24 @@ describe('useDraft auth scope', () => {
     expect(draft.readDraft()).toEqual(legacyDraft)
     expect(localStorage.getItem(DRAFT_KEY)).toBeNull()
     expect(localStorage.getItem(`${DRAFT_KEY}:alice@example.com`)).not.toBeNull()
+  })
+
+  it('flushes a pending autosave immediately when requested', () => {
+    vi.useFakeTimers()
+
+    setSession('alice@example.com')
+    const draft = useDraft()
+    const saveFn = vi.fn(() => {
+      draft.persistDraft(createDraft('Flushed Draft'))
+    })
+
+    draft.markDirty()
+    draft.queueAutosave(saveFn)
+
+    expect(saveFn).not.toHaveBeenCalled()
+    expect(draft.flushPendingAutosave(saveFn)).toBe(true)
+    expect(saveFn).toHaveBeenCalledTimes(1)
+    expect(draft.readDraft()).toEqual(createDraft('Flushed Draft'))
+    expect(draft.isDirty.value).toBe(false)
   })
 })

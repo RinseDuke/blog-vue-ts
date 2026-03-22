@@ -1,10 +1,6 @@
+<!-- 文章列表页侧栏筛选器 -->
 <script setup lang="ts">
 import { computed } from 'vue'
-
-interface TagOption {
-  name: string
-  count: number
-}
 
 interface DateOption {
   label: string
@@ -12,9 +8,6 @@ interface DateOption {
 }
 
 const props = defineProps<{
-  selectedTag: string
-  tagOptions: TagOption[]
-  totalPosts: number
   datePreset: string
   dateOptions: DateOption[]
   customStartDate: string
@@ -24,17 +17,11 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (e: 'update:selectedTag', value: string): void
   (e: 'update:datePreset', value: string): void
   (e: 'update:customStartDate', value: string): void
   (e: 'update:customEndDate', value: string): void
   (e: 'clearFilters'): void
 }>()
-
-const selectedTagValue = computed({
-  get: () => props.selectedTag,
-  set: (value: string) => emit('update:selectedTag', value),
-})
 
 const datePresetValue = computed({
   get: () => props.datePreset,
@@ -50,10 +37,6 @@ const customEndDateValue = computed({
   get: () => props.customEndDate,
   set: (value: string) => emit('update:customEndDate', value),
 })
-
-function selectTag(tag: string) {
-  selectedTagValue.value = tag
-}
 </script>
 
 <template>
@@ -62,33 +45,6 @@ function selectTag(tag: string) {
       <h3>筛选</h3>
       <button type="button" class="filter-reset" :disabled="!hasActiveFilters" @click="emit('clearFilters')">重置</button>
     </header>
-
-    <section class="filter-group">
-      <p class="filter-group__title">标签</p>
-      <div class="filter-tags">
-        <button
-          type="button"
-          class="tag-chip"
-          :class="{ 'tag-chip--active': selectedTagValue === 'all' }"
-          @click="selectTag('all')"
-        >
-          <span>全部</span>
-          <span class="tag-chip__count">{{ totalPosts }}</span>
-        </button>
-
-        <button
-          v-for="item in tagOptions"
-          :key="item.name"
-          type="button"
-          class="tag-chip"
-          :class="{ 'tag-chip--active': selectedTagValue === item.name }"
-          @click="selectTag(item.name)"
-        >
-          <span>#{{ item.name }}</span>
-          <span class="tag-chip__count">{{ item.count }}</span>
-        </button>
-      </div>
-    </section>
 
     <section class="filter-group">
       <p class="filter-group__title">发布时间</p>
@@ -166,52 +122,10 @@ function selectTag(tag: string) {
   gap: 0.65rem;
 }
 
-.filter-group + .filter-group {
-  margin-top: 1.1rem;
-  padding-top: 1.1rem;
-  border-top: 1px dashed var(--line-soft);
-}
-
 .filter-group__title {
   margin: 0;
   font-weight: 700;
   color: var(--ink-strong);
-}
-
-.filter-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.tag-chip {
-  border: 1px solid var(--line-soft);
-  background: var(--surface-strong);
-  color: var(--ink-main);
-  padding: 0.35rem 0.7rem;
-  border-radius: 999px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: all 0.15s ease;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-
-  &:hover {
-    border-color: rgba(0, 113, 227, 0.35);
-    color: var(--brand-500);
-  }
-}
-
-.tag-chip--active {
-  border-color: transparent;
-  background: var(--brand-500);
-  color: #fff;
-}
-
-.tag-chip__count {
-  font-size: 0.8rem;
-  opacity: 0.85;
 }
 
 .filter-select {

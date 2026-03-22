@@ -13,7 +13,6 @@ describe('article list query state utils', () => {
     const state = parseArticleListQueryState({}, { pageSizeOptions })
 
     expect(state).toEqual({
-      selectedTag: 'all',
       datePreset: 'all',
       customStartDate: '',
       customEndDate: '',
@@ -27,7 +26,6 @@ describe('article list query state utils', () => {
   it('parseArticleListQueryState reads valid query values', () => {
     const state = parseArticleListQueryState(
       {
-        tag: 'vue',
         date: 'custom',
         start: '2025-01-01',
         end: '2025-02-01',
@@ -40,7 +38,6 @@ describe('article list query state utils', () => {
     )
 
     expect(state).toEqual({
-      selectedTag: 'vue',
       datePreset: 'custom',
       customStartDate: '2025-01-01',
       customEndDate: '2025-02-01',
@@ -70,7 +67,6 @@ describe('article list query state utils', () => {
 
   it('buildArticleListQuery omits defaults and normalizes keyword', () => {
     const state: ArticleListQueryState = {
-      selectedTag: 'all',
       datePreset: 'all',
       customStartDate: '',
       customEndDate: '',
@@ -85,7 +81,6 @@ describe('article list query state utils', () => {
 
   it('buildArticleListQuery includes custom range and page info', () => {
     const state: ArticleListQueryState = {
-      selectedTag: 'frontend',
       datePreset: 'custom',
       customStartDate: '2025-01-01',
       customEndDate: '2025-01-31',
@@ -96,7 +91,6 @@ describe('article list query state utils', () => {
     }
 
     expect(buildArticleListQuery(state)).toEqual({
-      tag: 'frontend',
       date: 'custom',
       start: '2025-01-01',
       end: '2025-01-31',

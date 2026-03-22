@@ -1,3 +1,8 @@
+/**
+ * 搜索下拉面板 Composable
+ * 管理搜索框下拉面板的显示/隐藏、外部点击关闭、搜索触发、建议选择等行为。
+ */
+
 import { onBeforeUnmount, onMounted, ref, watch, type Ref } from 'vue'
 
 interface UseSearchDropdownOptions {
@@ -9,9 +14,9 @@ interface UseSearchDropdownOptions {
 }
 
 export function useSearchDropdown(options: UseSearchDropdownOptions) {
-  const showDropdown = ref(false)
-  const inputEl = ref<HTMLElement | null>(null)
-  const dropdownEl = ref<HTMLElement | null>(null)
+  const showDropdown = ref(false)                       // 下拉可见状态
+  const inputEl = ref<HTMLElement | null>(null)           // 输入框 DOM 引用
+  const dropdownEl = ref<HTMLElement | null>(null)        // 下拉面板 DOM 引用
 
   function openDropdown() {
     showDropdown.value = true
@@ -21,6 +26,7 @@ export function useSearchDropdown(options: UseSearchDropdownOptions) {
     showDropdown.value = false
   }
 
+  /** 触发搜索（关闭下拉 + 回调） */
   function triggerSearch() {
     const term = options.getCurrentInput().trim()
     if (!term && !options.allowEmptySearch) return
@@ -29,12 +35,14 @@ export function useSearchDropdown(options: UseSearchDropdownOptions) {
     options.onSearch(term)
   }
 
+  /** 点击建议项：填充输入框 + 触发搜索 */
   function selectSuggestion(term: string) {
     options.setInputValue?.(term)
     closeDropdown()
     options.onSearch(term)
   }
 
+  /** 点击下拉和输入框外部时关闭下拉 */
   function handleOutsideClick(event: MouseEvent) {
     const target = event.target
     if (!(target instanceof Node)) return
@@ -47,6 +55,7 @@ export function useSearchDropdown(options: UseSearchDropdownOptions) {
     }
   }
 
+  // 查询变化时自动打开下拉
   watch(options.normalizedQuery, openDropdown)
 
   onMounted(() => {

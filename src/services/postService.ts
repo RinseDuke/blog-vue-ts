@@ -1,31 +1,50 @@
+/**
+ * 文章服务
+ * 真实后端模式对接 blogs 接口，Mock 模式仍保留本地发布能力。
+ */
+
 import type { Post } from '@/types/post'
+import { toPlainText } from '@/features/post/utils/post'
 import { mockPosts } from '@/mocks/posts'
-import { readStoredAuthSession } from '@/features/auth/stores/useAuthStore'
-import { apiFetch, isMockMode, networkDelay } from './apiClient'
+import { requireAuthSession } from '@/features/auth/stores/useAuthStore'
+import { apiFetch, ApiError, isMockMode, networkDelay } from './apiClient'
+
+interface BackendBlogAuthor {
+  id: string
+  username: string
+}
+
+interface BackendBlog {
+  id: string
+  title: string
+  content?: string
+  html_content?: string
+  author?: BackendBlogAuthor
+  created_at: string
+  updated_at?: string
+  visibility?: 'public' | 'private'
+  status?: 'draft' | 'published'
+}
 
 export interface FetchPostsParams {
   limit?: number
   featuredOnly?: boolean
+  authorId?: string
+  search?: string
 }
 
 export interface CreatePostPayload {
   title: string
   markdown: string
   html: string
-  tags: string[]
+  status?: 'draft' | 'published'
+  visibility?: 'public' | 'private'
+  tags?: string[]
   coverImage?: string | null
 }
 
 const PUBLISHED_POSTS_KEY = 'blog_published_posts_v1'
-
-function requireAuthSession(errorMessage: string) {
-  const session = readStoredAuthSession()
-  if (!session) {
-    throw new Error(errorMessage)
-  }
-
-  return session
-}
+const DEFAULT_REAL_LIMIT = 100
 
 function isStoredPost(value: unknown): value is Post {
   if (!value || typeof value !== 'object') return false
@@ -75,23 +94,17 @@ function normalizeAuthorName(email: string) {
   return email.split('@')[0]?.trim() || 'Sign'
 }
 
-function buildAuthor(email: string): Post['author'] {
-  const name = normalizeAuthorName(email)
+function buildAuthor(email: string, nickname?: string): Post['author'] {
+  const name = nickname?.trim() || normalizeAuthorName(email)
 
   return {
     id: `user-${email}`,
     name,
+    username: name,
+    email,
     avatarUrl: `https://i.pravatar.cc/150?u=${encodeURIComponent(email)}`,
     bio: `${name} 发布的本地模拟文章。`,
   }
-}
-
-function toPlainText(source: string) {
-  return source
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/[#>*_`~[\]()!-]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
 }
 
 function buildExcerpt(source: string) {
@@ -117,14 +130,50 @@ function buildSlug(title: string, existingSlugs: Set<string>) {
   const baseSlug = normalizedTitle || 'article'
   let slug = `${baseSlug}-${Date.now().toString(36)}`
 
-  while (existingSlugs.has(slug)) {
+  let attempts = 0
+  while (existingSlugs.has(slug) && attempts < 100) {
     slug = `${baseSlug}-${Math.random().toString(36).slice(2, 8)}`
+    attempts += 1
   }
 
   return slug
 }
 
-//获取文章
+function mapBackendBlogToPost(blog: BackendBlog): Post {
+  const excerptSource = blog.content ?? blog.html_content ?? ''
+
+  return {
+    id: blog.id,
+    slug: blog.id,
+    title: blog.title,
+    excerpt: buildExcerpt(excerptSource) || '暂无摘要',
+    content: blog.html_content,
+    tags: [],
+    author: {
+      id: blog.author?.id ?? 'unknown',
+      name: blog.author?.username ?? '未知作者',
+      username: blog.author?.username,
+    },
+    publishedAt: blog.created_at,
+    updatedAt: blog.updated_at,
+    readMinutes: estimateReadMinutes(blog.content ?? excerptSource),
+    status: blog.status ?? 'published',
+    visibility: blog.visibility ?? 'public',
+  }
+}
+
+function buildBlogsQuery(params: FetchPostsParams = {}) {
+  const searchParams = new URLSearchParams()
+  searchParams.set('page', '1')
+  searchParams.set('per_page', String(params.limit ?? DEFAULT_REAL_LIMIT))
+  searchParams.set('only_public', 'true')
+
+  if (params.authorId) searchParams.set('author_id', params.authorId)
+  if (params.search) searchParams.set('search', params.search)
+
+  return searchParams
+}
+
 export async function fetchPosts(params: FetchPostsParams = {}): Promise<Post[]> {
   if (isMockMode()) {
     await networkDelay()
@@ -134,6 +183,17 @@ export async function fetchPosts(params: FetchPostsParams = {}): Promise<Post[]>
       result = result.filter((post) => post.featured)
     }
 
+    if (params.authorId) {
+      result = result.filter((post) => post.author.id === params.authorId)
+    }
+
+    if (params.search) {
+      const keyword = params.search.trim().toLowerCase()
+      result = result.filter((post) =>
+        [post.title, post.excerpt, post.author.name].join(' ').toLowerCase().includes(keyword)
+      )
+    }
+
     if (params.limit) {
       result = result.slice(0, params.limit)
     }
@@ -141,28 +201,48 @@ export async function fetchPosts(params: FetchPostsParams = {}): Promise<Post[]>
     return structuredClone(result)
   }
 
-  const searchParams = new URLSearchParams()
-  if (params.limit) searchParams.append('limit', String(params.limit))
-  if (params.featuredOnly) searchParams.append('featured', 'true')
+  if (params.featuredOnly) {
+    const latest = await apiFetch<BackendBlog[]>(`/blogs/latest?per_page=${params.limit ?? 12}`)
+    return latest.map(mapBackendBlogToPost)
+  }
 
-  return apiFetch<Post[]>(`/posts?${searchParams.toString()}`)
+  const blogs = await apiFetch<BackendBlog[]>(`/blogs?${buildBlogsQuery(params).toString()}`)
+  return blogs.map(mapBackendBlogToPost)
 }
 
-export async function fetchPostBySlug(slug: string): Promise<Post | undefined> {
+export async function fetchUserPosts(userId: string): Promise<Post[]> {
   if (isMockMode()) {
     await networkDelay()
-    const post = getAllPosts().find((post) => post.slug === slug)
+    return structuredClone(getAllPosts().filter((post) => post.author.id === userId))
+  }
+
+  const blogs = await apiFetch<BackendBlog[]>(
+    `/users/${userId}/blogs?page=1&per_page=${DEFAULT_REAL_LIMIT}`,
+  )
+
+  return blogs.map(mapBackendBlogToPost)
+}
+
+export async function fetchPostById(id: string): Promise<Post | undefined> {
+  if (isMockMode()) {
+    await networkDelay()
+    const post = getAllPosts().find((item) => item.id === id || item.slug === id)
     return post ? structuredClone(post) : undefined
   }
 
   try {
-    return await apiFetch<Post>(`/posts/${slug}`)
+    const post = await apiFetch<BackendBlog>(`/blogs/${id}`)
+    return mapBackendBlogToPost(post)
   } catch (err: unknown) {
-    if (err instanceof Error && 'status' in err && (err as { status: number }).status === 404) {
+    if (err instanceof ApiError && err.status === 404) {
       return undefined
     }
     throw err
   }
+}
+
+export async function fetchPostBySlug(identifier: string): Promise<Post | undefined> {
+  return fetchPostById(identifier)
 }
 
 export async function setPostLike(postId: string, liked: boolean): Promise<number> {
@@ -170,18 +250,24 @@ export async function setPostLike(postId: string, liked: boolean): Promise<numbe
     await networkDelay(100)
     requireAuthSession('请先登录后再点赞文章')
 
-    const post = mockPosts.find((p) => p.id === postId)
-    if (post) {
-      post.likes = Math.max(0, (post.likes ?? 0) + (liked ? 1 : -1))
-      return post.likes
+    const mockPost = mockPosts.find((post) => post.id === postId)
+    if (mockPost) {
+      mockPost.likes = Math.max(0, (mockPost.likes ?? 0) + (liked ? 1 : -1))
+      return mockPost.likes
     }
+
+    const publishedPosts = readPublishedPosts()
+    const publishedPost = publishedPosts.find((post) => post.id === postId)
+    if (publishedPost) {
+      publishedPost.likes = Math.max(0, (publishedPost.likes ?? 0) + (liked ? 1 : -1))
+      persistPublishedPosts(publishedPosts)
+      return publishedPost.likes
+    }
+
     return liked ? 1 : 0
   }
 
-  const data = await apiFetch<{ likes: number }>(`/posts/${postId}/like`, {
-    method: liked ? 'POST' : 'DELETE',
-  })
-  return data.likes
+  throw new Error('当前后端暂未开放文章点赞接口。')
 }
 
 export async function createPost(payload: CreatePostPayload): Promise<Post> {
@@ -200,20 +286,55 @@ export async function createPost(payload: CreatePostPayload): Promise<Post> {
       excerpt: excerpt || '新发布的文章',
       coverImage: payload.coverImage || undefined,
       content: payload.html,
-      tags: Array.from(new Set(payload.tags.map((tag) => tag.trim()).filter(Boolean))),
-      author: buildAuthor(session.email),
+      tags: Array.from(new Set((payload.tags ?? []).map((tag) => tag.trim()).filter(Boolean))),
+      author: buildAuthor(session.email, session.user.nickname),
       publishedAt,
+      updatedAt: publishedAt,
       readMinutes: estimateReadMinutes(payload.markdown),
       featured: false,
       likes: 0,
+      status: payload.status ?? 'published',
+      visibility: payload.visibility ?? 'public',
     }
 
     persistPublishedPosts([nextPost, ...publishedPosts].sort(sortByPublishedAtDesc))
     return structuredClone(nextPost)
   }
 
-  return apiFetch<Post>('/posts', {
+  const blog = await apiFetch<BackendBlog>('/blogs', {
     method: 'POST',
-    body: JSON.stringify(payload),
+    body: JSON.stringify({
+      title: payload.title.trim(),
+      content: payload.markdown,
+      status: payload.status ?? 'published',
+      visibility: payload.visibility ?? 'public',
+    }),
+  })
+
+  return mapBackendBlogToPost(blog)
+}
+
+export async function deletePost(postId: string): Promise<void> {
+  if (isMockMode()) {
+    await networkDelay(180)
+    const session = requireAuthSession('请先登录后再管理文章')
+    const ownedAuthorId = `user-${session.email}`
+    const publishedPosts = readPublishedPosts()
+    const targetPost = publishedPosts.find((post) => post.id === postId)
+
+    if (!targetPost) {
+      throw new Error('未找到可管理的文章')
+    }
+
+    if (targetPost.author.id !== ownedAuthorId) {
+      throw new Error('无权管理这篇文章')
+    }
+
+    persistPublishedPosts(publishedPosts.filter((post) => post.id !== postId))
+    return
+  }
+
+  await apiFetch<void>(`/blogs/${postId}`, {
+    method: 'DELETE',
   })
 }

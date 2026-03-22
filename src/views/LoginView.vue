@@ -1,3 +1,4 @@
+<!-- 登录页：按后端规范使用用户名 + 密码登录 -->
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
@@ -8,16 +9,16 @@ const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 
-const email = ref('')
+const username = ref('')
 const password = ref('')
 const rememberMe = ref(true)
 const isSubmitting = ref(false)
 const errorMessage = ref('')
 
-const normalizedEmail = computed(() => email.value.trim().toLowerCase())
-const isEmailValid = computed(() => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail.value))
-const isPasswordValid = computed(() => password.value.length >= 6)
-const canSubmit = computed(() => isEmailValid.value && isPasswordValid.value && !isSubmitting.value)
+const normalizedUsername = computed(() => username.value.trim())
+const isUsernameValid = computed(() => normalizedUsername.value.length >= 3)
+const isPasswordValid = computed(() => password.value.length >= 8)
+const canSubmit = computed(() => isUsernameValid.value && isPasswordValid.value && !isSubmitting.value)
 const registerLocation = computed(() => {
   const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : ''
   return redirect ? { name: 'register', query: { redirect } } : { name: 'register' }
@@ -25,7 +26,7 @@ const registerLocation = computed(() => {
 
 async function handleSubmit() {
   if (!canSubmit.value) {
-    errorMessage.value = '请输入有效邮箱和至少 6 位密码。'
+    errorMessage.value = '请输入有效用户名和至少 8 位密码。'
     return
   }
 
@@ -34,7 +35,7 @@ async function handleSubmit() {
 
   try {
     await authStore.login({
-      email: normalizedEmail.value,
+      username: normalizedUsername.value,
       password: password.value,
       rememberMe: rememberMe.value,
     })
@@ -53,17 +54,17 @@ async function handleSubmit() {
     <div class="login-card">
       <p class="login-card__eyebrow">账号</p>
       <h1>登录</h1>
-      <p class="login-card__hint">使用已注册邮箱登录，未注册请先创建账号。</p>
+      <p class="login-card__hint">使用已注册用户名登录，未注册请先创建账号。</p>
 
       <form class="login-form" @submit.prevent="handleSubmit">
         <label class="field">
-          <span>邮箱</span>
-          <input v-model="email" type="email" autocomplete="email" placeholder="name@example.com" />
+          <span>用户名</span>
+          <input v-model="username" type="text" autocomplete="username" placeholder="请输入用户名" />
         </label>
 
         <label class="field">
           <span>密码</span>
-          <input v-model="password" type="password" autocomplete="current-password" placeholder="至少 6 位" />
+          <input v-model="password" type="password" autocomplete="current-password" placeholder="至少 8 位" />
         </label>
 
         <label class="check-row">
@@ -82,7 +83,7 @@ async function handleSubmit() {
         还没有账号？
         <RouterLink :to="registerLocation">立即注册</RouterLink>
       </p>
-      <p class="login-card__note">当前为本地模拟邮箱登录，注册完成后会自动进入个人中心。</p>
+      <p class="login-card__note">当前页面已按后端规范切换为用户名登录。</p>
     </div>
   </section>
 </template>

@@ -1,5 +1,13 @@
 import { mockPosts } from '@/mocks/posts'
-import { createPost, fetchPostBySlug, fetchPosts, setPostLike } from '@/services/postService'
+import {
+  createPost,
+  deletePost,
+  fetchPostById,
+  fetchPostBySlug,
+  fetchPosts,
+  fetchUserPosts,
+  setPostLike,
+} from '@/services/postService'
 
 const AUTH_KEY = 'blog_auth_session_v1'
 
@@ -27,6 +35,27 @@ function createStorageMock(): StorageLike {
   }
 }
 
+function setSession(email: string, nickname = 'writer') {
+  const username = email.split('@')[0]
+
+  localStorage.setItem(
+    AUTH_KEY,
+    JSON.stringify({
+      email,
+      rememberMe: true,
+      loggedAt: '2026-03-07T10:00:00.000Z',
+      token: `mock-token-${email}`,
+      user: {
+        id: `user-${email}`,
+        username,
+        nickname,
+        email,
+        visibility: 'public',
+      },
+    })
+  )
+}
+
 describe('postService auth guard', () => {
   const originalPosts = structuredClone(mockPosts)
 
@@ -45,15 +74,7 @@ describe('postService auth guard', () => {
   })
 
   it('supports toggling article likes for the logged in user', async () => {
-    localStorage.setItem(
-      AUTH_KEY,
-      JSON.stringify({
-        email: 'tester@example.com',
-        rememberMe: true,
-        loggedAt: '2026-03-07T10:00:00.000Z',
-        token: 'mock-token-123',
-      })
-    )
+    setSession('tester@example.com', 'Tester')
 
     const originalLikes = mockPosts.find((post) => post.id === '1')?.likes ?? 0
 
@@ -67,36 +88,51 @@ describe('postService auth guard', () => {
         title: '匿名文章',
         markdown: '# 匿名文章',
         html: '<h1>匿名文章</h1>',
-        tags: ['Vue'],
       })
     ).rejects.toThrow('请先登录后再发布文章')
   })
 
+  it('rejects anonymous post deletion', async () => {
+    await expect(deletePost('user-post-1')).rejects.toThrow('请先登录后再管理文章')
+  })
+
   it('creates a published post that is visible in post queries', async () => {
-    localStorage.setItem(
-      AUTH_KEY,
-      JSON.stringify({
-        email: 'writer@example.com',
-        rememberMe: true,
-        loggedAt: '2026-03-07T10:00:00.000Z',
-        token: 'mock-token-456',
-      })
-    )
+    setSession('writer@example.com', 'Writer')
 
     const createdPost = await createPost({
       title: '新的发布文章',
       markdown: '# 新的发布文章\n\n这是一篇用于测试发布流程的内容。',
       html: '<h1>新的发布文章</h1><p>这是一篇用于测试发布流程的内容。</p>',
-      tags: ['Vue', '工程化'],
-      coverImage: 'https://example.com/cover.png',
+      status: 'published',
+      visibility: 'public',
     })
 
     expect(createdPost.author.id).toBe('user-writer@example.com')
-    expect(createdPost.slug).toContain('新的发布文章')
+    expect(createdPost.status).toBe('published')
+    await expect(fetchPostById(createdPost.id)).resolves.toEqual(expect.objectContaining({ id: createdPost.id }))
     await expect(fetchPostBySlug(createdPost.slug)).resolves.toEqual(expect.objectContaining({ id: createdPost.id }))
 
     const posts = await fetchPosts()
     expect(posts[0]?.id).toBe(createdPost.id)
     expect(posts.some((post) => post.id === createdPost.id)).toBe(true)
+
+    const managedPosts = await fetchUserPosts(createdPost.author.id)
+    expect(managedPosts.some((post) => post.id === createdPost.id)).toBe(true)
+  })
+
+  it('deletes a published post owned by the logged in user', async () => {
+    setSession('writer@example.com', 'Writer')
+
+    const createdPost = await createPost({
+      title: '待删除文章',
+      markdown: '# 待删除文章\n\n这是一篇会被删除的内容。',
+      html: '<h1>待删除文章</h1><p>这是一篇会被删除的内容。</p>',
+    })
+
+    await expect(deletePost(createdPost.id)).resolves.toBeUndefined()
+    await expect(fetchPostById(createdPost.id)).resolves.toBeUndefined()
+
+    const posts = await fetchPosts()
+    expect(posts.some((post) => post.id === createdPost.id)).toBe(false)
   })
 })

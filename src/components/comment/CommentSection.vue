@@ -1,3 +1,4 @@
+<!-- 评论区：加载评论列表并渲染 CommentItem + CommentForm -->
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'

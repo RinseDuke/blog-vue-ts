@@ -1,6 +1,7 @@
+<!-- 文章卡片：展示标题、摘要、作者 -->
 <template>
   <article class="post-card post-card--list">
-    <RouterLink :to="`/article/${post.slug}`" class="card-link-wrapper">
+    <RouterLink :to="{ name: 'article-detail', params: { id: post.id } }" class="card-link-wrapper">
       <div class="post-card__body">
         <div class="post-card__meta">
           <span class="post-card__date">{{ formatPostDate(post.publishedAt) }}</span>
@@ -10,19 +11,19 @@
 
         <h3>{{ post.title }}</h3>
         <p class="post-card__excerpt">{{ post.excerpt }}</p>
-
-        <div class="tags post-card__tags">
-          <span v-for="tag in post.tags" :key="tag" class="tag">#{{ tag }}</span>
-        </div>
-      </div>
-
-      <div class="post-card__footer">
-        <div class="author">
-          <img v-if="post.author.avatarUrl" :src="post.author.avatarUrl" :alt="post.author.name" />
-          <span>{{ post.author.name }}</span>
-        </div>
       </div>
     </RouterLink>
+
+    <div class="post-card__footer">
+      <div class="author">
+        <img v-if="post.author.avatarUrl" :src="post.author.avatarUrl" :alt="post.author.name" @error="($event.target as HTMLImageElement).style.display = 'none'" />
+        <span>{{ post.author.name }}</span>
+      </div>
+
+      <div v-if="$slots['footer-actions']" class="post-card__footer-actions">
+        <slot name="footer-actions" :post="post" />
+      </div>
+    </div>
   </article>
 </template>
 
@@ -44,22 +45,23 @@ defineProps<{
   flex-direction: column;
   width: 100%;
   min-width: 0;
+  flex: 1;
 }
 
 .post-card {
   display: flex;
-  flex-direction: row;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.92));
-  border-radius: 22px;
+  flex-direction: column;
+  background: linear-gradient(180deg, var(--card-top), var(--card-bottom));
+  border-radius: var(--radius-lg);
   border: 1px solid var(--line-soft);
   overflow: hidden;
-  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+  box-shadow: var(--shadow-sm);
   transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
 
   &:hover {
     transform: translateY(-5px);
     border-color: rgba(0, 113, 227, 0.26);
-    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
+    box-shadow: var(--shadow-md);
   }
 
   &__body {
@@ -117,8 +119,12 @@ defineProps<{
   border-top: 1px solid var(--line-soft);
 }
 
-.post-card__tags {
-  margin-top: 0.15rem;
+.post-card__footer-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
 .author {
@@ -134,34 +140,23 @@ defineProps<{
     height: 34px;
     border-radius: 50%;
     object-fit: cover;
-    border: 1px solid rgba(0, 0, 0, 0.08);
-  }
-}
-
-.tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.38rem;
-
-  .tag {
-    padding: 0.26rem 0.62rem;
-    border-radius: 999px;
     border: 1px solid var(--line-soft);
-    background: rgba(248, 250, 252, 0.9);
-    color: var(--ink-muted);
-    font-size: 0.78rem;
-    font-weight: 600;
   }
 }
 
 @media (max-width: 900px) {
   .post-card {
-    border-radius: 20px;
+    border-radius: var(--radius-lg);
   }
 
   .post-card__footer {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .post-card__footer-actions {
+    width: 100%;
+    justify-content: flex-start;
   }
 }
 </style>

@@ -1,5 +1,6 @@
+<!-- 文章列表页：支持日期筛选、关键词搜索、多种排序和分页 -->
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import type { Post } from '@/types/post'
 import { storeToRefs } from 'pinia'
@@ -22,7 +23,6 @@ const postsStore = usePostsStore()
 const { posts, loading, error } = storeToRefs(postsStore)
 const { ensurePosts } = postsStore
 
-const selectedTag = ref<string>('all')
 const datePreset = ref<DatePreset>('all')
 const customStartDate = ref('')
 const customEndDate = ref('')
@@ -50,23 +50,6 @@ const sortOptions: { label: string; value: SortMode }[] = [
 
 const pageSizeOptions = [6, 9, 12, 18]
 const isApplyingRouteState = ref(false)
-const FIXED_TAGS = [
-  '开发经验',
-  '前端开发',
-  'Vue',
-  'TypeScript',
-  '工程化',
-  '性能优化',
-  '调试排错',
-  '项目复盘',
-]
-
-const tagOptions = computed(() => {
-  return FIXED_TAGS.map((tagName) => ({
-    name: tagName,
-    count: posts.value.filter((post) => post.tags.includes(tagName)).length,
-  }))
-})
 
 const isCustomDateInvalid = computed(() => {
   if (!customStartDate.value || !customEndDate.value) return false
@@ -78,17 +61,13 @@ const normalizedKeyword = computed(() => keyword.value.trim().toLowerCase())
 const filteredPosts = computed(() => {
   let result = posts.value.slice()
 
-  if (selectedTag.value !== 'all') {
-    result = result.filter((post) => post.tags.includes(selectedTag.value))
-  }
-
   if (datePreset.value !== 'all') {
     result = result.filter((post) => isPostInDateRange(post.publishedAt))
   }
 
   if (normalizedKeyword.value) {
     result = result.filter((post) => {
-      const haystack = [post.title, post.excerpt, post.author.name, post.tags.join(' ')].join(' ').toLowerCase()
+      const haystack = [post.title, post.excerpt, post.author.name].join(' ').toLowerCase()
       return haystack.includes(normalizedKeyword.value)
     })
   }
@@ -98,7 +77,6 @@ const filteredPosts = computed(() => {
 
 const displayCount = computed(() => filteredPosts.value.length)
 const totalPosts = computed(() => posts.value.length)
-const totalTags = computed(() => tagOptions.value.length)
 const totalAuthors = computed(() => new Set(posts.value.map((post) => post.author.id)).size)
 
 const totalPages = computed(() => Math.max(1, Math.ceil(displayCount.value / pageSize.value)))
@@ -122,12 +100,11 @@ const selectedDateLabel = computed(() => {
 })
 
 const hasActiveFilters = computed(
-  () => selectedTag.value !== 'all' || datePreset.value !== 'all' || normalizedKeyword.value.length > 0
+  () => datePreset.value !== 'all' || normalizedKeyword.value.length > 0
 )
 
 const activeFiltersSummary = computed(() => {
   const parts: string[] = []
-  if (selectedTag.value !== 'all') parts.push(`标签: ${selectedTag.value}`)
   if (datePreset.value !== 'all') parts.push(`日期: ${selectedDateLabel.value}`)
   if (normalizedKeyword.value) parts.push(`搜索: "${normalizedKeyword.value}"`)
   return parts.join(', ')
@@ -147,7 +124,7 @@ const visiblePages = computed(() => {
   return pages
 })
 
-watch([selectedTag, datePreset, customStartDate, customEndDate, keyword, sortMode, pageSize], () => {
+watch([datePreset, customStartDate, customEndDate, keyword, sortMode, pageSize], () => {
   if (isApplyingRouteState.value) return
   currentPage.value = 1
 })
@@ -163,13 +140,15 @@ watch(
   (query) => {
     isApplyingRouteState.value = true
     applyQueryState(query)
-    isApplyingRouteState.value = false
+    void nextTick().then(() => {
+      isApplyingRouteState.value = false
+    })
   },
   { immediate: true }
 )
 
 watch(
-  [selectedTag, datePreset, customStartDate, customEndDate, keyword, sortMode, pageSize, currentPage],
+  [datePreset, customStartDate, customEndDate, keyword, sortMode, pageSize, currentPage],
   () => {
     if (isApplyingRouteState.value) return
     const nextQuery = buildQueryFromState()
@@ -193,7 +172,6 @@ function sortByMode(a: Post, b: Post) {
 }
 
 function clearFilters() {
-  selectedTag.value = 'all'
   datePreset.value = 'all'
   customStartDate.value = ''
   customEndDate.value = ''
@@ -209,9 +187,6 @@ function goToPage(page: number) {
 
 function applyQueryState(query: Record<string, unknown>) {
   const nextState = parseArticleListQueryState(query, { pageSizeOptions })
-  selectedTag.value = nextState.selectedTag === 'all' || FIXED_TAGS.includes(nextState.selectedTag)
-    ? nextState.selectedTag
-    : 'all'
   datePreset.value = nextState.datePreset
   customStartDate.value = nextState.customStartDate
   customEndDate.value = nextState.customEndDate
@@ -223,7 +198,6 @@ function applyQueryState(query: Record<string, unknown>) {
 
 function buildQueryFromState() {
   return buildArticleListQuery({
-    selectedTag: selectedTag.value,
     datePreset: datePreset.value,
     customStartDate: customStartDate.value,
     customEndDate: customEndDate.value,
@@ -244,13 +218,14 @@ function isPostInDateRange(publishedAt: string) {
     return publishedTime >= start && publishedTime <= end
   }
 
-  const dayMap: Record<Exclude<DatePreset, 'all' | 'custom'>, number> = {
+  const dayMap: Record<string, number> = {
     '7d': 7,
     '30d': 30,
     '90d': 90,
     '365d': 365,
   }
-  const days = dayMap[datePreset.value as Exclude<DatePreset, 'all' | 'custom'>]
+  const days = dayMap[datePreset.value]
+  if (!days) return true
   const limit = Date.now() - days * 24 * 60 * 60 * 1000
   return publishedTime >= limit
 }
@@ -265,8 +240,8 @@ function isPostInDateRange(publishedAt: string) {
           <strong>{{ totalPosts }}</strong>
         </article>
         <article class="hero-stat">
-          <p>主题数</p>
-          <strong>{{ totalTags }}</strong>
+          <p>总页数</p>
+          <strong>{{ totalPages }}</strong>
         </article>
         <article class="hero-stat">
           <p>作者数</p>
@@ -293,7 +268,7 @@ function isPostInDateRange(publishedAt: string) {
           <div class="feed__toolbar">
             <label class="control-field control-field--search">
               <span>搜索</span>
-              <input v-model="keyword" type="search" placeholder="标题、摘要、作者、标签..." />
+              <input v-model="keyword" type="search" placeholder="标题、摘要、作者..." />
             </label>
 
             <label class="control-field">
@@ -344,12 +319,9 @@ function isPostInDateRange(publishedAt: string) {
       </section>
 
       <ArticleFilters
-        v-model:selected-tag="selectedTag"
         v-model:date-preset="datePreset"
         v-model:custom-start-date="customStartDate"
         v-model:custom-end-date="customEndDate"
-        :tag-options="tagOptions"
-        :total-posts="posts.length"
         :date-options="dateOptions"
         :has-active-filters="hasActiveFilters"
         :is-custom-date-invalid="isCustomDateInvalid"
@@ -369,7 +341,7 @@ function isPostInDateRange(publishedAt: string) {
 }
 
 .article-page__hero {
-  max-width: 1200px;
+  max-width: 1120px;
   width: 100%;
   margin: 0 auto;
 }
@@ -383,8 +355,8 @@ function isPostInDateRange(publishedAt: string) {
 .hero-stat {
   border-radius: var(--radius-md);
   border: 1px solid var(--line-soft);
-  background: var(--surface);
-  padding: 0.84rem 0.9rem;
+  background: var(--surface-strong);
+  padding: 1rem 1rem 0.95rem;
   backdrop-filter: blur(8px);
 
   p {
@@ -397,14 +369,15 @@ function isPostInDateRange(publishedAt: string) {
     margin-top: 0.2rem;
     display: block;
     color: var(--ink-strong);
-    font-size: 1.3rem;
+    font-size: 1.55rem;
+    font-weight: 800;
     letter-spacing: -0.01em;
   }
 }
 
 .article-layout {
   width: 100%;
-  max-width: 1200px;
+  max-width: 1120px;
   margin: 0 auto;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 320px;
@@ -577,6 +550,10 @@ function isPostInDateRange(publishedAt: string) {
 }
 
 @media (max-width: 560px) {
+  .article-page {
+    padding: 40px 14px 40px;
+  }
+
   .article-page__stats {
     grid-template-columns: 1fr;
   }
