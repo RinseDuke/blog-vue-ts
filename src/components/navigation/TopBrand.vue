@@ -1,10 +1,9 @@
-<!-- 顶部品牌标识 -->
 <template>
   <RouterLink to="/" class="brand">
     <img src="@/assets/logo.svg" alt="博客 Logo" />
     <span class="brand__text">
       <strong>Sign</strong>
-      <em>博客实验室</em>
+      <!-- <em></em> -->
     </span>
   </RouterLink>
 </template>

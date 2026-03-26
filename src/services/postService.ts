@@ -6,7 +6,7 @@
 import type { Post } from '@/types/post'
 import { toPlainText } from '@/features/post/utils/post'
 import { mockPosts } from '@/mocks/posts'
-import { requireAuthSession } from '@/features/auth/stores/useAuthStore'
+import { readStoredAuthSession, requireAuthSession } from '@/features/auth/stores/useAuthStore'
 import { apiFetch, ApiError, isMockMode, networkDelay } from './apiClient'
 
 interface BackendBlogAuthor {
@@ -94,17 +94,37 @@ function normalizeAuthorName(email: string) {
   return email.split('@')[0]?.trim() || 'Sign'
 }
 
-function buildAuthor(email: string, nickname?: string): Post['author'] {
+function buildAuthor(userId: string, email: string, nickname?: string, username?: string): Post['author'] {
   const name = nickname?.trim() || normalizeAuthorName(email)
+  const normalizedUsername = username?.trim() || name
 
   return {
-    id: `user-${email}`,
+    id: userId,
     name,
-    username: name,
+    username: normalizedUsername,
     email,
     avatarUrl: `https://i.pravatar.cc/150?u=${encodeURIComponent(email)}`,
     bio: `${name} 发布的本地模拟文章。`,
   }
+}
+
+function isPublicPublishedPost(post: Post) {
+  return post.status !== 'draft' && post.visibility !== 'private'
+}
+
+function getMockViewerAuthorIds() {
+  const session = readStoredAuthSession()
+  if (!session) return new Set<string>()
+
+  return new Set([session.user.id, `user-${session.email}`])
+}
+
+function canManageMockPost(post: Post) {
+  return getMockViewerAuthorIds().has(post.author.id)
+}
+
+function canReadMockPost(post: Post) {
+  return isPublicPublishedPost(post) || canManageMockPost(post)
 }
 
 function buildExcerpt(source: string) {
@@ -177,7 +197,7 @@ function buildBlogsQuery(params: FetchPostsParams = {}) {
 export async function fetchPosts(params: FetchPostsParams = {}): Promise<Post[]> {
   if (isMockMode()) {
     await networkDelay()
-    let result = getAllPosts()
+    let result = getAllPosts().filter(isPublicPublishedPost)
 
     if (params.featuredOnly) {
       result = result.filter((post) => post.featured)
@@ -213,7 +233,14 @@ export async function fetchPosts(params: FetchPostsParams = {}): Promise<Post[]>
 export async function fetchUserPosts(userId: string): Promise<Post[]> {
   if (isMockMode()) {
     await networkDelay()
-    return structuredClone(getAllPosts().filter((post) => post.author.id === userId))
+    const viewerAuthorIds = getMockViewerAuthorIds()
+    const authorIds = viewerAuthorIds.has(userId) ? viewerAuthorIds : new Set([userId])
+    const authoredPosts = getAllPosts().filter((post) => authorIds.has(post.author.id))
+    const visiblePosts = viewerAuthorIds.has(userId)
+      ? authoredPosts
+      : authoredPosts.filter(isPublicPublishedPost)
+
+    return structuredClone(visiblePosts)
   }
 
   const blogs = await apiFetch<BackendBlog[]>(
@@ -227,7 +254,8 @@ export async function fetchPostById(id: string): Promise<Post | undefined> {
   if (isMockMode()) {
     await networkDelay()
     const post = getAllPosts().find((item) => item.id === id || item.slug === id)
-    return post ? structuredClone(post) : undefined
+    if (!post || !canReadMockPost(post)) return undefined
+    return structuredClone(post)
   }
 
   try {
@@ -287,7 +315,7 @@ export async function createPost(payload: CreatePostPayload): Promise<Post> {
       coverImage: payload.coverImage || undefined,
       content: payload.html,
       tags: Array.from(new Set((payload.tags ?? []).map((tag) => tag.trim()).filter(Boolean))),
-      author: buildAuthor(session.email, session.user.nickname),
+      author: buildAuthor(session.user.id, session.email, session.user.nickname, session.user.username),
       publishedAt,
       updatedAt: publishedAt,
       readMinutes: estimateReadMinutes(payload.markdown),
@@ -317,8 +345,7 @@ export async function createPost(payload: CreatePostPayload): Promise<Post> {
 export async function deletePost(postId: string): Promise<void> {
   if (isMockMode()) {
     await networkDelay(180)
-    const session = requireAuthSession('请先登录后再管理文章')
-    const ownedAuthorId = `user-${session.email}`
+    requireAuthSession('请先登录后再管理文章')
     const publishedPosts = readPublishedPosts()
     const targetPost = publishedPosts.find((post) => post.id === postId)
 
@@ -326,7 +353,7 @@ export async function deletePost(postId: string): Promise<void> {
       throw new Error('未找到可管理的文章')
     }
 
-    if (targetPost.author.id !== ownedAuthorId) {
+    if (!canManageMockPost(targetPost)) {
       throw new Error('无权管理这篇文章')
     }
 

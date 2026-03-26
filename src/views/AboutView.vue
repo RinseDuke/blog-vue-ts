@@ -4,11 +4,14 @@ import { computed, onMounted, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '@/features/auth/stores/useAuthStore'
+import { useDraft, type DraftPayload } from '@/features/post/composables/useDraft'
 import { usePostsStore } from '@/features/post/composables/usePostsStore'
+import { formatPostDate, toPlainText } from '@/features/post/utils/post'
 import { profileService, type UserProfile } from '@/services/profileService'
 
 const authStore = useAuthStore()
 const postsStore = usePostsStore()
+const { readDraft } = useDraft()
 const router = useRouter()
 const { isLoggedIn, userEmail } = storeToRefs(authStore)
 const { posts } = storeToRefs(postsStore)
@@ -35,12 +38,7 @@ const isLoadingProfile = ref(true)
 const isEditingBio = ref(false)
 const isSaving = ref(false)
 const editedBio = ref('')
-
-const draftEntries = [
-  { title: '从零搭建可维护博客', updatedAt: '2 小时前', progress: 70, status: '结构完成，准备补案例' },
-  { title: 'Vue 3 复杂表单最佳实践', updatedAt: '昨天', progress: 45, status: '表单校验章节补写中' },
-  { title: '设计系统中的色彩语义', updatedAt: '3 天前', progress: 20, status: '提纲已整理，等待扩写' },
-]
+const currentDraft = ref<DraftPayload | null>(null)
 
 const activityFeed = [
   {
@@ -68,9 +66,44 @@ const creatorShortcuts = [
   { label: '管理文章', to: '/about/articles', accent: false },
 ]
 
+const draftCount = computed(() => (currentDraft.value ? 1 : 0))
+
+const currentDraftPreview = computed(() => {
+  if (!currentDraft.value?.markdown) return '当前草稿还没有正文内容。'
+
+  const preview = toPlainText(currentDraft.value.markdown)
+  if (!preview) return '当前草稿还没有正文内容。'
+  return preview.length > 110 ? `${preview.slice(0, 110).trim()}...` : preview
+})
+
+const currentDraftProgress = computed(() => {
+  if (!currentDraft.value) return 0
+
+  const titleScore = currentDraft.value.title.trim() ? 25 : 0
+  const bodyScore = Math.min(65, Math.round(toPlainText(currentDraft.value.markdown).length / 10))
+  const settingsScore =
+    currentDraft.value.status === 'draft' || currentDraft.value.visibility === 'private' ? 10 : 0
+
+  return Math.min(100, titleScore + bodyScore + settingsScore)
+})
+
+const currentDraftUpdatedLabel = computed(() =>
+  currentDraft.value ? formatPostDate(currentDraft.value.updatedAt) : ''
+)
+
+const currentDraftStatusLabel = computed(() => {
+  if (!currentDraft.value) return ''
+
+  const parts: string[] = []
+  if (currentDraft.value.status === 'draft') parts.push('草稿状态')
+  if (currentDraft.value.visibility === 'private') parts.push('仅自己可见')
+
+  return parts.length ? `${parts.join(' · ')}，继续完善中` : '已保存，可继续补充内容'
+})
+
 const overviewMetrics = computed(() => [
   { label: '文章', value: posts.value.length, helper: '当前站内内容' },
-  { label: '草稿', value: draftEntries.length, helper: '等待继续完善' },
+  { label: '草稿', value: draftCount.value, helper: draftCount.value ? '等待继续完善' : '暂无草稿' },
   { label: '收藏', value: 2, helper: '已加入书签' },
   { label: '关注', value: 1, helper: '创作者订阅' },
 ])
@@ -89,6 +122,7 @@ const accountFacts = computed(() => [
 ])
 
 onMounted(async () => {
+  currentDraft.value = readDraft()
   const [profileResult, postsResult] = await Promise.allSettled([profileService.getProfile(), ensurePosts()])
 
   if (profileResult.status === 'fulfilled') {
@@ -208,23 +242,29 @@ function enterEditMode() {
             </header>
 
             <div class="draft-list">
-              <article v-for="draft in draftEntries" :key="draft.title" class="draft-item">
+              <article v-if="currentDraft" class="draft-item">
                 <div class="draft-item__head">
                   <div>
-                    <h3>{{ draft.title }}</h3>
-                    <p>{{ draft.status }}</p>
+                    <h3>{{ currentDraft.title || '未命名草稿' }}</h3>
+                    <p>{{ currentDraftStatusLabel }}</p>
                   </div>
-                  <span class="draft-item__time">{{ draft.updatedAt }}</span>
+                  <span class="draft-item__time">{{ currentDraftUpdatedLabel }}</span>
                 </div>
 
+                <p>{{ currentDraftPreview }}</p>
+
                 <div class="draft-item__progress">
-                  <span :style="{ width: `${draft.progress}%` }"></span>
+                  <span :style="{ width: `${currentDraftProgress}%` }"></span>
                 </div>
 
                 <div class="draft-item__footer">
-                  <span>完成度 {{ draft.progress }}%</span>
+                  <span>完成度 {{ currentDraftProgress }}%</span>
                 </div>
               </article>
+
+              <div v-else class="draft-empty">
+                <p>当前没有可继续编辑的草稿。</p>
+              </div>
             </div>
           </article>
         </section>
@@ -236,7 +276,7 @@ function enterEditMode() {
                 <p class="section-card__eyebrow">创作中心</p>
                 <h3>保持输出节奏</h3>
               </div>
-              <span class="side-card__tag">草稿 {{ draftEntries.length }}</span>
+              <span class="side-card__tag">草稿 {{ draftCount }}</span>
             </header>
 
             <p class="side-card__text">把灵感、草稿和已发布内容收口在一个工作台里，继续完成下一篇文章。</p>
@@ -600,6 +640,18 @@ function enterEditMode() {
   border-radius: var(--radius-md);
   border: 1px solid var(--line-soft);
   background: var(--surface-strong);
+}
+
+.draft-empty {
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--line-soft);
+  background: var(--bg-canvas-soft);
+  color: var(--ink-muted);
+}
+
+.draft-empty p {
+  margin: 0;
 }
 
 .activity-item__head,

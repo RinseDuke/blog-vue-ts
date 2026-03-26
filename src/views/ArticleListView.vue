@@ -1,4 +1,3 @@
-<!-- 文章列表页：支持日期筛选、关键词搜索、多种排序和分页 -->
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -332,6 +331,7 @@ function isPostInDateRange(publishedAt: string) {
 </template>
 
 <style scoped lang="less">
+//文章卡片
 .article-page {
   width: 100%;
   padding: 64px 20px 48px;
@@ -341,7 +341,7 @@ function isPostInDateRange(publishedAt: string) {
 }
 
 .article-page__hero {
-  max-width: 1120px;
+  max-width: 1200px;
   width: 100%;
   margin: 0 auto;
 }
@@ -352,11 +352,12 @@ function isPostInDateRange(publishedAt: string) {
   gap: 0.75rem;
 }
 
+// 统计信息卡片
 .hero-stat {
   border-radius: var(--radius-md);
   border: 1px solid var(--line-soft);
-  background: var(--surface-strong);
-  padding: 1rem 1rem 0.95rem;
+  background: var(--surface);
+  padding: 0.84rem 0.9rem;
   backdrop-filter: blur(8px);
 
   p {
@@ -369,15 +370,15 @@ function isPostInDateRange(publishedAt: string) {
     margin-top: 0.2rem;
     display: block;
     color: var(--ink-strong);
-    font-size: 1.55rem;
-    font-weight: 800;
+    font-size: 1.3rem;
     letter-spacing: -0.01em;
   }
 }
 
+//文章列表布局
 .article-layout {
   width: 100%;
-  max-width: 1120px;
+  max-width: 1200px;
   margin: 0 auto;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 320px;
@@ -385,6 +386,7 @@ function isPostInDateRange(publishedAt: string) {
   align-items: flex-start;
 }
 
+//文章列表主体
 .feed {
   display: flex;
   flex-direction: column;
@@ -457,6 +459,7 @@ function isPostInDateRange(publishedAt: string) {
   }
 }
 
+//筛选和排序控件
 .control-field {
   display: flex;
   flex-direction: column;
@@ -486,6 +489,7 @@ function isPostInDateRange(publishedAt: string) {
   }
 }
 
+//重置按钮
 .empty-reset {
   border: 1px solid var(--line-soft);
   background: var(--surface-strong);
@@ -528,6 +532,7 @@ function isPostInDateRange(publishedAt: string) {
   }
 }
 
+//针对不同的屏幕尺寸进行响应式调整
 @media (max-width: 1100px) {
   .article-layout {
     grid-template-columns: 1fr;
@@ -550,10 +555,6 @@ function isPostInDateRange(publishedAt: string) {
 }
 
 @media (max-width: 560px) {
-  .article-page {
-    padding: 40px 14px 40px;
-  }
-
   .article-page__stats {
     grid-template-columns: 1fr;
   }

@@ -1,4 +1,3 @@
-<!-- 根组件：全局布局（导航 + 搜索 + 主题切换 + 页脚），预加载文章缓存 -->
 <script setup lang="ts">
 import { useRoute, useRouter, RouterView } from 'vue-router'
 import { ref, computed, onMounted, watch, onUnmounted } from 'vue'
@@ -16,12 +15,12 @@ import TopThemeToggle from '@/components/navigation/TopThemeToggle.vue'
 const route = useRoute()
 const router = useRouter()
 const searchQuery = ref<string>((route.query.q as string) ?? '')
-const isNavHidden = ref(false)  // 导航栏是否隐藏（写作页滚动时自动隐藏）
+const isNavHidden = ref(false)  
 
 const isWritePage = computed(() => route.name === 'write')
 let lastScrollTop = 0
 
-// ── 文章数据 & 搜索 ──
+//文章数据 & 搜索
 const postsStore = usePostsStore()
 const { posts } = storeToRefs(postsStore)
 const { ensurePosts } = postsStore
@@ -54,7 +53,7 @@ watch(
   }
 )
 
-/** 处理搜索提交：保存历史 + 路由跳转 */
+// 处理搜索提交
 const handleSearch = (searchTerm: string) => {
   const term = searchTerm.trim()
   if (!term) return
@@ -63,7 +62,7 @@ const handleSearch = (searchTerm: string) => {
   router.push({ path: '/search', query: { q: term } })
 }
 
-/** 滚动处理：写作页下滑时隐藏导航栏，上滑时恢复 */
+// 滚动处理 
 const handleScroll = (event: Event) => {
   const target = event.target
   if (isWritePage.value && isScrollFromWriteEditor(target)) return
@@ -82,7 +81,7 @@ const handleScroll = (event: Event) => {
   lastScrollTop = scrollTop
 }
 
-/** 判断滚动是否来自写作页编辑器区域（忽略编辑器内部滚动） */
+//判断滚动是否来自写作页编辑器区域 
 const isScrollFromWriteEditor = (target: EventTarget | null) => {
   if (!(target instanceof Element)) return false
   return Boolean(

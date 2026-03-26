@@ -1,25 +1,24 @@
-<!-- 写作页：TipTap WYSIWYG + Markdown 源码 + 阅读预览三模式，草稿自动保存，发布流程 -->
-<template>
+﻿<template>
   <section class="write-page">
-    <!-- ─── 编辑器区域 ─── -->
+    <!-- 编辑器区域 -->
     <div class="editor-shell">
       <div class="editor-body">
         <input
           v-model="title"
           class="title-input"
           type="text"
-          maxlength="200"
-          placeholder="请输入标题（最多 200 个字）"
+          maxlength="100"
+          placeholder="请输入标题（最多 100 个字）"
           @input="onDirtyAndAutosave"
         />
 
-        <!-- ═══ Mode: 实时阅览 (Live WYSIWYG) ═══ -->
+        <!--实时阅览-->
         <template v-if="viewMode === 'live'">
           <EditorToolbar :editor="editor || null" />
-          <EditorContent :editor="editor" class="tiptap-editor" />
+          <editor-content :editor="editor" class="tiptap-editor" />
         </template>
 
-        <!-- ═══ Mode: 源码模式 (Source Markdown) ═══ -->
+        <!--源码模式 -->
         <template v-else-if="viewMode === 'source'">
           <div class="source-editor-wrap">
             <textarea
@@ -32,7 +31,7 @@
           </div>
         </template>
 
-        <!-- ═══ Mode: 阅读视图 (Read-only Preview) ═══ -->
+        <!-- 阅读视图  -->
         <template v-else-if="viewMode === 'read'">
           <div v-if="markdown.trim()" class="read-preview" v-html="renderedHtml"></div>
           <div v-else class="read-preview read-preview--empty">
@@ -48,16 +47,25 @@
         </template>
       </div>
 
-      <!-- ─── 发布设置面板 ─── -->
+      <!-- 发布设置面板 -->
       <PublishPanel
-        v-model:status="publishStatus"
-        v-model:visibility="publishVisibility"
+        :status="publishStatus"
+        :visibility="publishVisibility"
+        @update:status="handlePublishStatusChange"
+        @update:visibility="handlePublishVisibilityChange"
+      />
+      <input
+        ref="coverInputRef"
+        type="file"
+        accept="image/jpeg,image/jpg,image/png"
+        class="sr-only"
+        @change="onCoverChange"
       />
     </div>
 
     <p v-if="publishError" class="write-page__feedback write-page__feedback--error">{{ publishError }}</p>
 
-    <!-- ─── 底部状态栏 ─── -->
+    <!-- 按钮 -->
     <StatusBar 
       :word-count="wordCount"
       :current-mode-label="currentModeLabel"
@@ -75,9 +83,8 @@
 </template>
 
 <script setup lang="ts">
-import DOMPurify from 'dompurify'
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { onBeforeRouteLeave, useRouter } from 'vue-router'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 // Tiptap imports
 import { useEditor, EditorContent } from '@tiptap/vue-3'
@@ -92,14 +99,15 @@ import { TableRow } from '@tiptap/extension-table-row'
 import { TableHeader } from '@tiptap/extension-table-header'
 import { TableCell } from '@tiptap/extension-table-cell'
 import TurndownService from 'turndown'
+
 import { gfm } from 'turndown-plugin-gfm'
 import MarkdownIt from 'markdown-it'
 
-// Composables
 import { useDraft } from '@/features/post/composables/useDraft'
+import { useCoverUpload } from '@/features/post/composables/useCoverUpload'
 import { usePostsStore } from '@/features/post/composables/usePostsStore'
+import { useTagManager } from '@/features/post/composables/useTagManager'
 
-// Custom Components
 import EditorToolbar from '@/components/post/EditorToolbar.vue'
 import PublishPanel from '@/components/post/PublishPanel.vue'
 import StatusBar from '@/components/post/StatusBar.vue'
@@ -108,71 +116,50 @@ import { createPost } from '@/services/postService'
 const router = useRouter()
 const postsStore = usePostsStore()
 
-// ── Markdown / HTML 转换工具 ──
+// 封面上传（bushi）
 const turndownService = new TurndownService({ headingStyle: 'atx' })
 turndownService.use(gfm)
 const mdParser = new MarkdownIt()
 
-/** 编辑模式类型 */
 type ViewMode = 'read' | 'source' | 'live'
 const VIEW_MODE_KEY = 'blog_write_view_mode_v1'
-const VALID_VIEW_MODES: ViewMode[] = ['read', 'source', 'live']
+const DEFAULT_PUBLISH_STATUS = 'published'
+const DEFAULT_PUBLISH_VISIBILITY = 'public'
 
-// ── 草稿管理 ──
+
 const {
   lastSavedAt, isDirty,
   readDraft, persistDraft, clearPersistedDraft,
   markDirty, queueAutosave, cancelPendingAutosave, flushPendingAutosave,
 } = useDraft()
 
-/** 标记脏数据并触发自动保存 */
+//自动保存
 function onDirtyAndAutosave() {
   markDirty()
   queueAutosave(saveDraftNow)
 }
 
-const initialDraft = readDraft()
+const {
+  coverInputRef, coverPreviewUrl,
+  handleCoverSelect, removeCover, restoreCoverFromUrl,
+} = useCoverUpload(onDirtyAndAutosave)
 
-// ── 局部状态 ──
-const title = ref(initialDraft?.title ?? '')
-const markdown = ref(initialDraft?.markdown ?? '')
+const {
+  selectedTags, restoreTags, clearTags,
+} = useTagManager(onDirtyAndAutosave)
+
+
+const title = ref('')
+const markdown = ref('')
 const viewMode = ref<ViewMode>(readViewMode())
-const publishStatus = ref<'draft' | 'published'>(initialDraft?.status ?? 'published')
-const publishVisibility = ref<'public' | 'private'>(initialDraft?.visibility ?? 'public')
+const publishStatus = ref<'draft' | 'published'>(DEFAULT_PUBLISH_STATUS)
+const publishVisibility = ref<'public' | 'private'>(DEFAULT_PUBLISH_VISIBILITY)
 const isPublishing = ref(false)
 const publishError = ref('')
-if (initialDraft?.updatedAt) {
-  lastSavedAt.value = initialDraft.updatedAt
-}
+const isSyncingEditorContent = ref(false)
 
-let isProgrammaticEditorSync = false
-let hasHydratedEditor = false
 
-function sanitizeHtml(html: string) {
-  return DOMPurify.sanitize(html)
-}
-
-function syncMarkdownFromEditor() {
-  if (!editor.value) return
-  markdown.value = turndownService.turndown(editor.value.getHTML())
-}
-
-function syncEditorFromMarkdown(source: string) {
-  if (!editor.value) return
-
-  isProgrammaticEditorSync = true
-  try {
-    editor.value.commands.setContent(source ? mdParser.render(source) : '')
-  } finally {
-    isProgrammaticEditorSync = false
-  }
-}
-
-function isValidViewMode(mode: string): mode is ViewMode {
-  return VALID_VIEW_MODES.includes(mode as ViewMode)
-}
-
-// ── TipTap 编辑器初始化 ──
+//顶部编辑栏
 const editor = useEditor({
   extensions: [
     StarterKit,
@@ -196,28 +183,16 @@ const editor = useEditor({
   ],
   content: '',
   onUpdate: ({ editor }) => {
-    if (isProgrammaticEditorSync) return
+    if (isSyncingEditorContent.value) return
 
-    markdown.value = turndownService.turndown(editor.getHTML())
+    // 生成 HTML → 转 Markdown → 更新状态
+    const html = editor.getHTML()
+    markdown.value = turndownService.turndown(html)
     onDirtyAndAutosave()
   },
 })
 
-watch(
-  editor,
-  (instance) => {
-    if (!instance || hasHydratedEditor) return
-    syncEditorFromMarkdown(markdown.value)
-    hasHydratedEditor = true
-  },
-  { immediate: true },
-)
-
-watch([publishStatus, publishVisibility], () => {
-  onDirtyAndAutosave()
-})
-
-// ── Computed ──
+// 计算字数
 const wordCount = computed(() => {
   const zh = (markdown.value.match(/[\u4e00-\u9fff]/g) ?? []).length
   const en = (markdown.value.replace(/[\u4e00-\u9fff]/g, '').match(/[A-Za-z0-9_]+/g) ?? []).length
@@ -230,15 +205,6 @@ const saveLabel = computed(() => {
   return `已保存 ${dt.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}`
 })
 
-const hasDraftContent = computed(() =>
-  Boolean(
-    title.value.trim() ||
-    markdown.value.trim() ||
-    publishStatus.value === 'draft' ||
-    publishVisibility.value === 'private',
-  ),
-)
-
 const MODE_LABELS: Record<ViewMode, string> = {
   read: '阅读视图',
   source: '源码模式',
@@ -246,38 +212,78 @@ const MODE_LABELS: Record<ViewMode, string> = {
 }
 
 const currentModeLabel = computed(() => MODE_LABELS[viewMode.value])
-const publishLabel = computed(() => {
-  if (isPublishing.value) return publishStatus.value === 'draft' ? '保存中...' : '发布中...'
-  return publishStatus.value === 'draft' ? '保存草稿' : '发布'
-})
-const renderedHtml = computed(() => sanitizeHtml(mdParser.render(markdown.value)))
+const publishLabel = computed(() => (isPublishing.value ? '发布中...' : '发布'))
 
-/** 切换编辑模式，同步 Markdown 与 TipTap HTML */
+// 实时渲染 Markdown 为 HTML
+const renderedHtml = computed(() => mdParser.render(markdown.value))
+
+function syncEditorFromMarkdown(source: string) {
+  if (!editor.value) return
+
+  isSyncingEditorContent.value = true
+  try {
+    editor.value.commands.setContent(mdParser.render(source))
+  } finally {
+    isSyncingEditorContent.value = false
+  }
+}
+
 function setViewMode(mode: string) {
-  if (!isValidViewMode(mode) || viewMode.value === mode) return
+  const prevMode = viewMode.value
+  const newMode = mode as ViewMode
 
-  if (viewMode.value === 'live') {
-    syncMarkdownFromEditor()
+  if (prevMode === 'live' && editor.value) {
+    const html = editor.value.getHTML()
+    markdown.value = turndownService.turndown(html)
   }
 
-  if (mode === 'live') {
+  // 输入模式切换到实时阅览， markdown 渲染成 HTML 注入编辑器
+  if (newMode === 'live') {
     syncEditorFromMarkdown(markdown.value)
   }
 
-  viewMode.value = mode
+  // 输入模式切换到阅读视图
+  viewMode.value = newMode
   localStorage.setItem(VIEW_MODE_KEY, mode)
 }
 
-/** 源码模式 textarea 输入处理 */
+// 同步状态
 function onSourceInput() {
   onDirtyAndAutosave()
 }
 
-/** 手动保存草稿 */
-function saveDraftNow() {
-  cancelPendingAutosave()
+function handlePublishStatusChange(value: 'draft' | 'published') {
+  if (publishStatus.value === value) return
+  publishStatus.value = value
+  onDirtyAndAutosave()
+}
 
-  if (!hasDraftContent.value) {
+function handlePublishVisibilityChange(value: 'public' | 'private') {
+  if (publishVisibility.value === value) return
+  publishVisibility.value = value
+  onDirtyAndAutosave()
+}
+
+// 封面图片选择
+function onCoverChange(event: Event) {
+  const errMsg = handleCoverSelect(event)
+  if (errMsg) alert(errMsg)
+}
+
+function hasPersistableDraft() {
+  return Boolean(
+    title.value.trim() ||
+    markdown.value.trim() ||
+    selectedTags.value.length ||
+    coverPreviewUrl.value ||
+    publishStatus.value !== DEFAULT_PUBLISH_STATUS ||
+    publishVisibility.value !== DEFAULT_PUBLISH_VISIBILITY
+  )
+}
+
+// 草稿保存
+function saveDraftNow() {
+  if (!hasPersistableDraft()) {
     clearPersistedDraft()
     return
   }
@@ -285,42 +291,36 @@ function saveDraftNow() {
   persistDraft({
     title: title.value.trim(),
     markdown: markdown.value,
-    tags: [],
-    coverDataUrl: null,
+    tags: selectedTags.value,
+    coverDataUrl: coverPreviewUrl.value,
     status: publishStatus.value,
     visibility: publishVisibility.value,
     updatedAt: new Date().toISOString(),
   })
 }
 
-function flushDraftIfNeeded() {
-  if (flushPendingAutosave(saveDraftNow)) return
-  if (!isDirty.value) return
-  saveDraftNow()
-}
-
-/** 清空草稿（确认弹窗） */
+//清空草稿
 function onClearDraft() {
   if (!window.confirm('确定要清空当前草稿吗？此操作不可撤销。')) return
-
   publishError.value = ''
-  cancelPendingAutosave()
   title.value = ''
   markdown.value = ''
-  publishStatus.value = 'published'
-  publishVisibility.value = 'public'
-  syncEditorFromMarkdown('')
+  publishStatus.value = DEFAULT_PUBLISH_STATUS
+  publishVisibility.value = DEFAULT_PUBLISH_VISIBILITY
+  clearTags()
+  removeCover()
+  cancelPendingAutosave()
   clearPersistedDraft()
+  syncEditorFromMarkdown('')
 }
 
-/** 导出 Markdown 文件 */
+//导出Markdown
 function onExportMarkdown() {
   const content = markdown.value
   if (!content.trim()) {
     alert('当前没有可导出的内容')
     return
   }
-
   const name = (title.value.trim() || 'untitled').replace(/[\\/:*?"<>|]/g, '-')
   const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' })
   const url = URL.createObjectURL(blob)
@@ -331,7 +331,6 @@ function onExportMarkdown() {
   URL.revokeObjectURL(url)
 }
 
-/** 发布文章：校验 → 调用服务 → 清空草稿 → 跳转详情页 */
 async function onPublish() {
   const content = markdown.value
   const finalTitle = title.value.trim()
@@ -344,15 +343,15 @@ async function onPublish() {
   isPublishing.value = true
 
   try {
-    const html = viewMode.value === 'live' && editor.value
-      ? sanitizeHtml(editor.value.getHTML())
-      : renderedHtml.value
+    const html = viewMode.value === 'live' && editor.value ? editor.value.getHTML() : renderedHtml.value
     const createdPost = await createPost({
       title: finalTitle,
       markdown: content,
       html,
       status: publishStatus.value,
       visibility: publishVisibility.value,
+      tags: selectedTags.value,
+      coverImage: coverPreviewUrl.value,
     })
 
     cancelPendingAutosave()
@@ -368,52 +367,66 @@ async function onPublish() {
   }
 }
 
-/** 从 localStorage 读取上次使用的编辑模式 */
+// 模式选择
 function readViewMode(): ViewMode {
   const stored = localStorage.getItem(VIEW_MODE_KEY)
-  return stored && isValidViewMode(stored) ? stored : 'live'
+  if (stored === 'read' || stored === 'source' || stored === 'live') return stored
+  return 'live'
 }
 
-// ── 生命周期 ──
+// 加载草稿
 onMounted(() => {
+  const draft = readDraft()
+  title.value = draft?.title ?? ''
+  markdown.value = draft?.markdown ?? ''
+  publishStatus.value = draft?.status ?? DEFAULT_PUBLISH_STATUS
+  publishVisibility.value = draft?.visibility ?? DEFAULT_PUBLISH_VISIBILITY
+  restoreTags(draft?.tags ?? [])
+  restoreCoverFromUrl(draft?.coverDataUrl ?? null)
+
+  if (draft?.updatedAt) {
+    lastSavedAt.value = draft.updatedAt
+  }
+
+  //加载markdown草稿
+  if (markdown.value) {
+    syncEditorFromMarkdown(markdown.value)
+  }
+
   window.addEventListener('beforeunload', onBeforeUnload)
 })
 
-onBeforeRouteLeave(() => {
-  flushDraftIfNeeded()
-})
-
+// 卸载前清理
 onBeforeUnmount(() => {
-  flushDraftIfNeeded()
+  flushPendingAutosave(saveDraftNow)
   cancelPendingAutosave()
   window.removeEventListener('beforeunload', onBeforeUnload)
 })
 
-/** 离开页面前先落盘草稿，必要时再提示 */
+// 离开页面前提示保存
 function onBeforeUnload(e: BeforeUnloadEvent) {
+  if (flushPendingAutosave(saveDraftNow)) {
+    return
+  }
   if (!isDirty.value) return
-
-  flushDraftIfNeeded()
-  if (!isDirty.value) return
-
   e.preventDefault()
   e.returnValue = ''
 }
 </script>
 
 <style scoped lang="less">
-/* ───────── Page Layout ───────── */
+
+//页面布局
 .write-page {
   display: flex;
   flex-direction: column;
   min-height: calc(100vh - 78px);
   padding-bottom: 36px;
   background: var(--bg-canvas);
-  --write-content-max-width: 980px;
 }
 
 .write-page__feedback {
-  max-width: var(--write-content-max-width);
+  max-width: 820px;
   width: 100%;
   margin: 0 auto;
   padding: 0.8rem 24px 0;
@@ -425,7 +438,7 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   color: var(--danger-500);
 }
 
-/* ───────── Editor Shell ───────── */
+//编辑器主体
 .editor-shell {
   flex: 1;
   display: flex;
@@ -439,13 +452,13 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   flex: 1;
   display: flex;
   flex-direction: column;
-  max-width: var(--write-content-max-width);
+  max-width: 820px;
   width: 100%;
   margin: 0 auto;
   padding: 0 24px;
 }
 
-/* ───────── Title ───────── */
+//标题
 .title-input {
   width: 100%;
   border: none;
@@ -463,7 +476,7 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   }
 }
 
-/* ───────── Tiptap Editor Content (live mode) ───────── */
+//实时阅览编辑器
 .tiptap-editor {
   flex: 1;
   margin-top: 16px;
@@ -573,7 +586,8 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   }
 }
 
-/* ───────── Source Editor (source mode) ───────── */
+
+//源码编辑器
 .source-editor-wrap {
   flex: 1;
   display: flex;
@@ -611,7 +625,7 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   }
 }
 
-/* ───────── Read Preview (read mode) ───────── */
+//阅读视图
 .read-preview {
   flex: 1;
   margin-top: 16px;
@@ -710,8 +724,20 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
     }
   }
 }
+//屏幕阅读器专用隐藏元素
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
 
-/* ───────── Responsive ───────── */
+
+
+
 @media (max-width: 768px) {
   .editor-body {
     padding-left: 14px;

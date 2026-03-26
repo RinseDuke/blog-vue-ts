@@ -35,7 +35,7 @@ function createStorageMock(): StorageLike {
   }
 }
 
-function setSession(email: string, nickname = 'writer') {
+function setSession(email: string, nickname = 'writer', userId = `user-${email}`) {
   const username = email.split('@')[0]
 
   localStorage.setItem(
@@ -46,7 +46,7 @@ function setSession(email: string, nickname = 'writer') {
       loggedAt: '2026-03-07T10:00:00.000Z',
       token: `mock-token-${email}`,
       user: {
-        id: `user-${email}`,
+        id: userId,
         username,
         nickname,
         email,
@@ -134,5 +134,34 @@ describe('postService auth guard', () => {
 
     const posts = await fetchPosts()
     expect(posts.some((post) => post.id === createdPost.id)).toBe(false)
+  })
+
+  it('keeps draft/private posts out of public queries while allowing the author to manage them', async () => {
+    setSession('writer@example.com', 'Writer', 'user-writer-42')
+
+    const createdPost = await createPost({
+      title: '仅作者可见的草稿',
+      markdown: '# 仅作者可见的草稿\n\n这是一篇私密草稿。',
+      html: '<h1>仅作者可见的草稿</h1><p>这是一篇私密草稿。</p>',
+      status: 'draft',
+      visibility: 'private',
+    })
+
+    expect(createdPost.author.id).toBe('user-writer-42')
+
+    const publicPosts = await fetchPosts()
+    expect(publicPosts.some((post) => post.id === createdPost.id)).toBe(false)
+
+    const managedPosts = await fetchUserPosts('user-writer-42')
+    expect(managedPosts.some((post) => post.id === createdPost.id)).toBe(true)
+
+    await expect(fetchPostById(createdPost.id)).resolves.toEqual(expect.objectContaining({ id: createdPost.id }))
+
+    setSession('reader@example.com', 'Reader', 'user-reader-7')
+
+    await expect(fetchPostById(createdPost.id)).resolves.toBeUndefined()
+    await expect(fetchUserPosts('user-writer-42')).resolves.not.toContainEqual(
+      expect.objectContaining({ id: createdPost.id })
+    )
   })
 })

@@ -1,4 +1,4 @@
-<!-- 搜索结果页：展示文章搜索结果，支持空结果提示 -->
+<!-- 搜索结果页：展示文章搜索结果-->
 <template>
   <section class="search">
     <header v-if="!loading && !error" class="search__summary">

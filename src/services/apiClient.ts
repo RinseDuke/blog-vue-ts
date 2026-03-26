@@ -1,28 +1,11 @@
 /**
  * 统一 API 客户端
- * 封装所有网络请求，自动注入 Auth Token、统一错误处理，
- * 并根据环境变量决定走 Mock 数据还是真实后端。
+ * 封装所有网络请求，自动注入 Auth Token、统一错误处理
  */
-
-export interface ApiResponse<T> {
-    code: number
-    message: string
-    data: T
-    timestamp?: string
-}
-
-export interface PaginatedApiResponse<T> extends ApiResponse<T> {
-    pagination?: {
-        total: number
-        page: number
-        per_page: number
-        total_pages: number
-    }
-}
 
 /** 后端 API 根地址 */
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? ''
-/** 是否启用 Mock 模式（默认启用） */
+/** 是否启用 Mock 模式 */
 const USE_MOCK = import.meta.env.VITE_USE_MOCK !== 'false'
 
 /** API 请求错误类，携带 HTTP 状态码和响应体 */
@@ -37,7 +20,8 @@ export class ApiError extends Error {
     }
 }
 
-/** 从 localStorage / sessionStorage 读取 token，构造 Authorization 请求头 */
+/** 从 localStorage / sessionStorage 读取 token
+ * 构造 Authorization 请求头 */
 function getAuthHeaders(): Record<string, string> {
     try {
         const raw = localStorage.getItem('blog_auth_session_v1')
@@ -80,30 +64,14 @@ export async function apiFetch<T>(
         return undefined as T
     }
 
-    const contentType = response.headers.get('content-type') ?? ''
-    if (!contentType.includes('application/json')) {
-        return (await response.text()) as T
-    }
-
-    const payload = await response.json() as T | ApiResponse<T>
-
-    if (
-        payload &&
-        typeof payload === 'object' &&
-        'code' in payload &&
-        'data' in payload
-    ) {
-        return (payload as ApiResponse<T>).data
-    }
-
-    return payload as T
+    return (await response.json()) as T
 }
 
-/** 判断当前是否运行在 Mock 模式（无后端 URL 或显式开启） */
+// 判断当前是否运行在 Mock 模式 
 export function isMockMode(): boolean {
     return USE_MOCK || !API_BASE_URL
 }
 
-/** 模拟网络延迟，Mock 模式下让请求更真实 */
+//演示用
 export const networkDelay = (ms = 300) =>
     new Promise((resolve) => setTimeout(resolve, ms))
