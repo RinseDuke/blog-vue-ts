@@ -52,12 +52,26 @@ onMounted(() => {
 <style scoped lang="less">
 .front {
   width: 100%;
-  padding: 64px 20px 24px;
+  padding: 60px 20px 32px;
+  position: relative;
+}
+
+.front::before {
+  content: '';
+  position: absolute;
+  inset: 12px auto auto 50%;
+  width: min(960px, 92vw);
+  height: 180px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(0, 113, 227, 0.08), transparent 72%);
+  pointer-events: none;
+  filter: blur(10px);
 }
 
 
 .list-wrapper {
-  width: min(100%, 900px);
+  width: min(100%, 1040px);
   margin: 0 auto;
 }
 
@@ -70,8 +84,17 @@ onMounted(() => {
   &__head {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-end;
     gap: 1rem;
+    position: relative;
+    z-index: 2;
+    padding: 1.1rem 1.2rem;
+    border: 1px solid var(--line-soft);
+    border-radius: var(--radius-lg);
+    background:
+      radial-gradient(circle at top left, rgba(0, 113, 227, 0.06), transparent 32%),
+      linear-gradient(180deg, var(--surface-overlay), var(--surface));
+    box-shadow: var(--shadow-sm);
 
     h2 {
       margin: 0;
@@ -92,6 +115,7 @@ onMounted(() => {
     flex-direction: column;
     align-items: center;
     gap: 0.75rem;
+    box-shadow: var(--shadow-sm);
 
     p {
       margin: 0;
@@ -120,7 +144,20 @@ onMounted(() => {
 
     &--list {
       grid-template-columns: 1fr;
+      gap: 1.15rem;
+      margin-top: 1.15rem;
     }
+  }
+}
+
+@media (max-width: 840px) {
+  .front {
+    padding-top: 48px;
+  }
+
+  .feed__head {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }
 

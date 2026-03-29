@@ -102,6 +102,11 @@ function formatSuggestionMeta(post: Post) {
   gap: 0.58rem;
 }
 
+.search-dropdown__section + .search-dropdown__section {
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--line-soft);
+}
+
 .search-dropdown__section--empty {
   color: var(--ink-muted);
 }
@@ -109,6 +114,7 @@ function formatSuggestionMeta(post: Post) {
 .search-dropdown__header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 0.45rem;
   color: var(--ink-strong);
   font-weight: 700;
@@ -136,16 +142,17 @@ function formatSuggestionMeta(post: Post) {
   padding: 0.62rem 0.72rem;
   border-radius: 12px;
   border: 1px solid var(--line-soft);
-  background: #fff;
+  background: linear-gradient(180deg, var(--surface-strong), var(--surface));
   cursor: pointer;
   text-align: left;
   min-height: 60px;
-  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.32);
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
 
   &:hover {
     transform: translateY(-1px);
     border-color: rgba(0, 113, 227, 0.32);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
   }
 }
 
@@ -153,8 +160,8 @@ function formatSuggestionMeta(post: Post) {
   width: 22px;
   height: 22px;
   border-radius: 8px;
-  background: #ececf0;
-  color: #45454a;
+  background: var(--bg-canvas-soft);
+  color: var(--ink-main);
   font-weight: 700;
   display: inline-flex;
   align-items: center;
@@ -163,7 +170,7 @@ function formatSuggestionMeta(post: Post) {
 }
 
 .search-dropdown__rank[data-top='true'] {
-  background: #0071e3;
+  background: linear-gradient(135deg, var(--brand-400), var(--brand-500));
   color: #fff;
 }
 
@@ -199,7 +206,7 @@ function formatSuggestionMeta(post: Post) {
   padding: 0.34rem 0.72rem;
   border-radius: 999px;
   border: 1px solid var(--line-soft);
-  background: rgba(255, 255, 255, 0.92);
+  background: linear-gradient(180deg, var(--surface-strong), var(--surface));
   color: var(--ink-main);
   cursor: pointer;
   transition: all 0.15s ease;
@@ -207,6 +214,7 @@ function formatSuggestionMeta(post: Post) {
   &:hover {
     border-color: rgba(0, 113, 227, 0.35);
     color: var(--brand-500);
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
   }
 }
 
@@ -233,14 +241,14 @@ function formatSuggestionMeta(post: Post) {
   padding: 0.6rem 0.72rem;
   border: 1px solid var(--line-soft);
   border-radius: 12px;
-  background: #fff;
+  background: linear-gradient(180deg, var(--surface-strong), var(--surface));
   text-align: left;
   cursor: pointer;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 
   &:hover {
     border-color: rgba(0, 113, 227, 0.35);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
   }
 }
 

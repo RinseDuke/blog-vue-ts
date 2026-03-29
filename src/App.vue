@@ -139,13 +139,19 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   background: transparent;
-  padding-top: 78px;
+  padding-top: 92px;
 }
 
 .page {
   flex: 1;
   display: flex;
   flex-direction: column;
+}
+
+@media (max-width: 768px) {
+  .layout {
+    padding-top: 138px;
+  }
 }
 </style>
 

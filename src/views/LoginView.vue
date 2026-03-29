@@ -2,8 +2,10 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
-import { useAuthStore } from '@/features/auth/stores/useAuthStore'
+import { usePasswordVisibility } from '@/features/auth/composables/usePasswordVisibility'
+import { DEFAULT_MOCK_LOGIN, useAuthStore } from '@/features/auth/stores/useAuthStore'
 import { resolveAuthRedirect } from '@/features/auth/utils/redirect'
+import { isMockMode } from '@/services/apiClient'
 
 const route = useRoute()
 const router = useRouter()
@@ -14,6 +16,8 @@ const password = ref('')
 const rememberMe = ref(true)
 const isSubmitting = ref(false)
 const errorMessage = ref('')
+const showMockHint = isMockMode()
+const passwordVisibility = usePasswordVisibility()
 
 const normalizedUsername = computed(() => username.value.trim())
 const isUsernameValid = computed(() => normalizedUsername.value.length >= 3)
@@ -55,6 +59,9 @@ async function handleSubmit() {
       <p class="login-card__eyebrow">账号</p>
       <h1>登录</h1>
       <p class="login-card__hint">使用已注册用户名登录，未注册请先创建账号。</p>
+      <p v-if="showMockHint" class="login-card__mock">
+        Mock 测试账号：<code>{{ DEFAULT_MOCK_LOGIN.username }}</code> / <code>{{ DEFAULT_MOCK_LOGIN.password }}</code>
+      </p>
 
       <form class="login-form" @submit.prevent="handleSubmit">
         <label class="field">
@@ -64,7 +71,22 @@ async function handleSubmit() {
 
         <label class="field">
           <span>密码</span>
-          <input v-model="password" type="password" autocomplete="current-password" placeholder="至少 8 位" />
+          <div class="field__control">
+            <input
+              v-model="password"
+              :type="passwordVisibility.inputType.value"
+              autocomplete="current-password"
+              placeholder="至少 8 位"
+            />
+            <button
+              type="button"
+              class="field__toggle"
+              :aria-label="passwordVisibility.toggleLabel.value"
+              @click="passwordVisibility.toggle"
+            >
+              {{ passwordVisibility.buttonText.value }}
+            </button>
+          </div>
         </label>
 
         <label class="check-row">
@@ -122,11 +144,28 @@ async function handleSubmit() {
   }
 
   &__hint,
+  &__mock,
   &__note,
   &__switch {
     margin: 0;
     color: var(--ink-muted);
     font-size: 0.9rem;
+  }
+
+  &__mock {
+    margin-top: 0.65rem;
+    padding: 0.7rem 0.8rem;
+    border-radius: 14px;
+    border: 1px solid var(--line-soft);
+    background:
+      radial-gradient(circle at top left, color-mix(in srgb, var(--brand-100) 45%, transparent), transparent 42%),
+      linear-gradient(180deg, color-mix(in srgb, var(--surface-overlay) 98%, transparent), color-mix(in srgb, var(--surface) 96%, transparent));
+
+    code {
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: 0.84em;
+      color: var(--ink-strong);
+    }
   }
 
   &__switch {
@@ -161,16 +200,53 @@ async function handleSubmit() {
     font-weight: 600;
   }
 
+  &__control {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
   input {
     width: 100%;
     border: 1px solid var(--line-soft);
     border-radius: 10px;
     background: #fff;
     color: var(--ink-strong);
-    padding: 0.62rem 0.72rem;
+    padding: 0.62rem 4.9rem 0.62rem 0.72rem;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 
     &:focus {
+      outline: none;
+      border-color: rgba(0, 113, 227, 0.35);
+      box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.1);
+    }
+  }
+
+  &__toggle {
+    position: absolute;
+    right: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    border: 1px solid color-mix(in srgb, var(--line-soft) 92%, transparent);
+    border-radius: 999px;
+    background:
+      linear-gradient(180deg, color-mix(in srgb, var(--surface-overlay) 98%, transparent), color-mix(in srgb, var(--surface) 96%, transparent));
+    color: var(--ink-main);
+    padding: 0.26rem 0.62rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition:
+      border-color 0.2s ease,
+      color 0.2s ease,
+      background 0.2s ease;
+
+    &:hover {
+      border-color: rgba(0, 113, 227, 0.24);
+      color: var(--brand-500);
+    }
+
+    &:focus-visible {
       outline: none;
       border-color: rgba(0, 113, 227, 0.35);
       box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.1);

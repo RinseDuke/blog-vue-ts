@@ -84,27 +84,30 @@ function formatSuggestionMeta(post: Post) {
   display: flex;
   justify-content: center;
   min-width: 0;
-  padding: 0 0.55rem;
+  padding: 0 0.2rem;
 }
 
 .search-input-wrapper {
   position: relative;
   width: 100%;
-  max-width: 620px;
+  max-width: 640px;
   display: flex;
   align-items: center;
 }
 
 .search-box input {
   width: 100%;
-  padding: 0.66rem 2.8rem 0.66rem 1rem;
-  background: rgba(255, 255, 255, 0.75);
-  border: 1px solid var(--line-soft);
+  padding: 0.72rem 3.4rem 0.72rem 1.05rem;
+  background: linear-gradient(180deg, var(--surface-strong), var(--surface));
+  border: 1px solid color-mix(in srgb, var(--line-strong) 90%, transparent);
   border-radius: 999px;
   font-size: 0.9rem;
   color: var(--ink-strong);
   outline: none;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.48),
+    0 10px 22px rgba(15, 23, 42, 0.04);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
 }
 
 .search-box input::placeholder {
@@ -112,21 +115,28 @@ function formatSuggestionMeta(post: Post) {
 }
 
 .search-box input:focus {
-  border-color: rgba(0, 113, 227, 0.4);
-  box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.12);
-  background: #fff;
+  border-color: rgba(0, 113, 227, 0.3);
+  box-shadow:
+    0 0 0 4px rgba(0, 113, 227, 0.1),
+    0 16px 34px rgba(15, 23, 42, 0.08);
+  background: var(--surface-strong);
 }
 
 .search-btn {
   position: absolute;
-  right: 0.9rem;
-  background: transparent;
-  border: none;
-  color: var(--ink-muted);
+  right: 0.45rem;
+  width: 34px;
+  height: 34px;
+  background: color-mix(in srgb, var(--surface-strong) 92%, transparent);
+  border: 1px solid var(--line-soft);
+  border-radius: 50%;
+  color: var(--ink-main);
   cursor: pointer;
   padding: 0;
   display: flex;
   align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
   transition: color 0.2s;
 }
 
@@ -136,21 +146,25 @@ function formatSuggestionMeta(post: Post) {
 
 .top-search__dropdown {
   position: absolute;
-  top: calc(100% + 0.5rem);
+  top: calc(100% + 0.7rem);
   left: 0;
   right: 0;
-  background: rgba(255, 255, 255, 0.94);
-  border: 1px solid var(--line-soft);
-  border-radius: 16px;
-  box-shadow: var(--shadow-md);
-  padding: 0.92rem;
+  background:
+    linear-gradient(180deg, var(--surface-overlay), color-mix(in srgb, var(--surface) 98%, transparent)),
+    radial-gradient(circle at top left, var(--brand-100), transparent 44%);
+  border: 1px solid color-mix(in srgb, var(--line-strong) 88%, transparent);
+  border-radius: 22px;
+  box-shadow:
+    var(--shadow-md),
+    inset 0 1px 0 rgba(255, 255, 255, 0.38);
+  padding: 1rem;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
   z-index: 40;
   max-height: 70vh;
   overflow-y: auto;
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(18px);
 }
 
 @media (max-width: 768px) {

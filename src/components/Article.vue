@@ -119,16 +119,32 @@ function formatDate(dateString: string) {
 
 <style scoped lang="less">
 .article-container {
-  max-width: 860px;
-  margin: 3.2rem auto 2.4rem;
+  max-width: 920px;
+  margin: 2.8rem auto 2.6rem;
   padding: 0 1.2rem;
+  position: relative;
+}
+
+.article-container::before {
+  content: '';
+  position: absolute;
+  inset: -24px 12% auto;
+  height: 160px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(0, 113, 227, 0.08), transparent 72%);
+  filter: blur(12px);
+  pointer-events: none;
 }
 
 .status-message {
   text-align: center;
   color: var(--ink-muted);
   font-size: 1.05rem;
-  padding: 4rem 0;
+  padding: 2rem 1.2rem;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(180deg, var(--surface-overlay), var(--surface));
+  box-shadow: var(--shadow-sm);
 }
 
 .status-message.error {
@@ -138,8 +154,10 @@ function formatDate(dateString: string) {
 .article-content {
   border: 1px solid var(--line-soft);
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: var(--shadow-sm);
+  background:
+    radial-gradient(circle at top left, rgba(0, 113, 227, 0.05), transparent 28%),
+    linear-gradient(180deg, color-mix(in srgb, var(--card-top) 98%, transparent), color-mix(in srgb, var(--surface-overlay) 96%, transparent));
+  box-shadow: var(--shadow-md);
   padding: clamp(1.25rem, 2.8vw, 2.2rem);
 }
 
@@ -251,7 +269,7 @@ function formatDate(dateString: string) {
   padding: 0.95rem 1rem;
   border-radius: var(--radius-md);
   border: 1px dashed var(--line-strong);
-  background: var(--bg-canvas-soft);
+  background: linear-gradient(180deg, var(--bg-canvas-soft), color-mix(in srgb, var(--surface) 92%, transparent));
   color: var(--ink-muted);
   line-height: 1.65;
 }

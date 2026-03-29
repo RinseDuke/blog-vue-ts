@@ -64,6 +64,26 @@ interface RegisterPayload extends AuthCredentials {
   visibility?: 'public' | 'private'
 }
 
+const DEFAULT_MOCK_CREATED_AT = '2026-01-01T00:00:00.000Z'
+
+export const DEFAULT_MOCK_LOGIN = {
+  username: 'demo',
+  password: 'Demo123456',
+  email: 'demo@sign.local',
+} as const
+
+const DEFAULT_MOCK_USERS: RegisteredUser[] = [
+  {
+    id: 'mock-demo-user',
+    username: DEFAULT_MOCK_LOGIN.username,
+    nickname: 'Demo User',
+    email: DEFAULT_MOCK_LOGIN.email,
+    password: DEFAULT_MOCK_LOGIN.password,
+    visibility: 'public',
+    createdAt: DEFAULT_MOCK_CREATED_AT,
+  },
+]
+
 function wait(ms = 400) {
   return new Promise<void>((resolve) => setTimeout(resolve, ms))
 }
@@ -116,12 +136,12 @@ function isRegisteredUser(value: unknown): value is RegisteredUser {
 function readRegisteredUsers(): RegisteredUser[] {
   try {
     const raw = localStorage.getItem(USERS_KEY)
-    if (!raw) return []
+    if (!raw) return DEFAULT_MOCK_USERS.map((user) => ({ ...user }))
 
     const parsed = JSON.parse(raw) as unknown
-    if (!Array.isArray(parsed)) return []
+    if (!Array.isArray(parsed)) return DEFAULT_MOCK_USERS.map((user) => ({ ...user }))
 
-    return parsed.filter(isRegisteredUser).map((user) => {
+    const normalizedUsers = parsed.filter(isRegisteredUser).map((user) => {
       const email = normalizeEmail(user.email)
       const legacy = buildLegacyUser(email)
 
@@ -139,8 +159,25 @@ function readRegisteredUsers(): RegisteredUser[] {
 
       return normalizedUser
     })
+
+    const mergedUsers = DEFAULT_MOCK_USERS.map((user) => ({ ...user }))
+
+    normalizedUsers.forEach((user) => {
+      const existingIndex = mergedUsers.findIndex(
+        (item) => item.username === user.username || item.email === user.email
+      )
+
+      if (existingIndex >= 0) {
+        mergedUsers.splice(existingIndex, 1, user)
+        return
+      }
+
+      mergedUsers.push(user)
+    })
+
+    return mergedUsers
   } catch {
-    return []
+    return DEFAULT_MOCK_USERS.map((user) => ({ ...user }))
   }
 }
 

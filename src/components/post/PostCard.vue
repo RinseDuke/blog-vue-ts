@@ -51,24 +51,34 @@ defineProps<{
 .post-card {
   display: flex;
   flex-direction: column;
-  background: linear-gradient(180deg, var(--card-top), var(--card-bottom));
+  position: relative;
+  background: var(--post-card-bg);
   border-radius: var(--radius-lg);
-  border: 1px solid var(--line-soft);
+  border: 1px solid var(--post-card-border);
   overflow: hidden;
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--post-card-shadow);
   transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
 
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto;
+    height: 1px;
+    background: var(--post-card-edge);
+    pointer-events: none;
+  }
+
   &:hover {
-    transform: translateY(-5px);
-    border-color: rgba(0, 113, 227, 0.26);
-    box-shadow: var(--shadow-md);
+    transform: translateY(-4px);
+    border-color: var(--post-card-hover-border);
+    box-shadow: var(--post-card-hover-shadow);
   }
 
   &__body {
     display: flex;
     flex-direction: column;
-    gap: 0.7rem;
-    padding: 1.25rem 1.4rem 1rem;
+    gap: 0.76rem;
+    padding: 1.35rem 1.45rem 1.05rem;
     flex: 1;
   }
 
@@ -76,7 +86,7 @@ defineProps<{
     display: flex;
     align-items: center;
     gap: 0.4rem;
-    color: var(--ink-muted);
+    color: var(--post-card-meta);
     font-size: 0.83rem;
     font-weight: 600;
   }
@@ -88,7 +98,7 @@ defineProps<{
   h3 {
     margin: 0;
     font-size: clamp(1.15rem, 2vw, 1.34rem);
-    color: var(--ink-strong);
+    color: var(--post-card-title);
     line-height: 1.3;
     letter-spacing: -0.01em;
     display: -webkit-box;
@@ -99,7 +109,7 @@ defineProps<{
 
   &__excerpt {
     margin: 0;
-    color: var(--ink-main);
+    color: var(--post-card-text);
     line-height: 1.55;
     font-size: 0.93rem;
     display: -webkit-box;
@@ -115,8 +125,9 @@ defineProps<{
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
-  padding: 0.7rem 1.4rem 1rem;
-  border-top: 1px solid var(--line-soft);
+  padding: 0.82rem 1.45rem 1rem;
+  border-top: 1px solid var(--post-card-divider);
+  background: var(--post-card-footer-bg);
 }
 
 .post-card__footer-actions {
@@ -131,7 +142,7 @@ defineProps<{
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  color: var(--ink-main);
+  color: var(--post-card-text);
   font-size: 0.88rem;
   font-weight: 600;
 
@@ -140,7 +151,7 @@ defineProps<{
     height: 34px;
     border-radius: 50%;
     object-fit: cover;
-    border: 1px solid var(--line-soft);
+    border: 1px solid var(--post-card-avatar-border);
   }
 }
 

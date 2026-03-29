@@ -14,7 +14,6 @@ const postsStore = usePostsStore()
 const { readDraft } = useDraft()
 const router = useRouter()
 const { isLoggedIn, userEmail } = storeToRefs(authStore)
-const { posts } = storeToRefs(postsStore)
 const { ensurePosts } = postsStore
 
 function handleLogout() {
@@ -100,13 +99,6 @@ const currentDraftStatusLabel = computed(() => {
 
   return parts.length ? `${parts.join(' · ')}，继续完善中` : '已保存，可继续补充内容'
 })
-
-const overviewMetrics = computed(() => [
-  { label: '文章', value: posts.value.length, helper: '当前站内内容' },
-  { label: '草稿', value: draftCount.value, helper: draftCount.value ? '等待继续完善' : '暂无草稿' },
-  { label: '收藏', value: 2, helper: '已加入书签' },
-  { label: '关注', value: 1, helper: '创作者订阅' },
-])
 
 const relationshipMetrics = [
   { label: '关注了', value: 1 },
@@ -200,13 +192,6 @@ function enterEditMode() {
           </div>
         </div>
 
-        <div class="profile-hero__stats">
-          <article v-for="item in overviewMetrics" :key="item.label" class="metric-card">
-            <p class="metric-card__value">{{ item.value }}</p>
-            <p class="metric-card__label">{{ item.label }}</p>
-            <p class="metric-card__helper">{{ item.helper }}</p>
-          </article>
-        </div>
       </header>
 
       <div class="profile-layout">
@@ -533,39 +518,6 @@ function enterEditMode() {
 .hero-btn--secondary:hover {
   border-color: rgba(0, 113, 227, 0.26);
   background: var(--surface-hover);
-}
-
-.profile-hero__stats {
-  padding: 0 1.75rem 1.6rem;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.85rem;
-}
-
-.metric-card {
-  padding: 1rem 1rem 0.95rem;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--line-soft);
-  background: var(--surface-strong);
-}
-
-.metric-card__value {
-  margin: 0;
-  font-size: 1.55rem;
-  font-weight: 800;
-  color: var(--ink-strong);
-}
-
-.metric-card__label {
-  margin: 0.18rem 0 0;
-  color: var(--ink-main);
-  font-weight: 700;
-}
-
-.metric-card__helper {
-  margin: 0.32rem 0 0;
-  color: var(--ink-muted);
-  font-size: 0.82rem;
 }
 
 .profile-layout {
@@ -903,10 +855,6 @@ function enterEditMode() {
 }
 
 @media (max-width: 820px) {
-  .profile-hero__stats {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .profile-hero__body {
     align-items: flex-start;
   }
@@ -935,11 +883,6 @@ function enterEditMode() {
     width: 112px;
     height: 112px;
     font-size: 2.2rem;
-  }
-
-  .profile-hero__stats {
-    grid-template-columns: 1fr;
-    padding: 0 1rem 1rem;
   }
 
   .profile-hero__actions {

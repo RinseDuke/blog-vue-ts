@@ -11,6 +11,22 @@
   --surface-overlay: rgba(255, 255, 255, 0.94);
   --card-top: rgba(255, 255, 255, 0.98);
   --card-bottom: rgba(255, 255, 255, 0.92);
+  --post-card-bg: linear-gradient(180deg, var(--card-top), var(--card-bottom));
+  --post-card-border: var(--line-soft);
+  --post-card-divider: var(--line-soft);
+  --post-card-edge: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.72), transparent);
+  --post-card-footer-bg:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.14), transparent),
+    color-mix(in srgb, var(--surface) 88%, transparent);
+  --post-card-shadow: var(--shadow-sm);
+  --post-card-hover-border: rgba(0, 113, 227, 0.26);
+  --post-card-hover-shadow:
+    0 20px 40px rgba(15, 23, 42, 0.1),
+    0 8px 18px rgba(15, 23, 42, 0.06);
+  --post-card-title: var(--ink-strong);
+  --post-card-text: var(--ink-main);
+  --post-card-meta: var(--ink-muted);
+  --post-card-avatar-border: var(--line-soft);
   --ink-strong: #1d1d1f;
   --ink-main: #2d2d32;
   --ink-muted: #6e6e73;
@@ -29,6 +45,25 @@
   --radius-sm: 10px;
   --radius-md: 14px;
   --radius-lg: 22px;
+  --write-content-max-width: 980px;
+  --write-panel-border: color-mix(in srgb, var(--line-soft) 94%, transparent);
+  --write-panel-divider: color-mix(in srgb, var(--line-strong) 56%, transparent);
+  --write-panel-shadow:
+    0 18px 38px rgba(15, 23, 42, 0.08),
+    0 6px 14px rgba(15, 23, 42, 0.05);
+  --write-panel-bg:
+    radial-gradient(circle at top left, color-mix(in srgb, var(--brand-100) 78%, transparent), transparent 34%),
+    linear-gradient(180deg, color-mix(in srgb, var(--surface-overlay) 99%, transparent), color-mix(in srgb, var(--surface) 95%, transparent));
+  --write-panel-muted-bg:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface-strong) 84%, transparent), color-mix(in srgb, var(--surface) 76%, transparent));
+  --write-panel-inline-bg: color-mix(in srgb, var(--surface-strong) 88%, transparent);
+  --write-panel-inline-hover: color-mix(in srgb, var(--surface-overlay) 90%, var(--brand-100) 10%);
+  --write-panel-inline-border: color-mix(in srgb, var(--line-soft) 90%, transparent);
+  --write-panel-inset-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.38);
+  --write-status-rail-bg:
+    linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--bg-canvas) 82%, transparent) 48%, color-mix(in srgb, var(--bg-canvas) 96%, transparent) 100%);
+  --write-status-bar-height: 112px;
+  --write-status-bar-height-mobile: 150px;
 }
 
 :root[data-theme='dark'] {
@@ -42,6 +77,22 @@
   --surface-overlay: rgba(19, 25, 34, 0.94);
   --card-top: rgba(24, 32, 43, 0.98);
   --card-bottom: rgba(18, 25, 34, 0.92);
+  --post-card-bg: linear-gradient(180deg, rgba(22, 27, 34, 0.98), rgba(20, 25, 32, 0.98));
+  --post-card-border: #30363d;
+  --post-card-divider: rgba(48, 54, 61, 0.92);
+  --post-card-edge: linear-gradient(90deg, transparent, rgba(240, 246, 252, 0.08), transparent);
+  --post-card-footer-bg:
+    linear-gradient(180deg, rgba(240, 246, 252, 0.03), rgba(13, 17, 23, 0.08)),
+    linear-gradient(180deg, rgba(25, 31, 40, 0.98), rgba(22, 27, 34, 0.98));
+  --post-card-shadow: 0 16px 34px rgba(1, 4, 9, 0.28);
+  --post-card-hover-border: rgba(88, 166, 255, 0.34);
+  --post-card-hover-shadow:
+    0 18px 34px rgba(1, 4, 9, 0.26),
+    0 8px 16px rgba(1, 4, 9, 0.16);
+  --post-card-title: #e6edf3;
+  --post-card-text: #c9d1d9;
+  --post-card-meta: #8b949e;
+  --post-card-avatar-border: rgba(139, 148, 158, 0.28);
   --ink-strong: #f3f6fb;
   --ink-main: #d9e0ea;
   --ink-muted: #95a3b8;
@@ -57,6 +108,22 @@
   --warning-500: #ffb15e;
   --shadow-sm: 0 16px 36px rgba(0, 0, 0, 0.36);
   --shadow-md: 0 26px 60px rgba(0, 0, 0, 0.42);
+  --write-panel-border: rgba(110, 118, 129, 0.34);
+  --write-panel-divider: rgba(110, 118, 129, 0.26);
+  --write-panel-shadow:
+    0 18px 34px rgba(1, 4, 9, 0.32),
+    0 8px 16px rgba(1, 4, 9, 0.18);
+  --write-panel-bg:
+    radial-gradient(circle at top left, rgba(88, 166, 255, 0.12), transparent 36%),
+    linear-gradient(180deg, rgba(24, 32, 43, 0.96), rgba(20, 27, 36, 0.95));
+  --write-panel-muted-bg:
+    linear-gradient(180deg, rgba(28, 35, 46, 0.92), rgba(21, 27, 36, 0.9));
+  --write-panel-inline-bg: rgba(23, 29, 39, 0.9);
+  --write-panel-inline-hover: rgba(31, 40, 53, 0.96);
+  --write-panel-inline-border: rgba(110, 118, 129, 0.3);
+  --write-panel-inset-shadow: inset 0 1px 0 rgba(240, 246, 252, 0.04);
+  --write-status-rail-bg:
+    linear-gradient(180deg, rgba(13, 17, 23, 0) 0%, rgba(13, 17, 23, 0.72) 42%, rgba(13, 17, 23, 0.96) 100%);
 }
 
 *,
@@ -104,8 +171,10 @@ textarea {
   color: var(--ink-strong);
 }
 
-html[data-theme='dark'] .topbar {
-  background: var(--surface-frost) !important;
+html[data-theme='dark'] .topbar__inner {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface-overlay) 94%, transparent), color-mix(in srgb, var(--surface-frost) 98%, transparent)),
+    radial-gradient(circle at top left, rgba(105, 180, 255, 0.14), transparent 40%) !important;
 }
 
 html[data-theme='dark'] .navigation {

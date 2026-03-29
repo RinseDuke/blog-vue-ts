@@ -60,6 +60,21 @@ describe('useAuthStore backend-aligned auth flow', () => {
     )
   })
 
+  it('allows logging in with seeded mock credentials in a fresh environment', async () => {
+    const store = useAuthStore()
+
+    await store.login({
+      username: 'demo',
+      password: 'Demo123456',
+      rememberMe: true,
+    })
+
+    expect(store.isLoggedIn).toBe(true)
+    expect(store.username).toBe('demo')
+    expect(store.userEmail).toBe('demo@sign.local')
+    expect(localStorage.getItem(AUTH_KEY)).toContain('demo@sign.local')
+  })
+
   it('rejects duplicate usernames during registration', async () => {
     const store = useAuthStore()
 

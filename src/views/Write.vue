@@ -421,7 +421,7 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   display: flex;
   flex-direction: column;
   min-height: calc(100vh - 78px);
-  padding-bottom: 36px;
+  padding-bottom: calc(var(--write-status-bar-height, 112px) + env(safe-area-inset-bottom, 0px));
   background: var(--bg-canvas);
 }
 
@@ -739,6 +739,10 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
 
 
 @media (max-width: 768px) {
+  .write-page {
+    padding-bottom: calc(var(--write-status-bar-height-mobile, 150px) + env(safe-area-inset-bottom, 0px));
+  }
+
   .editor-body {
     padding-left: 14px;
     padding-right: 14px;

@@ -40,8 +40,10 @@ const themeToggleTitle = computed(() => themeToggleLabel.value)
   padding: 4px;
   border: 1px solid var(--line-soft);
   border-radius: 999px;
-  background: var(--surface-frost);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.32);
+  background: linear-gradient(180deg, var(--surface-frost), var(--surface));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    0 8px 18px rgba(15, 23, 42, 0.06);
   cursor: pointer;
   flex-shrink: 0;
   margin-left: auto;

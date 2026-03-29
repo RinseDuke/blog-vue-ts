@@ -57,20 +57,41 @@ onMounted(async () => {
 <style scoped lang="less">
 .search {
   width: 100%;
-  padding: 64px 20px 48px;
+  padding: 60px 20px 48px;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  position: relative;
+}
+
+.search::before {
+  content: '';
+  position: absolute;
+  inset: 8px auto auto 50%;
+  width: min(920px, 90vw);
+  height: 150px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(0, 113, 227, 0.08), transparent 72%);
+  pointer-events: none;
+  filter: blur(10px);
 }
 
 .search__summary {
-  max-width: 960px;
+  max-width: 1040px;
   width: 100%;
   margin: 0 auto;
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 1rem;
+  padding: 1rem 1.15rem;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-lg);
+  background:
+    radial-gradient(circle at top left, rgba(0, 113, 227, 0.06), transparent 34%),
+    linear-gradient(180deg, var(--surface-overlay), var(--surface));
+  box-shadow: var(--shadow-sm);
 }
 
 .search__meta {
@@ -92,7 +113,7 @@ onMounted(async () => {
   flex-direction: column;
   gap: 1.5rem;
   width: 100%;
-  max-width: 960px;
+  max-width: 1040px;
   margin: 0 auto;
   padding-bottom: 8px;
 
@@ -103,6 +124,7 @@ onMounted(async () => {
     border: 1px solid var(--line-soft);
     background: var(--surface);
     color: var(--ink-muted);
+    box-shadow: var(--shadow-sm);
 
     &--error {
       background: var(--danger-bg);

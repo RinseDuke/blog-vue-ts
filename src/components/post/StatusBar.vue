@@ -1,69 +1,102 @@
-<!-- 编辑器底部状态栏 -->
+﻿<!-- 编辑器底部状态栏 -->
 <template>
   <footer class="status-bar">
-    <div class="status-bar__left">
-      <span class="sb-meta">字数: {{ wordCount }}</span>
-      <i class="sb-sep" />
+    <div class="status-bar__inner">
+      <div class="status-bar__shell">
+        <div class="status-bar__left">
+          <span class="sb-chip">字数 {{ wordCount }}</span>
+          <i class="sb-sep" />
 
-      <!-- Mode Switcher Button -->
-      <div class="mode-switcher" ref="switcherRef" @keydown.esc.stop="menuOpen = false">
-        <button
-          type="button"
-          class="sb-btn sb-mode-btn"
-          aria-haspopup="menu"
-          :aria-expanded="menuOpen"
-          aria-controls="write-mode-menu"
-          @click="toggleMenu"
-        >
-          {{ currentModeLabel }}
-          <svg class="sb-mode-arrow" :class="{ 'sb-mode-arrow--open': menuOpen }" width="10" height="6" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="1,5 5,1 9,5"/>
-          </svg>
-        </button>
-
-        <!-- Dropdown Menu -->
-        <Transition name="mode-menu">
-          <div v-if="menuOpen" id="write-mode-menu" class="mode-menu" role="menu">
+          <div class="mode-switcher" ref="switcherRef" @keydown.esc.stop="menuOpen = false">
             <button
-              v-for="mode in modes"
-              :key="mode.value"
               type="button"
-              role="menuitemradio"
-              :aria-checked="mode.value === viewMode"
-              :class="['mode-menu__item', { 'mode-menu__item--active': mode.value === viewMode }]"
-              @click="selectMode(mode.value)"
+              class="sb-btn sb-surface-btn sb-mode-btn"
+              aria-haspopup="menu"
+              :aria-expanded="menuOpen"
+              aria-controls="write-mode-menu"
+              @click="toggleMenu"
             >
-              <span class="mode-menu__icon" v-html="mode.icon"></span>
-              <span class="mode-menu__label">{{ mode.label }}</span>
-              <svg v-if="mode.value === viewMode" class="mode-menu__check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="20 6 9 17 4 12"/>
+              {{ currentModeLabel }}
+              <svg
+                class="sb-mode-arrow"
+                :class="{ 'sb-mode-arrow--open': menuOpen }"
+                width="10"
+                height="6"
+                viewBox="0 0 10 6"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="1,5 5,1 9,5" />
               </svg>
             </button>
-          </div>
-        </Transition>
-      </div>
-    </div>
 
-    <div class="status-bar__right">
-      <button type="button" class="sb-btn" @click="$emit('clear-draft')">删除</button>
-      <span class="sb-dot">·</span>
-      <button type="button" class="sb-btn sb-draft" :disabled="isPublishing" @click="$emit('save-draft')">
-        草稿
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-          <path d="M19.35 10.04A7.49 7.49 0 0 0 12 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 0 0 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/>
-        </svg>
-      </button>
-      <span v-if="saveLabel" class="sb-saved">{{ saveLabel }}</span>
-      <button type="button" class="sb-btn" :disabled="isPublishing" @click="$emit('export-markdown')">导出</button>
-      <button type="button" class="sb-publish" :disabled="isPublishing" @click="$emit('publish')">
-        {{ publishLabel }}
-      </button>
+            <Transition name="mode-menu">
+              <div v-if="menuOpen" id="write-mode-menu" class="mode-menu" role="menu">
+                <button
+                  v-for="mode in modes"
+                  :key="mode.value"
+                  type="button"
+                  role="menuitemradio"
+                  :aria-checked="mode.value === viewMode"
+                  :class="['mode-menu__item', { 'mode-menu__item--active': mode.value === viewMode }]"
+                  @click="selectMode(mode.value)"
+                >
+                  <span class="mode-menu__icon" v-html="mode.icon"></span>
+                  <span class="mode-menu__label">{{ mode.label }}</span>
+                  <svg
+                    v-if="mode.value === viewMode"
+                    class="mode-menu__check"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                </button>
+              </div>
+            </Transition>
+          </div>
+
+          <span v-if="saveLabel" class="sb-saved">{{ saveLabel }}</span>
+        </div>
+
+        <div class="status-bar__right">
+          <button type="button" class="sb-btn sb-surface-btn" @click="$emit('clear-draft')">删除</button>
+          <button
+            type="button"
+            class="sb-btn sb-surface-btn sb-draft"
+            :disabled="isPublishing"
+            @click="$emit('save-draft')"
+          >
+            草稿
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+              <path
+                d="M19.35 10.04A7.49 7.49 0 0 0 12 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 0 0 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"
+              />
+            </svg>
+          </button>
+          <button type="button" class="sb-btn sb-surface-btn" :disabled="isPublishing" @click="$emit('export-markdown')">
+            导出
+          </button>
+          <button type="button" class="sb-publish" :disabled="isPublishing" @click="$emit('publish')">
+            {{ publishLabel }}
+          </button>
+        </div>
+      </div>
     </div>
   </footer>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 
 defineProps<{
   wordCount: number
@@ -129,209 +162,323 @@ onBeforeUnmount(() => {
 
 <style scoped lang="less">
 .status-bar {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 100;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 16px;
-    height: 36px;
-    background: var(--surface-strong);
-    border-top: 1px solid var(--line-soft);
-    box-shadow: 0 -1px 6px rgba(0, 0, 0, 0.03);
-    font-size: 0.78rem;
-    color: var(--ink-muted);
-    flex-shrink: 0;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 18px 0 16px;
+  background: var(--write-status-rail-bg);
+  backdrop-filter: blur(12px);
+  pointer-events: none;
+  font-size: 0.82rem;
+  color: var(--ink-muted);
+  flex-shrink: 0;
+}
+
+.status-bar__inner {
+  max-width: var(--write-content-max-width, 980px);
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.status-bar__shell {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px 18px;
+  min-height: 64px;
+  padding: 12px 14px;
+  border: 1px solid var(--write-panel-border);
+  border-radius: var(--radius-lg);
+  background: var(--write-panel-bg);
+  box-shadow: var(--write-panel-shadow), var(--write-panel-inset-shadow);
+  backdrop-filter: blur(16px);
+  pointer-events: auto;
 }
 
 .status-bar__left,
 .status-bar__right {
-    display: flex;
-    align-items: center;
-    gap: 6px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  min-width: 0;
+}
+
+.status-bar__left {
+  flex: 1 1 auto;
+}
+
+.status-bar__right {
+  justify-content: flex-end;
+}
+
+.sb-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--write-panel-inline-border);
+  background: var(--write-panel-inline-bg);
+  box-shadow: var(--write-panel-inset-shadow);
+  color: var(--ink-strong);
+  font-size: 0.8rem;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .sb-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 0.78rem;
-    color: var(--ink-muted);
-    padding: 1px 2px;
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-    transition: color 0.15s;
-
-    &:hover {
-        color: var(--brand-500);
-    }
-
-    &:disabled {
-        cursor: not-allowed;
-        color: var(--line-strong);
-    }
+  appearance: none;
+  border: 1px solid var(--write-panel-inline-border);
+  background: var(--write-panel-inline-bg);
+  box-shadow: var(--write-panel-inset-shadow);
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ink-main);
+  padding: 0 14px;
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  transition:
+    background 0.16s ease,
+    border-color 0.16s ease,
+    color 0.16s ease,
+    transform 0.12s ease,
+    box-shadow 0.16s ease;
+  white-space: nowrap;
 }
 
-/* Mode Switcher */
+.sb-btn:hover {
+  background: var(--write-panel-inline-hover);
+  color: var(--ink-strong);
+  border-color: color-mix(in srgb, var(--write-panel-inline-border) 78%, var(--brand-100) 22%);
+}
+
+.sb-btn:active {
+  transform: translateY(1px);
+}
+
+.sb-btn:disabled {
+  cursor: not-allowed;
+  color: var(--ink-muted);
+  opacity: 0.58;
+  transform: none;
+}
+
+.sb-surface-btn:focus-visible,
+.sb-publish:focus-visible,
+.mode-menu__item:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand-100) 72%, transparent), var(--write-panel-inset-shadow);
+}
+
 .mode-switcher {
-    position: relative;
+  position: relative;
 }
 
 .sb-mode-btn {
-    font-weight: 500;
-    gap: 4px;
+  font-weight: 700;
+  gap: 8px;
 }
 
 .sb-mode-arrow {
-    transition: transform 0.22s cubic-bezier(.4, 0, .2, 1);
+  color: var(--ink-muted);
+  transition: transform 0.22s cubic-bezier(.4, 0, .2, 1);
+}
 
-    &--open {
-        transform: rotate(180deg);
-    }
+.sb-mode-arrow--open {
+  transform: rotate(180deg);
 }
 
 .mode-menu {
-    position: absolute;
-    bottom: calc(100% + 10px);
-    left: 0;
-    min-width: 160px;
-    background: var(--surface-strong);
-    border: 1px solid var(--line-soft);
-    border-radius: var(--radius-sm);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.10), 0 2px 6px rgba(0, 0, 0, 0.04);
-    padding: 4px;
-    z-index: 200;
+  position: absolute;
+  bottom: calc(100% + 14px);
+  left: 0;
+  min-width: 188px;
+  padding: 6px;
+  border: 1px solid var(--write-panel-border);
+  border-radius: var(--radius-md);
+  background: var(--write-panel-bg);
+  box-shadow: var(--write-panel-shadow);
+  backdrop-filter: blur(16px);
+  z-index: 200;
+  pointer-events: auto;
 }
 
 .mode-menu__item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-    padding: 7px 10px;
-    border: none;
-    background: none;
-    border-radius: 7px;
-    cursor: pointer;
-    font-size: 0.8rem;
-    color: var(--ink-main);
-    transition: background 0.14s, color 0.14s;
-    white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  color: var(--ink-main);
+  transition: background 0.14s, color 0.14s, border-color 0.14s;
+  white-space: nowrap;
+}
 
-    &:hover {
-        background: var(--bg-canvas-soft);
-    }
+.mode-menu__item:hover {
+  background: var(--write-panel-inline-hover);
+}
 
-    &--active {
-        color: var(--brand-500);
-        background: rgba(0, 113, 227, 0.06);
-        font-weight: 600;
-    }
+.mode-menu__item--active {
+  color: var(--brand-500);
+  background: color-mix(in srgb, var(--brand-100) 66%, transparent);
+  border-color: color-mix(in srgb, var(--brand-100) 80%, transparent);
+  font-weight: 600;
 }
 
 .mode-menu__icon {
-    display: inline-flex;
-    align-items: center;
-    flex-shrink: 0;
-    color: inherit;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  color: inherit;
 }
 
 .mode-menu__label {
-    flex: 1;
-    text-align: left;
+  flex: 1;
+  text-align: left;
 }
 
 .mode-menu__check {
-    flex-shrink: 0;
-    color: var(--brand-500);
+  flex-shrink: 0;
+  color: var(--brand-500);
 }
 
-/* Menu transition */
 .mode-menu-enter-active {
-    transition: opacity 0.18s ease, transform 0.18s cubic-bezier(.4, 0, .2, 1);
+  transition: opacity 0.18s ease, transform 0.18s cubic-bezier(.4, 0, .2, 1);
 }
 
 .mode-menu-leave-active {
-    transition: opacity 0.12s ease, transform 0.12s ease;
+  transition: opacity 0.12s ease, transform 0.12s ease;
 }
 
 .mode-menu-enter-from,
 .mode-menu-leave-to {
-    opacity: 0;
-    transform: translateY(6px);
+  opacity: 0;
+  transform: translateY(6px);
 }
 
 .sb-sep {
-    width: 1px;
-    height: 11px;
-    background: var(--line-soft);
-    display: block;
-}
-
-.sb-meta {
-    white-space: nowrap;
-}
-
-.sb-dot {
-    color: var(--line-strong);
-    font-weight: 700;
+  width: 1px;
+  height: 22px;
+  background: var(--write-panel-divider);
+  display: block;
+  flex-shrink: 0;
 }
 
 .sb-draft svg {
-    color: var(--ink-muted);
+  color: currentColor;
 }
 
 .sb-saved {
-    font-size: 0.72rem;
-    color: var(--ink-muted);
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px dashed var(--write-panel-divider);
+  background: color-mix(in srgb, var(--write-panel-inline-bg) 78%, transparent);
+  color: var(--ink-muted);
+  font-size: 0.74rem;
+  white-space: nowrap;
 }
 
 .sb-publish {
-    background: var(--brand-500);
-    color: #fff;
-    border: none;
-    border-radius: 6px;
-    padding: 3px 16px;
-    font-size: 0.78rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.16s, transform 0.12s;
+  min-height: 38px;
+  padding: 0 18px;
+  border: 1px solid color-mix(in srgb, var(--brand-500) 60%, var(--write-panel-inline-border) 40%);
+  border-radius: 999px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--brand-400) 86%, white 14%), var(--brand-500));
+  color: #fff;
+  box-shadow: 0 14px 24px color-mix(in srgb, var(--brand-100) 42%, transparent);
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    transform 0.12s ease,
+    filter 0.16s ease,
+    box-shadow 0.16s ease;
+}
 
-    &:hover {
-        background: #005ec5;
-    }
+.sb-publish:hover {
+  filter: saturate(1.05) brightness(1.03);
+  box-shadow: 0 16px 26px color-mix(in srgb, var(--brand-100) 48%, transparent);
+}
 
-    &:active {
-        transform: scale(0.97);
-    }
+.sb-publish:active {
+  transform: translateY(1px);
+}
 
-    &:disabled {
-        cursor: not-allowed;
-        background: #9ca3af;
-    }
+.sb-publish:disabled {
+  cursor: not-allowed;
+  filter: grayscale(0.12);
+  opacity: 0.62;
+  box-shadow: none;
 }
 
 @media (max-width: 768px) {
-    .status-bar {
-        padding: 0 8px;
-        height: 32px;
-    }
+  .status-bar {
+    padding: 12px 0;
+  }
 
-    .status-bar__left,
-    .status-bar__right {
-        gap: 4px;
-    }
+  .status-bar__inner {
+    padding: 0 14px;
+  }
 
-    .sb-saved {
-        display: none;
-    }
+  .status-bar__shell {
+    align-items: stretch;
+    padding: 12px;
+    border-radius: 20px;
+  }
 
-    .sb-meta:last-child {
-        display: none;
-    }
+  .status-bar__left,
+  .status-bar__right {
+    width: 100%;
+    gap: 8px;
+  }
+
+  .status-bar__right {
+    justify-content: space-between;
+  }
+
+  .sb-sep,
+  .sb-saved {
+    display: none;
+  }
+
+  .sb-chip,
+  .sb-btn,
+  .sb-publish {
+    min-height: 36px;
+  }
+
+  .sb-btn,
+  .sb-publish {
+    flex: 1 1 auto;
+    justify-content: center;
+    padding: 0 12px;
+  }
+
+  .mode-menu {
+    bottom: calc(100% + 12px);
+  }
+}
+
+@media (max-width: 520px) {
+  .status-bar__right .sb-btn,
+  .status-bar__right .sb-publish {
+    flex: 1 1 calc(50% - 4px);
+  }
 }
 </style>

@@ -75,8 +75,6 @@ const filteredPosts = computed(() => {
 })
 
 const displayCount = computed(() => filteredPosts.value.length)
-const totalPosts = computed(() => posts.value.length)
-const totalAuthors = computed(() => new Set(posts.value.map((post) => post.author.id)).size)
 
 const totalPages = computed(() => Math.max(1, Math.ceil(displayCount.value / pageSize.value)))
 
@@ -232,27 +230,6 @@ function isPostInDateRange(publishedAt: string) {
 
 <template>
   <section class="article-page">
-    <header class="article-page__hero">
-      <div class="article-page__stats">
-        <article class="hero-stat">
-          <p>文章总数</p>
-          <strong>{{ totalPosts }}</strong>
-        </article>
-        <article class="hero-stat">
-          <p>总页数</p>
-          <strong>{{ totalPages }}</strong>
-        </article>
-        <article class="hero-stat">
-          <p>作者数</p>
-          <strong>{{ totalAuthors }}</strong>
-        </article>
-        <article class="hero-stat">
-          <p>当前可见</p>
-          <strong>{{ displayCount }}</strong>
-        </article>
-      </div>
-    </header>
-
     <section class="article-layout">
       <section class="feed" aria-live="polite">
         <header class="feed__head">
@@ -319,9 +296,13 @@ function isPostInDateRange(publishedAt: string) {
 
       <ArticleFilters
         v-model:date-preset="datePreset"
+        v-model:sort-mode="sortMode"
+        v-model:page-size="pageSize"
         v-model:custom-start-date="customStartDate"
         v-model:custom-end-date="customEndDate"
         :date-options="dateOptions"
+        :sort-options="sortOptions"
+        :page-size-options="pageSizeOptions"
         :has-active-filters="hasActiveFilters"
         :is-custom-date-invalid="isCustomDateInvalid"
         @clear-filters="clearFilters"
@@ -334,45 +315,24 @@ function isPostInDateRange(publishedAt: string) {
 //文章卡片
 .article-page {
   width: 100%;
-  padding: 64px 20px 48px;
+  padding: 60px 20px 48px;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  position: relative;
 }
 
-.article-page__hero {
-  max-width: 1200px;
-  width: 100%;
-  margin: 0 auto;
-}
-
-.article-page__stats {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.75rem;
-}
-
-// 统计信息卡片
-.hero-stat {
-  border-radius: var(--radius-md);
-  border: 1px solid var(--line-soft);
-  background: var(--surface);
-  padding: 0.84rem 0.9rem;
-  backdrop-filter: blur(8px);
-
-  p {
-    margin: 0;
-    color: var(--ink-muted);
-    font-size: 0.85rem;
-  }
-
-  strong {
-    margin-top: 0.2rem;
-    display: block;
-    color: var(--ink-strong);
-    font-size: 1.3rem;
-    letter-spacing: -0.01em;
-  }
+.article-page::before {
+  content: '';
+  position: absolute;
+  inset: 8px auto auto 50%;
+  width: min(1040px, 92vw);
+  height: 180px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(0, 113, 227, 0.08), transparent 72%);
+  pointer-events: none;
+  filter: blur(12px);
 }
 
 //文章列表布局
@@ -397,6 +357,14 @@ function isPostInDateRange(publishedAt: string) {
     display: flex;
     flex-direction: column;
     gap: 0.9rem;
+    padding: 1.1rem 1.2rem;
+    border: 1px solid var(--line-soft);
+    border-radius: var(--radius-lg);
+    background:
+      radial-gradient(circle at top left, color-mix(in srgb, var(--brand-100) 55%, transparent), transparent 36%),
+      linear-gradient(180deg, color-mix(in srgb, var(--surface-overlay) 98%, transparent), color-mix(in srgb, var(--surface) 96%, transparent));
+    box-shadow: var(--shadow-sm);
+    backdrop-filter: blur(14px);
   }
 
   &__title {
@@ -420,18 +388,18 @@ function isPostInDateRange(publishedAt: string) {
   }
 
   &__toolbar {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 230px 120px;
-    gap: 0.7rem;
+    display: none;
   }
 
   &__state {
     padding: 2rem;
     text-align: center;
     border-radius: var(--radius-lg);
-    background: var(--surface);
+    background:
+      linear-gradient(180deg, color-mix(in srgb, var(--surface-overlay) 98%, transparent), color-mix(in srgb, var(--surface) 96%, transparent));
     border: 1px solid var(--line-soft);
     color: var(--ink-muted);
+    box-shadow: var(--shadow-sm);
 
     p {
       margin: 0;
@@ -492,7 +460,7 @@ function isPostInDateRange(publishedAt: string) {
 //重置按钮
 .empty-reset {
   border: 1px solid var(--line-soft);
-  background: var(--surface-strong);
+  background: linear-gradient(180deg, var(--surface-strong), var(--surface));
   color: var(--brand-500);
   border-radius: var(--radius-sm);
   padding: 0.45rem 0.8rem;
@@ -510,7 +478,7 @@ function isPostInDateRange(publishedAt: string) {
 
   button {
     border: 1px solid var(--line-soft);
-    background: var(--surface-strong);
+    background: linear-gradient(180deg, var(--surface-strong), var(--surface));
     color: var(--ink-main);
     border-radius: var(--radius-sm);
     padding: 0.4rem 0.75rem;
@@ -540,10 +508,6 @@ function isPostInDateRange(publishedAt: string) {
 }
 
 @media (max-width: 900px) {
-  .article-page__stats {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .feed__toolbar {
     grid-template-columns: 1fr;
   }
@@ -554,9 +518,4 @@ function isPostInDateRange(publishedAt: string) {
   }
 }
 
-@media (max-width: 560px) {
-  .article-page__stats {
-    grid-template-columns: 1fr;
-  }
-}
 </style>

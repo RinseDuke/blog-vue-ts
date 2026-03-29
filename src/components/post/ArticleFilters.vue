@@ -1,8 +1,15 @@
 <!-- 文章列表页侧栏筛选器 -->
 <script setup lang="ts">
 import { computed } from 'vue'
+import DropdownSelect from '@/components/ui/DropdownSelect.vue'
+import DatePickerInput from '@/components/ui/DatePickerInput.vue'
 
 interface DateOption {
+  label: string
+  value: string
+}
+
+interface SortOption {
   label: string
   value: string
 }
@@ -10,6 +17,10 @@ interface DateOption {
 const props = defineProps<{
   datePreset: string
   dateOptions: DateOption[]
+  sortMode: string
+  sortOptions: SortOption[]
+  pageSize: number
+  pageSizeOptions: number[]
   customStartDate: string
   customEndDate: string
   hasActiveFilters: boolean
@@ -18,6 +29,8 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'update:datePreset', value: string): void
+  (e: 'update:sortMode', value: string): void
+  (e: 'update:pageSize', value: number): void
   (e: 'update:customStartDate', value: string): void
   (e: 'update:customEndDate', value: string): void
   (e: 'clearFilters'): void
@@ -27,6 +40,23 @@ const datePresetValue = computed({
   get: () => props.datePreset,
   set: (value: string) => emit('update:datePreset', value),
 })
+
+const sortModeValue = computed({
+  get: () => props.sortMode,
+  set: (value: string) => emit('update:sortMode', value),
+})
+
+const pageSizeValue = computed({
+  get: () => props.pageSize,
+  set: (value: number) => emit('update:pageSize', value),
+})
+
+const pageSizeDropdownOptions = computed(() =>
+  props.pageSizeOptions.map((size) => ({
+    label: `${size} / 页`,
+    value: size,
+  }))
+)
 
 const customStartDateValue = computed({
   get: () => props.customStartDate,
@@ -46,20 +76,28 @@ const customEndDateValue = computed({
       <button type="button" class="filter-reset" :disabled="!hasActiveFilters" @click="emit('clearFilters')">重置</button>
     </header>
 
+    <section class="filter-group filter-group--compact">
+      <p class="filter-group__title">排序</p>
+      <DropdownSelect v-model="sortModeValue" :options="sortOptions" placeholder="选择排序" />
+    </section>
+
+    <section class="filter-group filter-group--compact">
+      <p class="filter-group__title">每页显示</p>
+      <DropdownSelect v-model="pageSizeValue" :options="pageSizeDropdownOptions" placeholder="选择数量" />
+    </section>
+
     <section class="filter-group">
       <p class="filter-group__title">发布时间</p>
-      <select v-model="datePresetValue" class="filter-select">
-        <option v-for="option in dateOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
-      </select>
+      <DropdownSelect v-model="datePresetValue" :options="dateOptions" placeholder="选择时间" />
 
       <div v-if="datePresetValue === 'custom'" class="date-range">
         <label>
           <span>开始日期</span>
-          <input v-model="customStartDateValue" type="date" />
+          <DatePickerInput v-model="customStartDateValue" />
         </label>
         <label>
           <span>结束日期</span>
-          <input v-model="customEndDateValue" type="date" />
+          <DatePickerInput v-model="customEndDateValue" />
         </label>
       </div>
 
@@ -70,14 +108,17 @@ const customEndDateValue = computed({
 
 <style scoped lang="less">
 .filter-box {
-  background: var(--surface-overlay);
+  background:
+    radial-gradient(circle at top left, color-mix(in srgb, var(--brand-100) 70%, transparent), transparent 36%),
+    linear-gradient(180deg, color-mix(in srgb, var(--surface-overlay) 98%, transparent), color-mix(in srgb, var(--surface) 96%, transparent));
   border-radius: var(--radius-lg);
   border: 1px solid var(--line-soft);
   box-shadow: var(--shadow-sm);
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(14px);
   padding: 1rem;
   position: sticky;
-  top: 88px;
+  top: 102px;
+  overflow: visible;
 
   &__head {
     display: flex;
@@ -120,6 +161,17 @@ const customEndDateValue = computed({
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--line-soft);
+}
+
+.filter-group--compact {
+  padding-top: 0;
+  border-top: none;
+}
+
+.filter-group--compact + .filter-group--compact {
+  margin-top: 0.95rem;
 }
 
 .filter-group__title {
@@ -128,33 +180,18 @@ const customEndDateValue = computed({
   color: var(--ink-strong);
 }
 
-.filter-select {
-  width: 100%;
-  border: 1px solid var(--line-soft);
-  border-radius: var(--radius-sm);
-  padding: 0.55rem 0.65rem;
-  background: var(--surface-strong);
-  color: var(--ink-strong);
-}
-
 .date-range {
   display: grid;
-  gap: 0.6rem;
+  gap: 0.75rem;
+  margin-top: 0.2rem;
 
   label {
     display: flex;
     flex-direction: column;
-    gap: 0.3rem;
+    gap: 0.45rem;
     color: var(--ink-muted);
     font-size: 0.85rem;
-  }
-
-  input {
-    border: 1px solid var(--line-soft);
-    border-radius: var(--radius-sm);
-    padding: 0.5rem 0.6rem;
-    background: var(--surface-strong);
-    color: var(--ink-strong);
+    font-weight: 600;
   }
 }
 
@@ -171,4 +208,5 @@ const customEndDateValue = computed({
     order: -1;
   }
 }
+
 </style>
