@@ -1,53 +1,59 @@
-﻿<template>
+<template>
   <section class="write-page">
-    <!-- 编辑器区域 -->
     <div class="editor-shell">
-      <div class="editor-body">
-        <input
-          v-model="title"
-          class="title-input"
-          type="text"
-          maxlength="100"
-          placeholder="请输入标题（最多 100 个字）"
-          @input="onDirtyAndAutosave"
-        />
+      <div class="editor-main">
+        <EditorToolbar v-if="viewMode === 'live'" :editor="editor || null" />
 
-        <!--实时阅览-->
-        <template v-if="viewMode === 'live'">
-          <EditorToolbar :editor="editor || null" />
-          <editor-content :editor="editor" class="tiptap-editor" />
-        </template>
+        <section class="editor-main-card">
+          <header class="editor-main-card__header">
+            <input
+              v-model="title"
+              class="title-input"
+              type="text"
+              maxlength="100"
+              placeholder="请输入标题（最多 100 个字）"
+              @input="onDirtyAndAutosave"
+            />
+          </header>
 
-        <!--源码模式 -->
-        <template v-else-if="viewMode === 'source'">
-          <div class="source-editor-wrap">
-            <textarea
-              v-model="markdown"
-              class="source-editor"
-              placeholder="在此输入 Markdown 源码..."
-              spellcheck="false"
-              @input="onSourceInput"
-            ></textarea>
+          <div class="editor-main-card__canvas">
+            <template v-if="viewMode === 'live'">
+              <div class="editor-canvas editor-canvas--live">
+                <EditorContent :editor="editor" class="tiptap-editor" />
+              </div>
+            </template>
+
+            <template v-else-if="viewMode === 'source'">
+              <div class="editor-canvas editor-canvas--source">
+                <textarea
+                  v-model="markdown"
+                  class="source-editor"
+                  placeholder="在此输入 Markdown 源码..."
+                  spellcheck="false"
+                  @input="onSourceInput"
+                ></textarea>
+              </div>
+            </template>
+
+            <template v-else-if="viewMode === 'read'">
+              <div class="editor-canvas editor-canvas--read">
+                <div v-if="markdown.trim()" class="read-preview" v-html="renderedHtml"></div>
+                <div v-else class="read-preview read-preview--empty">
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="16" y1="13" x2="8" y2="13"/>
+                    <line x1="16" y1="17" x2="8" y2="17"/>
+                    <polyline points="10 9 9 9 8 9"/>
+                  </svg>
+                  <p>暂无内容，请先在编辑模式中撰写文章</p>
+                </div>
+              </div>
+            </template>
           </div>
-        </template>
-
-        <!-- 阅读视图  -->
-        <template v-else-if="viewMode === 'read'">
-          <div v-if="markdown.trim()" class="read-preview" v-html="renderedHtml"></div>
-          <div v-else class="read-preview read-preview--empty">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.2">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-              <polyline points="14 2 14 8 20 8"/>
-              <line x1="16" y1="13" x2="8" y2="13"/>
-              <line x1="16" y1="17" x2="8" y2="17"/>
-              <polyline points="10 9 9 9 8 9"/>
-            </svg>
-            <p>暂无内容，请先在编辑模式中撰写文章</p>
-          </div>
-        </template>
+        </section>
       </div>
 
-      <!-- 发布设置面板 -->
       <PublishPanel
         :status="publishStatus"
         :visibility="publishVisibility"
@@ -65,7 +71,6 @@
 
     <p v-if="publishError" class="write-page__feedback write-page__feedback--error">{{ publishError }}</p>
 
-    <!-- 按钮 -->
     <StatusBar 
       :word-count="wordCount"
       :current-mode-label="currentModeLabel"
@@ -415,8 +420,6 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
 </script>
 
 <style scoped lang="less">
-
-//页面布局
 .write-page {
   display: flex;
   flex-direction: column;
@@ -426,7 +429,7 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
 }
 
 .write-page__feedback {
-  max-width: 820px;
+  max-width: var(--write-content-max-width, 980px);
   width: 100%;
   margin: 0 auto;
   padding: 0.8rem 24px 0;
@@ -438,36 +441,83 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   color: var(--danger-500);
 }
 
-//编辑器主体
 .editor-shell {
   flex: 1;
   display: flex;
   flex-direction: column;
   width: 100%;
-  background: var(--surface-strong);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface-strong) 97%, transparent), color-mix(in srgb, var(--bg-canvas) 84%, transparent));
   border-bottom: 1px solid var(--line-soft);
 }
 
-.editor-body {
+.editor-main {
   flex: 1;
   display: flex;
   flex-direction: column;
   max-width: 820px;
   width: 100%;
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 0 24px 40px;
 }
 
-//标题
+.editor-main-card {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--write-editor-card-border);
+  border-radius: 24px;
+  background: var(--write-editor-card-bg);
+  box-shadow: var(--write-editor-card-shadow), var(--write-panel-inset-shadow);
+  backdrop-filter: blur(14px);
+}
+
+.editor-main-card__header {
+  padding: 0 28px;
+  border-bottom: 1px solid var(--write-editor-divider);
+  background: var(--write-editor-header-bg);
+}
+
+.editor-main-card__canvas {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: 18px 22px 26px;
+}
+
+.editor-canvas {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: calc(100vh - 390px);
+  padding: 18px 20px 28px;
+  border: 1px solid var(--write-editor-canvas-border);
+  border-radius: 20px;
+  background: var(--write-editor-canvas-bg);
+  box-shadow: var(--write-editor-canvas-shadow);
+}
+
+.editor-canvas--read {
+  padding: 22px 24px 28px;
+}
+
+.editor-canvas--source:focus-within {
+  border-color: color-mix(in srgb, var(--write-editor-canvas-border) 54%, var(--brand-100) 46%);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--brand-100) 58%, transparent),
+    var(--write-editor-canvas-shadow);
+}
+
 .title-input {
   width: 100%;
   border: none;
   outline: none;
-  font-size: clamp(1.45rem, 2.4vw, 1.9rem);
+  font-size: clamp(1.55rem, 2.55vw, 2.05rem);
   font-weight: 700;
   color: var(--ink-strong);
   line-height: 1.4;
-  padding: 28px 0 10px;
+  padding: 28px 0 22px;
   background: transparent;
 
   &::placeholder {
@@ -476,16 +526,15 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   }
 }
 
-//实时阅览编辑器
 .tiptap-editor {
   flex: 1;
-  margin-top: 16px;
-  padding-bottom: 40px;
+  min-height: 100%;
+  padding-bottom: 0;
 }
 
 :deep(.tiptap) {
   outline: none !important;
-  min-height: calc(100vh - 280px);
+  min-height: calc(100vh - 430px);
   font-size: 16px;
   line-height: 1.7;
   color: var(--ink-main);
@@ -586,50 +635,38 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   }
 }
 
-
-//源码编辑器
-.source-editor-wrap {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  margin-top: 16px;
-  padding-bottom: 40px;
-}
-
 .source-editor {
   flex: 1;
   width: 100%;
-  min-height: calc(100vh - 280px);
+  min-height: calc(100vh - 430px);
   border: none;
   outline: none;
   resize: none;
   font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
   font-size: 14px;
   line-height: 1.75;
-  color: var(--ink-strong);
-  background: var(--bg-canvas-soft);
-  border-radius: 8px;
-  padding: 20px;
+  color: var(--ink-main);
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
   tab-size: 2;
   white-space: pre-wrap;
   word-wrap: break-word;
-  transition: background 0.2s;
 
   &::placeholder {
     color: var(--ink-muted);
   }
 
   &:focus {
-    background: var(--bg-canvas);
-    box-shadow: inset 0 0 0 1.5px rgba(0, 113, 227, 0.15);
+    background: transparent;
+    box-shadow: none;
   }
 }
 
-//阅读视图
 .read-preview {
   flex: 1;
-  margin-top: 16px;
-  padding-bottom: 40px;
+  margin-top: 0;
+  padding-bottom: 0;
   font-size: 16px;
   line-height: 1.7;
   color: var(--ink-main);
@@ -639,7 +676,7 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-height: calc(100vh - 280px);
+    min-height: calc(100vh - 470px);
     gap: 16px;
     color: var(--ink-muted);
     font-size: 0.92rem;
@@ -724,7 +761,7 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
     }
   }
 }
-//屏幕阅读器专用隐藏元素
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -735,17 +772,48 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   border: 0;
 }
 
-
-
-
 @media (max-width: 768px) {
   .write-page {
     padding-bottom: calc(var(--write-status-bar-height-mobile, 150px) + env(safe-area-inset-bottom, 0px));
   }
 
-  .editor-body {
+  .editor-main {
     padding-left: 14px;
     padding-right: 14px;
+    padding-bottom: 28px;
+  }
+
+  .editor-main-card {
+    border-radius: 20px;
+  }
+
+  .editor-main-card__header {
+    padding: 0 18px;
+  }
+
+  .editor-main-card__canvas {
+    padding: 12px;
+  }
+
+  .editor-canvas {
+    min-height: calc(100vh - 420px);
+    padding: 16px 14px 22px;
+    border-radius: 18px;
+  }
+
+  .editor-canvas--read {
+    padding: 18px 16px 22px;
+  }
+
+  .title-input {
+    padding-top: 22px;
+    padding-bottom: 18px;
+  }
+
+  :deep(.tiptap),
+  .source-editor,
+  .read-preview--empty {
+    min-height: calc(100vh - 470px);
   }
 }
 </style>
