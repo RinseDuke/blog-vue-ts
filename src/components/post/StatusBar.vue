@@ -188,8 +188,8 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: space-between;
   gap: 16px 18px;
-  min-height: 64px;
-  padding: 12px 14px;
+  min-height: 60px;
+  padding: 10px 12px;
   border: 1px solid var(--write-panel-border);
   border-radius: var(--radius-lg);
   background: var(--write-panel-bg);
@@ -218,8 +218,8 @@ onBeforeUnmount(() => {
 .sb-chip {
   display: inline-flex;
   align-items: center;
-  min-height: 36px;
-  padding: 0 14px;
+  min-height: 34px;
+  padding: 0 13px;
   border-radius: 999px;
   border: 1px solid var(--write-panel-inline-border);
   background: var(--write-panel-inline-bg);
@@ -240,7 +240,7 @@ onBeforeUnmount(() => {
   font-weight: 600;
   color: var(--ink-main);
   padding: 0 14px;
-  min-height: 38px;
+  min-height: 36px;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -384,7 +384,7 @@ onBeforeUnmount(() => {
 .sb-saved {
   display: inline-flex;
   align-items: center;
-  min-height: 36px;
+  min-height: 34px;
   padding: 0 12px;
   border-radius: 999px;
   border: 1px dashed var(--write-panel-divider);
@@ -395,8 +395,8 @@ onBeforeUnmount(() => {
 }
 
 .sb-publish {
-  min-height: 38px;
-  padding: 0 18px;
+  min-height: 36px;
+  padding: 0 16px;
   border: 1px solid color-mix(in srgb, var(--brand-500) 60%, var(--write-panel-inline-border) 40%);
   border-radius: 999px;
   background: linear-gradient(180deg, color-mix(in srgb, var(--brand-400) 86%, white 14%), var(--brand-500));
@@ -438,7 +438,7 @@ onBeforeUnmount(() => {
 
   .status-bar__shell {
     align-items: stretch;
-    padding: 12px;
+    padding: 10px;
     border-radius: 20px;
   }
 

@@ -61,6 +61,12 @@
   --write-panel-inline-border: color-mix(in srgb, var(--line-soft) 90%, transparent);
   --write-panel-inset-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.38);
   --write-toolbar-group-bg: color-mix(in srgb, var(--write-panel-inline-bg) 84%, transparent);
+  --write-toolbar-bg:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface-overlay) 98%, transparent), color-mix(in srgb, var(--surface) 94%, transparent));
+  --write-toolbar-border: color-mix(in srgb, var(--line-soft) 92%, transparent);
+  --write-toolbar-shadow:
+    0 14px 28px rgba(15, 23, 42, 0.06),
+    0 6px 14px rgba(15, 23, 42, 0.04);
   --write-editor-card-border: color-mix(in srgb, var(--line-soft) 96%, transparent);
   --write-editor-card-bg:
     linear-gradient(180deg, color-mix(in srgb, var(--surface-overlay) 99%, transparent), color-mix(in srgb, var(--surface-strong) 96%, transparent));
@@ -139,6 +145,12 @@
   --write-panel-inline-border: rgba(110, 118, 129, 0.3);
   --write-panel-inset-shadow: inset 0 1px 0 rgba(240, 246, 252, 0.04);
   --write-toolbar-group-bg: rgba(19, 26, 35, 0.9);
+  --write-toolbar-bg:
+    linear-gradient(180deg, rgba(23, 29, 39, 0.96), rgba(18, 24, 33, 0.94));
+  --write-toolbar-border: rgba(110, 118, 129, 0.28);
+  --write-toolbar-shadow:
+    0 16px 28px rgba(1, 4, 9, 0.22),
+    0 8px 16px rgba(1, 4, 9, 0.14);
   --write-editor-card-border: rgba(110, 118, 129, 0.34);
   --write-editor-card-bg:
     linear-gradient(180deg, rgba(22, 27, 34, 0.98), rgba(17, 23, 30, 0.98));

@@ -86,12 +86,15 @@ function emitVisibilityChange(value: string | number) {
 }
 
 .publish-panel__card {
-  border: 1px solid var(--write-panel-border);
+  border: 1px solid color-mix(in srgb, var(--write-panel-border) 88%, transparent);
   border-radius: var(--radius-lg);
-  background: var(--write-panel-bg);
-  box-shadow: var(--write-panel-shadow), var(--write-panel-inset-shadow);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface-overlay) 94%, transparent), color-mix(in srgb, var(--surface) 88%, transparent));
+  box-shadow:
+    0 14px 28px rgba(15, 23, 42, 0.05),
+    var(--write-panel-inset-shadow);
   backdrop-filter: blur(14px);
-  padding: 1.25rem;
+  padding: 1.1rem;
 }
 
 .publish-panel__title {
@@ -124,7 +127,7 @@ function emitVisibilityChange(value: string | number) {
   padding: 0.95rem 1rem;
   border-radius: var(--radius-md);
   border: 1px dashed var(--write-panel-divider);
-  background: var(--write-panel-muted-bg);
+  background: color-mix(in srgb, var(--write-panel-muted-bg) 82%, transparent);
   color: var(--ink-muted);
   font-size: 0.88rem;
   line-height: 1.7;

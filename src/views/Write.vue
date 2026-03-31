@@ -2,7 +2,9 @@
   <section class="write-page">
     <div class="editor-shell">
       <div class="editor-main">
-        <EditorToolbar v-if="viewMode === 'live'" :editor="editor || null" />
+        <div v-if="viewMode === 'live'" class="editor-toolbar-wrap">
+          <EditorToolbar :editor="editor || null" />
+        </div>
 
         <section class="editor-main-card">
           <header class="editor-main-card__header">
@@ -455,10 +457,14 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   flex: 1;
   display: flex;
   flex-direction: column;
-  max-width: 820px;
+  max-width: 860px;
   width: 100%;
   margin: 0 auto;
-  padding: 0 24px 40px;
+  padding: 0 24px 36px;
+}
+
+.editor-toolbar-wrap {
+  margin-bottom: 6px;
 }
 
 .editor-main-card {
@@ -467,14 +473,14 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   flex-direction: column;
   overflow: hidden;
   border: 1px solid var(--write-editor-card-border);
-  border-radius: 24px;
+  border-radius: 22px;
   background: var(--write-editor-card-bg);
   box-shadow: var(--write-editor-card-shadow), var(--write-panel-inset-shadow);
   backdrop-filter: blur(14px);
 }
 
 .editor-main-card__header {
-  padding: 0 28px;
+  padding: 0 30px;
   border-bottom: 1px solid var(--write-editor-divider);
   background: var(--write-editor-header-bg);
 }
@@ -483,7 +489,7 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   display: flex;
   flex: 1;
   flex-direction: column;
-  padding: 18px 22px 26px;
+  padding: 16px 20px 24px;
 }
 
 .editor-canvas {
@@ -491,15 +497,15 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   flex: 1;
   flex-direction: column;
   min-height: calc(100vh - 390px);
-  padding: 18px 20px 28px;
+  padding: 16px 18px 24px;
   border: 1px solid var(--write-editor-canvas-border);
-  border-radius: 20px;
+  border-radius: 18px;
   background: var(--write-editor-canvas-bg);
   box-shadow: var(--write-editor-canvas-shadow);
 }
 
 .editor-canvas--read {
-  padding: 22px 24px 28px;
+  padding: 20px 22px 24px;
 }
 
 .editor-canvas--source:focus-within {
@@ -783,26 +789,30 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
     padding-bottom: 28px;
   }
 
+  .editor-toolbar-wrap {
+    margin-bottom: 4px;
+  }
+
   .editor-main-card {
     border-radius: 20px;
   }
 
   .editor-main-card__header {
-    padding: 0 18px;
+    padding: 0 20px;
   }
 
   .editor-main-card__canvas {
-    padding: 12px;
+    padding: 10px;
   }
 
   .editor-canvas {
     min-height: calc(100vh - 420px);
-    padding: 16px 14px 22px;
-    border-radius: 18px;
+    padding: 14px 12px 18px;
+    border-radius: 16px;
   }
 
   .editor-canvas--read {
-    padding: 18px 16px 22px;
+    padding: 16px 14px 18px;
   }
 
   .title-input {
