@@ -5,6 +5,40 @@ import {
 } from './writeMarkdown'
 
 describe('write markdown table roundtrip', () => {
+  it('serializes empty tiptap tables into valid markdown tables', () => {
+    const emptyTableHtml = `
+      <table>
+        <tbody>
+          <tr>
+            <th colspan="1" rowspan="1"><p></p></th>
+            <th colspan="1" rowspan="1"><p></p></th>
+            <th colspan="1" rowspan="1"><p></p></th>
+          </tr>
+          <tr>
+            <td colspan="1" rowspan="1"><p></p></td>
+            <td colspan="1" rowspan="1"><p></p></td>
+            <td colspan="1" rowspan="1"><p></p></td>
+          </tr>
+          <tr>
+            <td colspan="1" rowspan="1"><p></p></td>
+            <td colspan="1" rowspan="1"><p></p></td>
+            <td colspan="1" rowspan="1"><p></p></td>
+          </tr>
+        </tbody>
+      </table>
+    `
+
+    const markdown = serializeEditorHtmlToMarkdown(emptyTableHtml)
+
+    expect(markdown).toContain('|   |   |   |')
+    expect(markdown).toContain('| --- | --- | --- |')
+
+    const html = renderWriteMarkdownToHtml(markdown)
+
+    expect(html).toContain('<table>')
+    expect(html).not.toContain('<p>|')
+  })
+
   it('preserves tiptap tables across live/read mode conversions', () => {
     const tiptapTableHtml = `
       <table>
