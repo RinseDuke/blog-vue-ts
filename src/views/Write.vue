@@ -105,15 +105,15 @@ import { Table } from '@tiptap/extension-table'
 import { TableRow } from '@tiptap/extension-table-row'
 import { TableHeader } from '@tiptap/extension-table-header'
 import { TableCell } from '@tiptap/extension-table-cell'
-import TurndownService from 'turndown'
-
-import { gfm } from 'turndown-plugin-gfm'
-import MarkdownIt from 'markdown-it'
-
 import { useDraft } from '@/features/post/composables/useDraft'
 import { useCoverUpload } from '@/features/post/composables/useCoverUpload'
 import { usePostsStore } from '@/features/post/composables/usePostsStore'
 import { useTagManager } from '@/features/post/composables/useTagManager'
+import {
+  normalizeWriteMarkdown,
+  renderWriteMarkdownToHtml,
+  serializeEditorHtmlToMarkdown,
+} from '@/features/post/utils/writeMarkdown'
 
 import EditorToolbar from '@/components/post/EditorToolbar.vue'
 import PublishPanel from '@/components/post/PublishPanel.vue'
@@ -124,10 +124,6 @@ const router = useRouter()
 const postsStore = usePostsStore()
 
 // 封面上传（bushi）
-const turndownService = new TurndownService({ headingStyle: 'atx' })
-turndownService.use(gfm)
-const mdParser = new MarkdownIt()
-
 type ViewMode = 'read' | 'source' | 'live'
 const VIEW_MODE_KEY = 'blog_write_view_mode_v1'
 const DEFAULT_PUBLISH_STATUS = 'published'
@@ -194,7 +190,7 @@ const editor = useEditor({
 
     // 生成 HTML → 转 Markdown → 更新状态
     const html = editor.getHTML()
-    markdown.value = turndownService.turndown(html)
+    markdown.value = serializeEditorHtmlToMarkdown(html)
     onDirtyAndAutosave()
   },
 })
@@ -222,14 +218,14 @@ const currentModeLabel = computed(() => MODE_LABELS[viewMode.value])
 const publishLabel = computed(() => (isPublishing.value ? '发布中...' : '发布'))
 
 // 实时渲染 Markdown 为 HTML
-const renderedHtml = computed(() => mdParser.render(markdown.value))
+const renderedHtml = computed(() => renderWriteMarkdownToHtml(markdown.value))
 
 function syncEditorFromMarkdown(source: string) {
   if (!editor.value) return
 
   isSyncingEditorContent.value = true
   try {
-    editor.value.commands.setContent(mdParser.render(source))
+    editor.value.commands.setContent(renderWriteMarkdownToHtml(source))
   } finally {
     isSyncingEditorContent.value = false
   }
@@ -241,7 +237,7 @@ function setViewMode(mode: string) {
 
   if (prevMode === 'live' && editor.value) {
     const html = editor.value.getHTML()
-    markdown.value = turndownService.turndown(html)
+    markdown.value = serializeEditorHtmlToMarkdown(html)
   }
 
   // 输入模式切换到实时阅览， markdown 渲染成 HTML 注入编辑器
@@ -385,7 +381,7 @@ function readViewMode(): ViewMode {
 onMounted(() => {
   const draft = readDraft()
   title.value = draft?.title ?? ''
-  markdown.value = draft?.markdown ?? ''
+  markdown.value = normalizeWriteMarkdown(draft?.markdown ?? '')
   publishStatus.value = draft?.status ?? DEFAULT_PUBLISH_STATUS
   publishVisibility.value = draft?.visibility ?? DEFAULT_PUBLISH_VISIBILITY
   restoreTags(draft?.tags ?? [])
