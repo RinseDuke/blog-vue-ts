@@ -30,7 +30,6 @@ const rootEl = ref<HTMLElement | null>(null)
 const isOpen = ref(false)
 const viewDate = ref(getInitialViewDate(props.modelValue))
 
-const selectedDate = computed(() => parseDateValue(props.modelValue))
 const displayValue = computed(() =>
   props.modelValue ? formatDateDisplay(props.modelValue) : props.placeholder
 )

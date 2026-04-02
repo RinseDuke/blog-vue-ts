@@ -10,6 +10,7 @@ import {
 } from '@/services/postService'
 
 const AUTH_KEY = 'blog_auth_session_v1'
+const PUBLISHED_POSTS_KEY = 'blog_published_posts_v1'
 
 interface StorageLike {
   getItem: (key: string) => string | null
@@ -54,6 +55,14 @@ function setSession(email: string, nickname = 'writer', userId = `user-${email}`
       },
     })
   )
+}
+
+function getVisibleSeededPost() {
+  const candidate = mockPosts.find((post) => post.status !== 'draft' && post.visibility !== 'private')
+  if (!candidate) {
+    throw new Error('mock posts are unavailable for this test')
+  }
+  return candidate
 }
 
 describe('postService auth guard', () => {
@@ -164,4 +173,91 @@ describe('postService auth guard', () => {
       expect.objectContaining({ id: createdPost.id })
     )
   })
+
+  it('keeps only one post when a persisted mock post collides with a seeded post id', async () => {
+    const seededPost = structuredClone(getVisibleSeededPost())
+
+    localStorage.setItem(
+      PUBLISHED_POSTS_KEY,
+      JSON.stringify([
+        {
+          ...seededPost,
+          title: 'Local Override Title',
+          excerpt: 'Local Override Excerpt',
+          content: '<p>Local override content</p>',
+          publishedAt: seededPost.publishedAt,
+        },
+      ])
+    )
+
+    const posts = await fetchPosts()
+    const collidedPosts = posts.filter((post) => post.id === seededPost.id)
+
+    expect(collidedPosts).toHaveLength(1)
+    expect(collidedPosts[0]).toEqual(
+      expect.objectContaining({
+        id: seededPost.id,
+        title: 'Local Override Title',
+        excerpt: 'Local Override Excerpt',
+      })
+    )
+
+    await expect(fetchPostById(seededPost.id)).resolves.toEqual(
+      expect.objectContaining({
+        id: seededPost.id,
+        title: 'Local Override Title',
+      })
+    )
+  })
+
+  it('keeps only one post when a persisted mock post collides with a seeded post slug', async () => {
+    const seededPost = structuredClone(getVisibleSeededPost())
+    const persistedPostId = `persisted-${seededPost.id}`
+
+    localStorage.setItem(
+      PUBLISHED_POSTS_KEY,
+      JSON.stringify([
+        {
+          ...seededPost,
+          id: persistedPostId,
+          title: 'Slug Collision Local Title',
+          excerpt: 'Slug Collision Local Excerpt',
+          content: '<p>Slug collision local content</p>',
+        },
+      ])
+    )
+
+    const posts = await fetchPosts()
+    const collidedPosts = posts.filter((post) => post.slug === seededPost.slug)
+
+    expect(collidedPosts).toHaveLength(1)
+    expect(collidedPosts[0]).toEqual(
+      expect.objectContaining({
+        id: persistedPostId,
+        slug: seededPost.slug,
+        title: 'Slug Collision Local Title',
+        excerpt: 'Slug Collision Local Excerpt',
+      })
+    )
+
+    await expect(fetchPostBySlug(seededPost.slug)).resolves.toEqual(
+      expect.objectContaining({
+        id: persistedPostId,
+        slug: seededPost.slug,
+        title: 'Slug Collision Local Title',
+      })
+    )
+  })
+
+  it('falls back to seeded mock posts when persisted storage is corrupted', async () => {
+    localStorage.setItem(PUBLISHED_POSTS_KEY, 'not-json')
+
+    const postsPromise = fetchPosts()
+    await expect(postsPromise).resolves.toEqual(expect.any(Array))
+    const posts = await postsPromise
+
+    expect(posts.length).toBeGreaterThan(0)
+    expect(posts.some((post) => post.id === getVisibleSeededPost().id)).toBe(true)
+  })
+
 })

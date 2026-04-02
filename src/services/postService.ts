@@ -64,7 +64,7 @@ function isStoredPost(value: unknown): value is Post {
   )
 }
 
-function readPublishedPosts() {
+function readPublishedPosts(): Post[] {
   try {
     const raw = localStorage.getItem(PUBLISHED_POSTS_KEY)
     if (!raw) return []
@@ -79,15 +79,31 @@ function readPublishedPosts() {
 }
 
 function persistPublishedPosts(posts: Post[]) {
-  localStorage.setItem(PUBLISHED_POSTS_KEY, JSON.stringify(posts))
+  const normalizedPosts = mergeMockPosts(posts, [])
+  localStorage.setItem(PUBLISHED_POSTS_KEY, JSON.stringify(normalizedPosts))
 }
 
 function sortByPublishedAtDesc(a: Post, b: Post) {
   return new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
 }
 
+function mergeMockPosts(storedPosts: Post[], seededPosts: Post[]) {
+  const merged: Post[] = []
+  const seenIds = new Set<string>()
+  const seenSlugs = new Set<string>()
+
+  for (const post of [...storedPosts, ...seededPosts]) {
+    if (seenIds.has(post.id) || seenSlugs.has(post.slug)) continue
+    seenIds.add(post.id)
+    seenSlugs.add(post.slug)
+    merged.push(post)
+  }
+
+  return merged.sort(sortByPublishedAtDesc)
+}
+
 function getAllPosts() {
-  return [...readPublishedPosts(), ...mockPosts].sort(sortByPublishedAtDesc)
+  return mergeMockPosts(readPublishedPosts(), mockPosts)
 }
 
 function normalizeAuthorName(email: string) {
@@ -303,7 +319,7 @@ export async function createPost(payload: CreatePostPayload): Promise<Post> {
     await networkDelay(250)
     const session = requireAuthSession('请先登录后再发布文章')
     const existingPosts = getAllPosts()
-    const publishedPosts = readPublishedPosts()
+    const storedPosts = readPublishedPosts()
     const publishedAt = new Date().toISOString()
     const excerpt = buildExcerpt(payload.markdown || payload.html)
 
@@ -325,7 +341,7 @@ export async function createPost(payload: CreatePostPayload): Promise<Post> {
       visibility: payload.visibility ?? 'public',
     }
 
-    persistPublishedPosts([nextPost, ...publishedPosts].sort(sortByPublishedAtDesc))
+    persistPublishedPosts([nextPost, ...storedPosts])
     return structuredClone(nextPost)
   }
 
