@@ -246,6 +246,7 @@ const postSeeds: MockPostSeed[] = [
     featured: false,
     likes: 35,
     contentLead: '文章页改版最容易出问题的不是样式，而是标题、摘要、作者信息和正文结构在不同入口下是否保持一致。',
+<<<<<<< HEAD
     contentSections: [
       '先锁定哪些结构必须前后保持一致',
       '如何分阶段替换旧模块避免整页返工',
@@ -355,6 +356,7 @@ const postSeeds: MockPostSeed[] = [
     featured: false,
     likes: 40,
     contentLead: '真正影响维护成本的，往往不是类型多，而是页面没有先约束哪些状态必须被明确区分。',
+<<<<<<< HEAD
     contentSections: [
       '联合类型什么时候该拆成显式状态',
       '什么时候需要先做 normalize 再进入页面逻辑',
@@ -439,8 +441,8 @@ const postSeeds: MockPostSeed[] = [
   {
     id: '26',
     slug: 'extensible-mock-data-layer-design',
-    title: '如何设计可扩展的 Mock 数据层',
-    excerpt: '围绕类型对齐、时间分布和测试场景覆盖，整理一套更适合前端自测的 mock 数据设计方法。',
+    title: '如何设计可扩展的示例文章库',
+    excerpt: '围绕主题分布、时间跨度和阅读密度，整理一套更适合内容站演示的数据组织方式。',
     coverImage: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1400&q=80',
     tags: ['TypeScript', '工程化', '项目复盘'],
     author: authors.architect,
@@ -448,8 +450,8 @@ const postSeeds: MockPostSeed[] = [
     readMinutes: 10,
     featured: false,
     likes: 37,
-    contentLead: 'Mock 数据如果只有几条“演示数据”，它就很难帮助你提前发现列表页、筛选器和推荐逻辑里的真实问题。',
-    contentSections: ['为什么要覆盖不同时间跨度的数据', '评论和文章之间如何建立更真实的关系', '测试分页时数量阈值该如何选择'],
+    contentLead: '示例文章如果只有少量重复主题，很难帮你提前发现首页编排、专题区和推荐模块里的真实问题。',
+    contentSections: ['为什么要覆盖不同主题和发布时间跨度', '示例文章之间如何建立更自然的内容关系', '怎样控制数量与密度让列表页更接近真实环境'],
   },
 ]
 
