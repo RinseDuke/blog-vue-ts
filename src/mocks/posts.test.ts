@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { mockPosts } from '@/mocks/posts'
 
 const forbiddenDisplayPhrases = [
@@ -12,6 +12,15 @@ const forbiddenDisplayPhrases = [
 
 describe('mockPosts display copy', () => {
   it('does not expose prelaunch mock and backend integration wording', () => {
+    expect(mockPosts.length).toBeGreaterThan(0)
+
+    mockPosts.forEach((post) => {
+      expect(post.title.trim()).not.toBe('')
+      expect(post.excerpt.trim()).not.toBe('')
+      const contentTrimmed = post.content?.trim() ?? ''
+      expect(contentTrimmed).not.toBe('')
+    })
+
     const renderedText = mockPosts
       .map((post) => [post.title, post.excerpt, post.content].join('\n'))
       .join('\n')
