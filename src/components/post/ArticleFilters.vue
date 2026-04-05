@@ -37,6 +37,7 @@ const emit = defineEmits<{
 }>()
 
 const isMobileFiltersOpen = ref(false)
+const mobileFiltersPanelId = 'article-filters-panel'
 
 const mobileToggleText = computed(() => (isMobileFiltersOpen.value ? '\u6536\u8d77\u7b5b\u9009' : '\u7b5b\u9009'))
 const mobileToggleLabel = computed(() =>
@@ -87,6 +88,7 @@ const customEndDateValue = computed({
         type="button"
         class="filter-box__toggle"
         :aria-expanded="isMobileFiltersOpen"
+        :aria-controls="mobileFiltersPanelId"
         :aria-label="mobileToggleLabel"
         @click="toggleMobileFilters"
       >
@@ -104,7 +106,7 @@ const customEndDateValue = computed({
       </button>
     </div>
 
-    <div class="filter-box__panel" :aria-expanded="isMobileFiltersOpen">
+    <div class="filter-box__panel" :id="mobileFiltersPanelId">
       <header class="filter-box__desktop-head">
       <h3>筛选</h3>
       <button type="button" class="filter-reset" :disabled="!hasActiveFilters" @click="emit('clearFilters')">重置</button>
