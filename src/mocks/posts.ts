@@ -246,7 +246,6 @@ const postSeeds: MockPostSeed[] = [
     featured: false,
     likes: 35,
     contentLead: '文章页改版最容易出问题的不是样式，而是标题、摘要、作者信息和正文结构在不同入口下是否保持一致。',
-<<<<<<< HEAD
     contentSections: [
       '先锁定哪些结构必须前后保持一致',
       '如何分阶段替换旧模块避免整页返工',
@@ -356,7 +355,6 @@ const postSeeds: MockPostSeed[] = [
     featured: false,
     likes: 40,
     contentLead: '真正影响维护成本的，往往不是类型多，而是页面没有先约束哪些状态必须被明确区分。',
-<<<<<<< HEAD
     contentSections: [
       '联合类型什么时候该拆成显式状态',
       '什么时候需要先做 normalize 再进入页面逻辑',
