@@ -70,14 +70,13 @@ export const useCommentStore = defineStore('comments', () => {
         const wasLiked = likedCommentIds.value.has(commentId)
         const delta = wasLiked ? -1 : 1
 
-        // 1. 切换点赞状态
+        //切换点赞状态
         if (wasLiked) {
             likedCommentIds.value.delete(commentId)
         } else {
             likedCommentIds.value.add(commentId)
         }
 
-        // 2. 乐观更新 UI 上的点赞数
         const comments = commentsByPost.value[postId]
         if (comments) {
             const target = comments.find((c) => c.id === commentId)
@@ -87,14 +86,14 @@ export const useCommentStore = defineStore('comments', () => {
         }
 
         try {
-            // 3. 请求后端，用服务端返回值纠正
+            //请求，用服务端返回值纠正
             const serverLikes = await setCommentLikeApi(commentId, !wasLiked)
             const target = comments?.find((c) => c.id === commentId)
             if (target) {
                 target.likes = serverLikes
             }
         } catch (err: unknown) {
-            // 4. 失败时回滚点赞状态和计数
+            // 失败时回滚点赞状态和计数
             if (wasLiked) {
                 likedCommentIds.value.add(commentId)
             } else {

@@ -453,7 +453,7 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   flex: 1;
   display: flex;
   flex-direction: column;
-  max-width: 860px;
+  max-width: var(--write-content-max-width, 980px);
   width: 100%;
   margin: 0 auto;
   padding: 0 24px 36px;

@@ -24,4 +24,20 @@ describe('EditorToolbar source contract', () => {
     expect(source).toContain('deleteColumn')
     expect(source).toContain('deleteTable')
   })
+
+  it('surfaces desktop shortcuts while keeping mobile-only duplicates in the more menu', () => {
+    expect(source).toContain('toolbar-btn--desktop-only')
+    expect(source).toContain('toolbar-more__item--mobile-shortcut')
+  })
+
+  it('uses an inline desktop toolbar treatment with deduplicated heading labels', () => {
+    expect(source).toContain('toolbar-label--desktop-hidden')
+    expect(source).toMatch(/@media \(min-width: 769px\) {[\s\S]*\.toolbar-btn[\s\S]*flex-direction: row;/)
+  })
+
+  it('assigns desktop width tiers to keep the toolbar rhythm consistent', () => {
+    expect(source).toContain('toolbar-btn--desktop-token')
+    expect(source).toContain('toolbar-btn--desktop-regular')
+    expect(source).toContain('toolbar-btn--desktop-wide')
+  })
 })

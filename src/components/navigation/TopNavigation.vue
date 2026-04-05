@@ -56,18 +56,6 @@ const { isLoggedIn } = storeToRefs(useAuthStore())
 
 @media (max-width: 768px) {
   .navigation {
-    width: 100%;
-    justify-content: flex-start;
-    gap: 0.3rem;
-    order: 3;
-    overflow-x: auto;
-    white-space: nowrap;
-    border-radius: 16px;
-    padding: 0.3rem;
-    scrollbar-width: none;
-  }
-
-  .navigation::-webkit-scrollbar {
     display: none;
   }
 }

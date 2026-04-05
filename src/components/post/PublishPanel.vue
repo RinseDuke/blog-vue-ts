@@ -26,10 +26,6 @@
           </label>
         </div>
 
-        <div class="publish-note">
-          <p>当前后端仅支持标题、正文、状态和可见性。</p>
-          <p>封面、标签等扩展字段已暂时停用，后续接口补齐后可继续接回。</p>
-        </div>
       </div>
     </div>
   </div>
@@ -119,25 +115,6 @@ function emitVisibilityChange(value: string | number) {
     font-size: 0.92rem;
     font-weight: 700;
     color: var(--ink-strong);
-  }
-}
-
-.publish-note {
-  margin-top: 1rem;
-  padding: 0.95rem 1rem;
-  border-radius: var(--radius-md);
-  border: 1px dashed var(--write-panel-divider);
-  background: color-mix(in srgb, var(--write-panel-muted-bg) 82%, transparent);
-  color: var(--ink-muted);
-  font-size: 0.88rem;
-  line-height: 1.7;
-
-  p {
-    margin: 0;
-  }
-
-  p + p {
-    margin-top: 0.35rem;
   }
 }
 

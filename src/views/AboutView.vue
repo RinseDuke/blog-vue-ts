@@ -1,4 +1,4 @@
-<!-- 个人中心页：展示个人资料、活动动态、草稿进度、关注情况和快捷入口 -->
+<!-- 个人中心页：展示个人资料、活动动态、草稿进度、关系摘要和快捷入口 -->
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
@@ -101,8 +101,8 @@ const currentDraftStatusLabel = computed(() => {
 })
 
 const relationshipMetrics = [
-  { label: '关注了', value: 1 },
-  { label: '关注者', value: 0 },
+  { label: '关注', value: 1 },
+  { label: '粉丝', value: 0 },
 ]
 
 const accountFacts = computed(() => [
@@ -180,6 +180,18 @@ function enterEditMode() {
                 <span class="profile-hero__dot">•</span>
                 <span>最近活跃 {{ profile.lastActive }}</span>
               </div>
+
+              <div class="profile-hero__relationship" aria-label="关注摘要">
+                <span
+                  v-for="item in relationshipMetrics"
+                  :key="item.label"
+                  class="profile-hero__relationship-item"
+                >
+                  <span>{{ item.label }}</span>
+                  <strong>{{ item.value }}</strong>
+                </span>
+              </div>
+
               <p class="profile-hero__caption">创作者档案</p>
             </div>
           </div>
@@ -316,21 +328,6 @@ function enterEditMode() {
             </dl>
           </article>
 
-          <article class="panel side-card">
-            <header class="side-card__head side-card__head--tight">
-              <div>
-                <p class="section-card__eyebrow">关系</p>
-                <h3>关注情况</h3>
-              </div>
-            </header>
-
-            <div class="relationship-grid">
-              <div v-for="item in relationshipMetrics" :key="item.label" class="relationship-stat">
-                <p>{{ item.label }}</p>
-                <strong>{{ item.value }}</strong>
-              </div>
-            </div>
-          </article>
         </aside>
       </div>
     </div>
@@ -478,6 +475,32 @@ function enterEditMode() {
   color: var(--ink-muted);
   font-size: 0.88rem;
   font-weight: 700;
+}
+
+.profile-hero__relationship {
+  margin-top: 0.8rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.profile-hero__relationship-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  padding: 0.42rem 0.72rem;
+  border-radius: 999px;
+  border: 1px solid var(--line-soft);
+  background: var(--surface-strong);
+  color: var(--ink-muted);
+  font-size: 0.8rem;
+  line-height: 1;
+}
+
+.profile-hero__relationship-item strong {
+  color: var(--ink-strong);
+  font-size: 0.94rem;
+  font-weight: 800;
 }
 
 .profile-hero__dot {
@@ -816,32 +839,6 @@ function enterEditMode() {
   font-weight: 600;
 }
 
-.relationship-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.75rem;
-}
-
-.relationship-stat {
-  padding: 1rem 0.9rem;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--line-soft);
-  background: var(--surface-strong);
-  text-align: center;
-}
-
-.relationship-stat p {
-  margin: 0;
-  color: var(--ink-muted);
-}
-
-.relationship-stat strong {
-  display: block;
-  margin-top: 0.35rem;
-  color: var(--ink-strong);
-  font-size: 1.6rem;
-}
-
 @keyframes pulse {
   0% { opacity: 0.6; }
   50% { opacity: 0.3; }
@@ -869,33 +866,98 @@ function enterEditMode() {
     padding: 40px 14px 40px;
   }
 
+  .profile-hero__banner {
+    min-height: 108px;
+    padding: 0.8rem 0.9rem;
+  }
+
+  .profile-hero__banner::before {
+    width: 180px;
+    height: 180px;
+    right: -66px;
+    bottom: -106px;
+  }
+
+  .profile-hero__banner::after {
+    width: 112px;
+    height: 112px;
+    left: 20%;
+    top: -42px;
+  }
+
+  .profile-hero__location {
+    padding: 0.36rem 0.68rem;
+    font-size: 0.74rem;
+  }
+
   .profile-hero__body {
-    margin-top: -48px;
-    padding: 0 1rem 1rem;
+    margin-top: -34px;
+    padding: 0 0.9rem 0.9rem;
+    gap: 0.8rem;
   }
 
   .profile-hero__identity {
-    flex-direction: column;
-    align-items: flex-start;
+    flex-direction: row;
+    align-items: flex-end;
+    gap: 0.8rem;
+    min-width: 0;
   }
 
   .profile-avatar {
-    width: 112px;
-    height: 112px;
-    font-size: 2.2rem;
+    width: 88px;
+    height: 88px;
+    border-width: 4px;
+    font-size: 1.85rem;
+  }
+
+  .profile-hero__meta {
+    padding-bottom: 0;
+  }
+
+  .profile-hero__meta h1 {
+    font-size: clamp(1.68rem, 8vw, 2rem);
+  }
+
+  .profile-hero__account {
+    margin-top: 0.35rem;
+    font-size: 0.92rem;
+  }
+
+  .profile-hero__facts {
+    margin-top: 0.35rem;
+    gap: 0.28rem;
+    font-size: 0.82rem;
+  }
+
+  .profile-hero__relationship {
+    margin-top: 0.5rem;
+    gap: 0.4rem;
+  }
+
+  .profile-hero__relationship-item {
+    padding: 0.36rem 0.6rem;
+    font-size: 0.76rem;
+  }
+
+  .profile-hero__relationship-item strong {
+    font-size: 0.88rem;
+  }
+
+  .profile-hero__caption {
+    display: none;
   }
 
   .profile-hero__actions {
     width: 100%;
+    gap: 0.55rem;
   }
 
   .hero-btn {
     flex: 1;
+    min-height: 44px;
+    padding: 0.68rem 1rem;
+    font-size: 0.92rem;
     text-align: center;
-  }
-
-  .relationship-grid {
-    grid-template-columns: 1fr;
   }
 }
 </style>

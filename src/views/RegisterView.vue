@@ -93,7 +93,6 @@ async function handleSubmit() {
     <div class="register-card">
       <p class="register-card__eyebrow">账号</p>
       <h1>注册</h1>
-      <p class="register-card__hint">当前表单已对齐后端注册规范，注册成功后会自动登录。</p>
 
       <form class="register-form" @submit.prevent="handleSubmit">
         <label class="field">
@@ -143,7 +142,6 @@ async function handleSubmit() {
         已有账号？
         <RouterLink :to="loginLocation">返回登录</RouterLink>
       </p>
-      <p class="register-card__note">邮箱验证码和扩展资料字段暂未启用，待后端接口补充后再接回。</p>
     </div>
   </section>
 </template>
@@ -181,8 +179,6 @@ async function handleSubmit() {
     font-size: 0.78rem;
   }
 
-  &__hint,
-  &__note,
   &__switch {
     margin: 0;
     color: var(--ink-muted);
@@ -198,9 +194,6 @@ async function handleSubmit() {
     }
   }
 
-  &__note {
-    margin-top: 0.65rem;
-  }
 }
 
 .register-form {

@@ -7,7 +7,7 @@
           <div class="editor-toolbar__actions">
             <button
               type="button"
-              class="toolbar-btn toolbar-btn--compact"
+              class="toolbar-btn toolbar-btn--compact toolbar-btn--desktop-regular"
               :disabled="!editor.can().undo()"
               title="撤销 (Ctrl+Z)"
               @click="editor.chain().focus().undo().run()"
@@ -21,7 +21,7 @@
 
             <button
               type="button"
-              class="toolbar-btn toolbar-btn--compact"
+              class="toolbar-btn toolbar-btn--compact toolbar-btn--desktop-regular"
               :disabled="!editor.can().redo()"
               title="重做 (Ctrl+Y)"
               @click="editor.chain().focus().redo().run()"
@@ -35,27 +35,44 @@
 
             <button
               type="button"
-              :class="['toolbar-btn', 'toolbar-btn--compact', { 'is-active': editor.isActive('heading', { level: 2 }) }]"
+              :class="[
+                'toolbar-btn',
+                'toolbar-btn--compact',
+                'toolbar-btn--desktop-token',
+                { 'is-active': editor.isActive('heading', { level: 2 }) },
+              ]"
+              aria-label="H2"
               title="标题 2 (H2)"
               @click="editor.chain().focus().toggleHeading({ level: 2 }).run()"
             >
-              <span class="toolbar-icon-text">H2</span>
-              <span class="toolbar-label">H2</span>
+              <span class="toolbar-icon-text" aria-hidden="true">H2</span>
+              <span class="toolbar-label toolbar-label--desktop-hidden">H2</span>
             </button>
 
             <button
               type="button"
-              :class="['toolbar-btn', 'toolbar-btn--compact', { 'is-active': editor.isActive('heading', { level: 3 }) }]"
+              :class="[
+                'toolbar-btn',
+                'toolbar-btn--compact',
+                'toolbar-btn--desktop-token',
+                { 'is-active': editor.isActive('heading', { level: 3 }) },
+              ]"
+              aria-label="H3"
               title="标题 3 (H3)"
               @click="editor.chain().focus().toggleHeading({ level: 3 }).run()"
             >
-              <span class="toolbar-icon-text">H3</span>
-              <span class="toolbar-label">H3</span>
+              <span class="toolbar-icon-text" aria-hidden="true">H3</span>
+              <span class="toolbar-label toolbar-label--desktop-hidden">H3</span>
             </button>
 
             <button
               type="button"
-              :class="['toolbar-btn', 'toolbar-btn--compact', { 'is-active': editor.isActive('bold') }]"
+              :class="[
+                'toolbar-btn',
+                'toolbar-btn--compact',
+                'toolbar-btn--desktop-regular',
+                { 'is-active': editor.isActive('bold') },
+              ]"
               title="加粗 (Ctrl+B)"
               @click="editor.chain().focus().toggleBold().run()"
             >
@@ -68,7 +85,12 @@
 
             <button
               type="button"
-              :class="['toolbar-btn', 'toolbar-btn--compact', { 'is-active': editor.isActive('italic') }]"
+              :class="[
+                'toolbar-btn',
+                'toolbar-btn--compact',
+                'toolbar-btn--desktop-regular',
+                { 'is-active': editor.isActive('italic') },
+              ]"
               title="斜体 (Ctrl+I)"
               @click="editor.chain().focus().toggleItalic().run()"
             >
@@ -82,7 +104,12 @@
 
             <button
               type="button"
-              :class="['toolbar-btn', 'toolbar-btn--compact', { 'is-active': editor.isActive('bulletList') }]"
+              :class="[
+                'toolbar-btn',
+                'toolbar-btn--compact',
+                'toolbar-btn--desktop-regular',
+                { 'is-active': editor.isActive('bulletList') },
+              ]"
               title="无序列表"
               @click="editor.chain().focus().toggleBulletList().run()"
             >
@@ -99,17 +126,27 @@
 
             <button
               type="button"
-              :class="['toolbar-btn', 'toolbar-btn--compact', { 'is-active': editor.isActive('blockquote') }]"
+              :class="[
+                'toolbar-btn',
+                'toolbar-btn--compact',
+                'toolbar-btn--desktop-regular',
+                { 'is-active': editor.isActive('blockquote') },
+              ]"
               title="引用"
               @click="editor.chain().focus().toggleBlockquote().run()"
             >
-              <span class="toolbar-icon-text">”</span>
+              <span class="toolbar-icon-text" aria-hidden="true">”</span>
               <span class="toolbar-label">引用</span>
             </button>
 
             <button
               type="button"
-              :class="['toolbar-btn', 'toolbar-btn--compact', { 'is-active': editor.isActive('codeBlock') }]"
+              :class="[
+                'toolbar-btn',
+                'toolbar-btn--compact',
+                'toolbar-btn--desktop-regular',
+                { 'is-active': editor.isActive('codeBlock') },
+              ]"
               title="代码块"
               @click="editor.chain().focus().toggleCodeBlock().run()"
             >
@@ -119,16 +156,124 @@
               </svg>
               <span class="toolbar-label">代码</span>
             </button>
+
+            <button
+              type="button"
+              :class="[
+                'toolbar-btn',
+                'toolbar-btn--compact',
+                'toolbar-btn--desktop-only',
+                'toolbar-btn--desktop-wide',
+                { 'is-active': editor.isActive('strike') },
+              ]"
+              title="删除线"
+              @click="toggleStrike"
+            >
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M6 10c0-2 2-4 6-4s6 2 6 4-2 4-6 4-6 2-6 4 2 4 6 4 6-2 6-4" />
+                <line x1="4" y1="12" x2="20" y2="12" />
+              </svg>
+              <span class="toolbar-label">删除线</span>
+            </button>
+
+            <button
+              type="button"
+              :class="[
+                'toolbar-btn',
+                'toolbar-btn--compact',
+                'toolbar-btn--desktop-only',
+                'toolbar-btn--desktop-regular',
+                { 'is-active': editor.isActive('orderedList') },
+              ]"
+              title="有序列表"
+              @click="toggleOrderedList"
+            >
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="10" y1="6" x2="21" y2="6" />
+                <line x1="10" y1="12" x2="21" y2="12" />
+                <line x1="10" y1="18" x2="21" y2="18" />
+                <path d="M4 6h1v4" />
+                <path d="M4 10h2" />
+                <path d="M4 18h2c0-1.1-.9-2-2-2 1.1 0 2-.9 2-2" />
+              </svg>
+              <span class="toolbar-label">有序</span>
+            </button>
+
+            <button
+              type="button"
+              :class="[
+                'toolbar-btn',
+                'toolbar-btn--compact',
+                'toolbar-btn--desktop-only',
+                'toolbar-btn--desktop-regular',
+                { 'is-active': editor.isActive('link') },
+              ]"
+              title="链接"
+              @click="setLinkFromPrompt"
+            >
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10 13a5 5 0 0 0 7.07 0l1.41-1.41a5 5 0 1 0-7.07-7.07L10.5 5.43" />
+                <path d="M14 11a5 5 0 0 0-7.07 0l-1.41 1.41a5 5 0 0 0 7.07 7.07l.91-.91" />
+              </svg>
+              <span class="toolbar-label">链接</span>
+            </button>
+
+            <button
+              type="button"
+              :class="[
+                'toolbar-btn',
+                'toolbar-btn--compact',
+                'toolbar-btn--desktop-only',
+                'toolbar-btn--desktop-regular',
+                { 'is-active': editor.isActive('table') },
+              ]"
+              title="插入表格"
+              @click="insertTable"
+            >
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="5" width="18" height="14" rx="1.5" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+                <line x1="9" y1="5" x2="9" y2="19" />
+                <line x1="15" y1="5" x2="15" y2="19" />
+              </svg>
+              <span class="toolbar-label">表格</span>
+            </button>
+
+            <button
+              type="button"
+              class="toolbar-btn toolbar-btn--compact toolbar-btn--desktop-only toolbar-btn--desktop-regular"
+              title="分割线"
+              @click="insertRule"
+            >
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <line x1="4" y1="12" x2="20" y2="12" />
+              </svg>
+              <span class="toolbar-label">分割</span>
+            </button>
+
+            <button
+              type="button"
+              class="toolbar-btn toolbar-btn--compact toolbar-btn--desktop-only toolbar-btn--desktop-regular"
+              title="清空格式"
+              @click="clearFormatting"
+            >
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 20h7" />
+                <path d="M7 4h9" />
+                <path d="M9 4 4 12h6l-1 8 5-8H8z" />
+              </svg>
+              <span class="toolbar-label">清空</span>
+            </button>
           </div>
         </div>
 
         <div ref="moreRef" class="toolbar-more" @keydown.esc.stop="closeMoreMenu">
-          <button
-            type="button"
-            class="toolbar-btn toolbar-btn--compact toolbar-btn--more"
-            :aria-expanded="menuOpen"
-            aria-controls="editor-toolbar-more-menu"
-            aria-haspopup="menu"
+            <button
+              type="button"
+              class="toolbar-btn toolbar-btn--compact toolbar-btn--more toolbar-btn--desktop-wide"
+              :aria-expanded="menuOpen"
+              aria-controls="editor-toolbar-more-menu"
+              aria-haspopup="menu"
             title="更多格式"
             @click.stop="toggleMoreMenu"
           >
@@ -159,7 +304,11 @@
               <button
                 type="button"
                 role="menuitem"
-                :class="['toolbar-more__item', { 'toolbar-more__item--active': editor.isActive('strike') }]"
+                :class="[
+                  'toolbar-more__item',
+                  'toolbar-more__item--mobile-shortcut',
+                  { 'toolbar-more__item--active': editor.isActive('strike') },
+                ]"
                 @click="runMoreAction(toggleStrike)"
               >
                 <span>删除线</span>
@@ -167,15 +316,29 @@
               <button
                 type="button"
                 role="menuitem"
-                :class="['toolbar-more__item', { 'toolbar-more__item--active': editor.isActive('orderedList') }]"
+                :class="[
+                  'toolbar-more__item',
+                  'toolbar-more__item--mobile-shortcut',
+                  { 'toolbar-more__item--active': editor.isActive('orderedList') },
+                ]"
                 @click="runMoreAction(toggleOrderedList)"
               >
                 <span>有序列表</span>
               </button>
-              <button type="button" role="menuitem" class="toolbar-more__item" @click="setLinkFromPrompt">
+              <button
+                type="button"
+                role="menuitem"
+                class="toolbar-more__item toolbar-more__item--mobile-shortcut"
+                @click="setLinkFromPrompt"
+              >
                 <span>链接</span>
               </button>
-              <button type="button" role="menuitem" class="toolbar-more__item" @click="runMoreAction(insertTable)">
+              <button
+                type="button"
+                role="menuitem"
+                class="toolbar-more__item toolbar-more__item--mobile-shortcut"
+                @click="runMoreAction(insertTable)"
+              >
                 <span>插入表格</span>
               </button>
               <button
@@ -223,10 +386,20 @@
               >
                 <span>删除表格</span>
               </button>
-              <button type="button" role="menuitem" class="toolbar-more__item" @click="runMoreAction(insertRule)">
+              <button
+                type="button"
+                role="menuitem"
+                class="toolbar-more__item toolbar-more__item--mobile-shortcut"
+                @click="runMoreAction(insertRule)"
+              >
                 <span>分割线</span>
               </button>
-              <button type="button" role="menuitem" class="toolbar-more__item" @click="runMoreAction(clearFormatting)">
+              <button
+                type="button"
+                role="menuitem"
+                class="toolbar-more__item toolbar-more__item--mobile-shortcut"
+                @click="runMoreAction(clearFormatting)"
+              >
                 <span>清空格式</span>
               </button>
             </div>
@@ -470,6 +643,64 @@ onBeforeUnmount(() => {
   text-align: center;
 }
 
+@media (min-width: 769px) {
+  .editor-toolbar__actions {
+    gap: 4px;
+  }
+
+  .toolbar-btn,
+  .toolbar-btn--compact {
+    flex-direction: row;
+    gap: 6px;
+    min-width: 0;
+    min-height: 38px;
+    padding: 0 10px;
+    border-radius: 11px;
+  }
+
+  .toolbar-btn svg,
+  .toolbar-icon-text,
+  .toolbar-label {
+    flex: 0 0 auto;
+  }
+
+  .toolbar-icon-text {
+    font-size: 14px;
+  }
+
+  .toolbar-label {
+    font-size: 0.72rem;
+    white-space: nowrap;
+  }
+
+  .toolbar-label--desktop-hidden {
+    display: none;
+  }
+
+  .toolbar-btn--desktop-token {
+    width: 42px;
+    min-width: 42px;
+    padding-inline: 0;
+    gap: 0;
+    justify-content: center;
+  }
+
+  .toolbar-btn--desktop-regular {
+    min-width: 56px;
+    justify-content: center;
+  }
+
+  .toolbar-btn--desktop-wide {
+    min-width: 64px;
+    justify-content: center;
+  }
+
+  .toolbar-btn--more {
+    min-width: 0;
+    padding-right: 8px;
+  }
+}
+
 .toolbar-more {
   position: relative;
   display: flex;
@@ -529,6 +760,10 @@ onBeforeUnmount(() => {
   transition: background 0.14s ease, color 0.14s ease, border-color 0.14s ease;
 }
 
+.toolbar-more__item--mobile-shortcut {
+  display: none;
+}
+
 .toolbar-more__item:hover {
   background: var(--write-panel-inline-hover);
   border-color: color-mix(in srgb, var(--write-panel-inline-border) 76%, var(--brand-100) 24%);
@@ -578,6 +813,10 @@ onBeforeUnmount(() => {
     padding: 7px 9px;
   }
 
+  .toolbar-btn--desktop-only {
+    display: none;
+  }
+
   .toolbar-label {
     font-size: 0.64rem;
   }
@@ -593,6 +832,10 @@ onBeforeUnmount(() => {
 
   .toolbar-more__menu {
     min-width: 160px;
+  }
+
+  .toolbar-more__item--mobile-shortcut {
+    display: flex;
   }
 }
 </style>

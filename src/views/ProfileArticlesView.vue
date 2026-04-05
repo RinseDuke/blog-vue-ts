@@ -229,16 +229,6 @@ onMounted(async () => {
             </dl>
           </article>
 
-          <article class="panel side-panel">
-            <header class="section-head section-head--side">
-              <div>
-                <p class="section-head__eyebrow">说明</p>
-                <h2>接口状态</h2>
-              </div>
-            </header>
-
-            <p class="state-card state-card--empty">后端暂未支持标签字段，相关主题统计和标签展示已先隐藏。</p>
-          </article>
         </aside>
       </div>
     </div>

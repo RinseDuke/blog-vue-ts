@@ -169,18 +169,7 @@ function formatSuggestionMeta(post: Post) {
 
 @media (max-width: 768px) {
   .search-box {
-    padding: 0;
-    width: 100%;
-    flex: 1 1 100%;
-    order: 2;
-  }
-
-  .search-input-wrapper {
-    max-width: 100%;
-  }
-
-  .top-search__dropdown {
-    max-width: 100%;
+    display: none;
   }
 }
 </style>

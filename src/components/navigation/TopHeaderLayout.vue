@@ -63,10 +63,9 @@ const props = withDefaults(
   }
 
   .topbar__inner {
-    flex-wrap: wrap;
-    gap: 0.6rem;
-    padding: 0.72rem;
-    border-radius: 20px;
+    display: block;
+    padding: 0.62rem;
+    border-radius: 22px;
   }
 }
 </style>

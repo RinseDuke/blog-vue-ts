@@ -47,10 +47,8 @@ function buildArticleContent(title: string, lead: string, sections: string[]) {
   return [
     `<h2>${title}</h2>`,
     `<p>${lead}</p>`,
-    '<h3>测试重点</h3>',
+    '<h3>本文要点</h3>',
     `<ul>${sections.map((section) => `<li>${section}</li>`).join('')}</ul>`,
-    '<blockquote>这批内容用于验证多数据场景下的分页、搜索、筛选、推荐与详情渲染。</blockquote>',
-    '<p>当你后续接入真实后端时，只要保持当前字段结构一致，服务层就可以直接切换。</p>',
   ].join('')
 }
 
@@ -238,8 +236,8 @@ const postSeeds: MockPostSeed[] = [
   {
     id: '13',
     slug: 'mock-to-real-api-migration-guide',
-    title: '从 Mock 数据切换到真实 API 的迁移方案',
-    excerpt: '围绕统一服务层、环境变量和接口约定，整理前后端联调前的切换步骤。',
+    title: '内容站改版时如何稳定迁移文章页结构',
+    excerpt: '围绕页面层级、元信息组织和旧链接兼容，整理内容站改版时更稳妥的迁移步骤。',
     coverImage: 'https://images.unsplash.com/photo-1516321497487-e288fb19713f?auto=format&fit=crop&w=1400&q=80',
     tags: ['工程化', '项目复盘', 'TypeScript'],
     author: authors.architect,
@@ -247,8 +245,12 @@ const postSeeds: MockPostSeed[] = [
     readMinutes: 9,
     featured: false,
     likes: 35,
-    contentLead: 'Mock 阶段最容易忽视的是数据结构的一致性，这会直接影响后续切换到真实接口时的成本。',
-    contentSections: ['Mock 返回结构为何要严格对齐类型', '环境变量如何控制数据源', '什么时候需要在 service 层做兼容转换'],
+    contentLead: '文章页改版最容易出问题的不是样式，而是标题、摘要、作者信息和正文结构在不同入口下是否保持一致。',
+    contentSections: [
+      '先锁定哪些结构必须前后保持一致',
+      '如何分阶段替换旧模块避免整页返工',
+      '改版后用什么清单确认详情页没有漏项',
+    ],
   },
   {
     id: '14',
@@ -343,8 +345,8 @@ const postSeeds: MockPostSeed[] = [
   {
     id: '20',
     slug: 'typesafe-api-contracts-in-frontend',
-    title: '前端 API 类型契约实践：把接口不确定性前置',
-    excerpt: '从类型定义、服务层和页面容错三个层次讨论接口契约的收口方法。',
+    title: '前端类型收敛实践：把复杂状态前置',
+    excerpt: '从表单状态、异步结果和页面容错三个层次讨论前端类型收敛的落点。',
     coverImage: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&fit=crop&w=1400&q=80',
     tags: ['TypeScript', '工程化', '开发经验'],
     author: authors.hunter,
@@ -352,8 +354,12 @@ const postSeeds: MockPostSeed[] = [
     readMinutes: 10,
     featured: false,
     likes: 40,
-    contentLead: '真实接口最怕的是“不完全稳定”，所以前端需要明确哪些字段是强依赖，哪些字段可以兜底。',
-    contentSections: ['类型定义如何跟接口变更保持同步', '什么时候需要 normalize 数据', '页面容错信息放在哪一层最合适'],
+    contentLead: '真正影响维护成本的，往往不是类型多，而是页面没有先约束哪些状态必须被明确区分。',
+    contentSections: [
+      '联合类型什么时候该拆成显式状态',
+      '什么时候需要先做 normalize 再进入页面逻辑',
+      '页面层和工具层如何分担兜底责任',
+    ],
   },
   {
     id: '21',

@@ -39,10 +39,6 @@
 
       <div class="article-body" v-html="safeHtml"></div>
 
-      <div class="feature-note">
-        当前详情页已按后端博客模型收口，点赞、评论、举报等互动能力待后端接口补充后再接回。
-      </div>
-
       <footer class="article-footer">
         <router-link to="/article" class="back-line">返回文章列表</router-link>
       </footer>
@@ -262,16 +258,6 @@ function formatDate(dateString: string) {
     border-radius: 12px;
     color: var(--ink-main);
   }
-}
-
-.feature-note {
-  margin-top: 2rem;
-  padding: 0.95rem 1rem;
-  border-radius: var(--radius-md);
-  border: 1px dashed var(--line-strong);
-  background: linear-gradient(180deg, var(--bg-canvas-soft), color-mix(in srgb, var(--surface) 92%, transparent));
-  color: var(--ink-muted);
-  line-height: 1.65;
 }
 
 .article-footer {

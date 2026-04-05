@@ -11,16 +11,18 @@ import TopHeaderLayout from '@/components/navigation/TopHeaderLayout.vue'
 import TopSearchBox from '@/components/search/TopSearchBox.vue'
 import TopNavigation from '@/components/navigation/TopNavigation.vue'
 import TopThemeToggle from '@/components/navigation/TopThemeToggle.vue'
+import MobileTopTabs from '@/components/navigation/MobileTopTabs.vue'
+import MobileSearchSheet from '@/components/search/MobileSearchSheet.vue'
 
 const route = useRoute()
 const router = useRouter()
 const searchQuery = ref<string>((route.query.q as string) ?? '')
-const isNavHidden = ref(false)  
+const isNavHidden = ref(false)
+const isMobileSearchOpen = ref(false)
 
 const isWritePage = computed(() => route.name === 'write')
 let lastScrollTop = 0
 
-//文章数据 & 搜索
 const postsStore = usePostsStore()
 const { posts } = storeToRefs(postsStore)
 const { ensurePosts } = postsStore
@@ -36,16 +38,15 @@ const { normalizedQuery, suggestionPosts, recommendedPosts } = usePostSearchBund
   },
 })
 
-// 路由变化时重置导航显示状态
 watch(
   () => route.fullPath,
   () => {
     isNavHidden.value = false
+    isMobileSearchOpen.value = false
     lastScrollTop = 0
   }
 )
 
-// URL 中的查询参数变化时同步搜索框
 watch(
   () => route.query.q,
   (value) => {
@@ -53,16 +54,24 @@ watch(
   }
 )
 
-// 处理搜索提交
 const handleSearch = (searchTerm: string) => {
   const term = searchTerm.trim()
   if (!term) return
+
+  isMobileSearchOpen.value = false
   searchQuery.value = term
   persistHistory(term)
   router.push({ path: '/search', query: { q: term } })
 }
 
-// 滚动处理 
+const toggleMobileSearch = () => {
+  isMobileSearchOpen.value = !isMobileSearchOpen.value
+}
+
+const closeMobileSearch = () => {
+  isMobileSearchOpen.value = false
+}
+
 const handleScroll = (event: Event) => {
   const target = event.target
   if (isWritePage.value && isScrollFromWriteEditor(target)) return
@@ -81,7 +90,6 @@ const handleScroll = (event: Event) => {
   lastScrollTop = scrollTop
 }
 
-//判断滚动是否来自写作页编辑器区域 
 const isScrollFromWriteEditor = (target: EventTarget | null) => {
   if (!(target instanceof Element)) return false
   return Boolean(
@@ -110,18 +118,55 @@ onUnmounted(() => {
 <template>
   <div class="layout">
     <TopHeaderLayout :is-hidden="isNavHidden">
-      <TopBrand />
-      <TopSearchBox
-        v-model="searchQuery"
-        :recommended-posts="recommendedPosts"
-        :suggestion-posts="suggestionPosts"
-        :search-history="searchHistory"
-        :normalized-query="normalizedQuery"
-        @search="handleSearch"
-        @clear-history="clearHistory"
-      />
-      <TopNavigation />
-      <TopThemeToggle />
+      <div class="desktop-topbar">
+        <TopBrand />
+        <TopSearchBox
+          v-model="searchQuery"
+          :recommended-posts="recommendedPosts"
+          :suggestion-posts="suggestionPosts"
+          :search-history="searchHistory"
+          :normalized-query="normalizedQuery"
+          @search="handleSearch"
+          @clear-history="clearHistory"
+        />
+        <TopNavigation />
+        <TopThemeToggle />
+      </div>
+
+      <div class="mobile-topbar">
+        <div class="mobile-topbar__main">
+          <TopBrand />
+          <div class="mobile-topbar__actions">
+            <button
+              type="button"
+              class="mobile-search-trigger"
+              :aria-expanded="isMobileSearchOpen"
+              aria-label="打开搜索"
+              @click="toggleMobileSearch"
+            >
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+            </button>
+            <MobileTopTabs :search-open="isMobileSearchOpen" />
+            <TopThemeToggle />
+          </div>
+        </div>
+
+        <MobileSearchSheet
+          :open="isMobileSearchOpen"
+          :model-value="searchQuery"
+          :recommended-posts="recommendedPosts"
+          :suggestion-posts="suggestionPosts"
+          :search-history="searchHistory"
+          :normalized-query="normalizedQuery"
+          @update:model-value="searchQuery = $event"
+          @search="handleSearch"
+          @clear-history="clearHistory"
+          @close="closeMobileSearch"
+        />
+      </div>
     </TopHeaderLayout>
 
     <main class="page">
@@ -148,11 +193,76 @@ onUnmounted(() => {
   flex-direction: column;
 }
 
+.desktop-topbar {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.mobile-topbar {
+  display: none;
+  width: 100%;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.mobile-topbar__main {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.mobile-topbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.42rem;
+  margin-left: auto;
+}
+
+.mobile-search-trigger {
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--line-soft);
+  border-radius: 14px;
+  background:
+    linear-gradient(180deg, var(--surface-strong), var(--surface)),
+    radial-gradient(circle at top left, var(--brand-100), transparent 50%);
+  color: var(--ink-main);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  box-shadow:
+    0 10px 22px rgba(15, 23, 42, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.36);
+}
+
 @media (max-width: 768px) {
   .layout {
-    padding-top: 138px;
+    padding-top: 92px;
+  }
+
+  .desktop-topbar {
+    display: none;
+  }
+
+  .mobile-topbar {
+    display: flex;
+  }
+
+  .mobile-topbar__actions .theme-switch {
+    margin-left: 0;
+    order: initial;
+  }
+}
+
+@media (min-width: 769px) {
+  .mobile-topbar {
+    display: none;
   }
 }
 </style>
-
-

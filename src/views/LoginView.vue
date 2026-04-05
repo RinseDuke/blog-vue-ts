@@ -3,9 +3,8 @@
 import { computed, ref } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { usePasswordVisibility } from '@/features/auth/composables/usePasswordVisibility'
-import { DEFAULT_MOCK_LOGIN, useAuthStore } from '@/features/auth/stores/useAuthStore'
+import { useAuthStore } from '@/features/auth/stores/useAuthStore'
 import { resolveAuthRedirect } from '@/features/auth/utils/redirect'
-import { isMockMode } from '@/services/apiClient'
 
 const route = useRoute()
 const router = useRouter()
@@ -16,7 +15,6 @@ const password = ref('')
 const rememberMe = ref(true)
 const isSubmitting = ref(false)
 const errorMessage = ref('')
-const showMockHint = isMockMode()
 const passwordVisibility = usePasswordVisibility()
 
 const normalizedUsername = computed(() => username.value.trim())
@@ -59,9 +57,6 @@ async function handleSubmit() {
       <p class="login-card__eyebrow">账号</p>
       <h1>登录</h1>
       <p class="login-card__hint">使用已注册用户名登录，未注册请先创建账号。</p>
-      <p v-if="showMockHint" class="login-card__mock">
-        Mock 测试账号：<code>{{ DEFAULT_MOCK_LOGIN.username }}</code> / <code>{{ DEFAULT_MOCK_LOGIN.password }}</code>
-      </p>
 
       <form class="login-form" @submit.prevent="handleSubmit">
         <label class="field">
@@ -105,7 +100,6 @@ async function handleSubmit() {
         还没有账号？
         <RouterLink :to="registerLocation">立即注册</RouterLink>
       </p>
-      <p class="login-card__note">当前页面已按后端规范切换为用户名登录。</p>
     </div>
   </section>
 </template>
@@ -144,28 +138,10 @@ async function handleSubmit() {
   }
 
   &__hint,
-  &__mock,
-  &__note,
   &__switch {
     margin: 0;
     color: var(--ink-muted);
     font-size: 0.9rem;
-  }
-
-  &__mock {
-    margin-top: 0.65rem;
-    padding: 0.7rem 0.8rem;
-    border-radius: 14px;
-    border: 1px solid var(--line-soft);
-    background:
-      radial-gradient(circle at top left, color-mix(in srgb, var(--brand-100) 45%, transparent), transparent 42%),
-      linear-gradient(180deg, color-mix(in srgb, var(--surface-overlay) 98%, transparent), color-mix(in srgb, var(--surface) 96%, transparent));
-
-    code {
-      font-family: 'JetBrains Mono', 'Fira Code', monospace;
-      font-size: 0.84em;
-      color: var(--ink-strong);
-    }
   }
 
   &__switch {
@@ -177,9 +153,6 @@ async function handleSubmit() {
     }
   }
 
-  &__note {
-    margin-top: 0.65rem;
-  }
 }
 
 .login-form {

@@ -8,4 +8,8 @@ describe('Write view source contract', () => {
     expect(source).toContain('editor-main-card__canvas')
     expect(source.indexOf('editor-toolbar-wrap')).toBeLessThan(source.indexOf('editor-main-card'))
   })
+
+  it('lets the desktop editor width follow the shared write content max width', () => {
+    expect(source).toMatch(/\.editor-main\s*\{[\s\S]*max-width: var\(--write-content-max-width, 980px\);/)
+  })
 })
