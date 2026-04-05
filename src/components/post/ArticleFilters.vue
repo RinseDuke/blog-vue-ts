@@ -1,6 +1,6 @@
 <!-- 文章列表页侧栏筛选器 -->
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import DropdownSelect from '@/components/ui/DropdownSelect.vue'
 import DatePickerInput from '@/components/ui/DatePickerInput.vue'
 
@@ -36,6 +36,17 @@ const emit = defineEmits<{
   (e: 'clearFilters'): void
 }>()
 
+const isMobileFiltersOpen = ref(false)
+
+const mobileToggleText = computed(() => (isMobileFiltersOpen.value ? '\u6536\u8d77\u7b5b\u9009' : '\u7b5b\u9009'))
+const mobileToggleLabel = computed(() =>
+  isMobileFiltersOpen.value ? '\u6536\u8d77\u7b5b\u9009\u9762\u677f' : '\u5c55\u5f00\u7b5b\u9009\u9762\u677f'
+)
+
+const toggleMobileFilters = () => {
+  isMobileFiltersOpen.value = !isMobileFiltersOpen.value
+}
+
 const datePresetValue = computed({
   get: () => props.datePreset,
   set: (value: string) => emit('update:datePreset', value),
@@ -70,8 +81,31 @@ const customEndDateValue = computed({
 </script>
 
 <template>
-  <aside class="filter-box">
-    <header class="filter-box__head">
+  <aside class="filter-box" :class="{ 'is-mobile-open': isMobileFiltersOpen }">
+    <div class="filter-box__mobile-bar">
+      <button
+        type="button"
+        class="filter-box__toggle"
+        :aria-expanded="isMobileFiltersOpen"
+        :aria-label="mobileToggleLabel"
+        @click="toggleMobileFilters"
+      >
+        <span>{{ mobileToggleText }}</span>
+        <span class="filter-box__toggle-icon" aria-hidden="true"></span>
+      </button>
+
+      <button
+        type="button"
+        class="filter-reset filter-reset--mobile"
+        :disabled="!hasActiveFilters"
+        @click="emit('clearFilters')"
+      >
+        {{ '\u91cd\u7f6e' }}
+      </button>
+    </div>
+
+    <div class="filter-box__panel" :aria-expanded="isMobileFiltersOpen">
+      <header class="filter-box__desktop-head">
       <h3>筛选</h3>
       <button type="button" class="filter-reset" :disabled="!hasActiveFilters" @click="emit('clearFilters')">重置</button>
     </header>
@@ -103,6 +137,7 @@ const customEndDateValue = computed({
 
       <p v-if="isCustomDateInvalid" class="filter-error">结束日期不能早于开始日期。</p>
     </section>
+    </div>
   </aside>
 </template>
 
@@ -120,7 +155,7 @@ const customEndDateValue = computed({
   top: 102px;
   overflow: visible;
 
-  &__head {
+  &__desktop-head {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -133,6 +168,50 @@ const customEndDateValue = computed({
       font-weight: 700;
     }
   }
+}
+
+.filter-box__mobile-bar {
+  display: none;
+}
+
+.filter-box__panel {
+  display: block;
+}
+
+.filter-box__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border: 1px solid var(--line-soft);
+  background: var(--surface-strong);
+  color: var(--ink-strong);
+  padding: 0.45rem 0.75rem;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: rgba(0, 113, 227, 0.35);
+    background: rgba(0, 113, 227, 0.08);
+  }
+}
+
+.filter-box__toggle-icon {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform 0.2s ease;
+}
+
+.filter-box.is-mobile-open .filter-box__toggle-icon {
+  transform: rotate(-135deg);
+}
+
+.filter-reset--mobile {
+  padding: 0.4rem 0.8rem;
 }
 
 .filter-reset {
@@ -206,6 +285,29 @@ const customEndDateValue = computed({
   .filter-box {
     position: static;
     order: -1;
+    padding: 0.85rem;
+  }
+
+  .filter-box__mobile-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  .filter-box__desktop-head {
+    display: none;
+  }
+
+  .filter-box__panel {
+    display: none;
+    margin-top: 0.9rem;
+    padding-top: 0.9rem;
+    border-top: 1px solid var(--line-soft);
+  }
+
+  .filter-box.is-mobile-open .filter-box__panel {
+    display: block;
   }
 }
 
