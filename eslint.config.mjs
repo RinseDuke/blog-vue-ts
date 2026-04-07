@@ -6,7 +6,13 @@ import vueParser from 'vue-eslint-parser'
 
 export default [
   {
-    ignores: ['dist/**', 'coverage/**', 'node_modules/**'],
+    ignores: [
+      'dist/**',
+      'coverage/**',
+      'node_modules/**',
+      '.worktrees/**',
+      '.codex-artifacts/**',
+    ],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,

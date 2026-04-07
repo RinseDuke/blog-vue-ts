@@ -1,4 +1,4 @@
-<!-- 举报对话框：选择理由并提交举报 -->
+<!-- 举报对话框：选择理由并提交举报(弃用中) -->
 <script setup lang="ts">
 import { ref } from 'vue'
 import type { ReportReason, ReportTargetType } from '@/types/post'
@@ -324,12 +324,24 @@ function handleOverlayClick(e: MouseEvent) {
 }
 
 @keyframes overlay-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes dialog-in {
-  from { opacity: 0; transform: scale(0.95) translateY(8px); }
-  to { opacity: 1; transform: scale(1) translateY(0); }
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 </style>

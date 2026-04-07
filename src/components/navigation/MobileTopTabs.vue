@@ -247,11 +247,9 @@ onBeforeUnmount(() => {
   a.router-link-active {
     color: var(--ink-strong);
     border-color: color-mix(in srgb, var(--brand-100) 88%, transparent);
-    background: linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--surface-strong) 98%, transparent),
-      color-mix(in srgb, var(--surface-overlay) 96%, transparent)
-    );
+    background: linear-gradient(180deg,
+        color-mix(in srgb, var(--surface-strong) 98%, transparent),
+        color-mix(in srgb, var(--surface-overlay) 96%, transparent));
     box-shadow:
       0 8px 18px rgba(15, 23, 42, 0.06),
       inset 0 1px 0 rgba(255, 255, 255, 0.72);

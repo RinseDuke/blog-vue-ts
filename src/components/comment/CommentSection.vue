@@ -44,7 +44,7 @@ async function handleSubmit(payload: { content: string; parentId?: string }) {
       parentId: payload.parentId,
     })
   } catch {
-    // error is already set in store
+    //.......
   }
 }
 
@@ -57,7 +57,7 @@ async function handleLike(commentId: string) {
   try {
     await commentStore.likeComment(props.postId, commentId)
   } catch {
-    // error is already set in store
+    //......
   }
 }
 
