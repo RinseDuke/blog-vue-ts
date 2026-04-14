@@ -24,48 +24,40 @@ const props = withDefaults(
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.9rem 1.2rem 0;
-  background: transparent;
+  padding: 0 1rem;
+  background: color-mix(in srgb, var(--surface-strong) 96%, var(--bg-canvas) 4%);
+  border-bottom: 1px solid color-mix(in srgb, var(--line-strong) 82%, transparent);
   color: var(--ink-main);
   position: fixed;
   top: 0;
   z-index: 40;
   margin: 0;
-  transition: transform 0.32s ease;
+  transition: transform 0.32s ease, background-color 0.24s ease, border-color 0.24s ease;
 }
 
 .topbar__inner {
-  width: min(1220px, 100%);
+  width: min(1360px, 100%);
   display: flex;
   align-items: center;
-  gap: 0.85rem;
+  gap: 0.72rem;
   min-width: 0;
-  padding: 0.72rem 0.85rem;
-  border-radius: 24px;
-  border: 1px solid color-mix(in srgb, var(--line-strong) 88%, transparent);
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--surface-overlay) 92%, transparent), color-mix(in srgb, var(--surface-frost) 96%, transparent)),
-    radial-gradient(circle at top left, var(--brand-100), transparent 42%);
-  box-shadow:
-    0 22px 54px rgba(15, 23, 42, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.42);
-  backdrop-filter: blur(18px) saturate(1.2);
-  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+  min-height: 68px;
+  padding: 0.7rem 0;
 }
 
 .topbar.hidden {
-  transform: translateY(calc(-100% - 12px));
+  transform: translateY(-100%);
 }
 
 @media (max-width: 768px) {
   .topbar {
-    padding: 0.7rem 0.75rem 0;
+    padding: 0 0.75rem;
   }
 
   .topbar__inner {
     display: block;
-    padding: 0.62rem;
-    border-radius: 22px;
+    min-height: 72px;
+    padding: 0.55rem 0;
   }
 }
 </style>

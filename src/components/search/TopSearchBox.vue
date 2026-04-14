@@ -84,13 +84,13 @@ function formatSuggestionMeta(post: Post) {
   display: flex;
   justify-content: center;
   min-width: 0;
-  padding: 0 0.2rem;
+  padding: 0 0.1rem;
 }
 
 .search-input-wrapper {
   position: relative;
   width: 100%;
-  max-width: 640px;
+  max-width: 700px;
   display: flex;
   align-items: center;
 }

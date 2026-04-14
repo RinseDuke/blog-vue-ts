@@ -215,12 +215,6 @@ textarea {
   color: var(--ink-strong);
 }
 
-html[data-theme='dark'] .topbar__inner {
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--surface-overlay) 94%, transparent), color-mix(in srgb, var(--surface-frost) 98%, transparent)),
-    radial-gradient(circle at top left, rgba(105, 180, 255, 0.14), transparent 40%) !important;
-}
-
 html[data-theme='dark'] .navigation {
   background: var(--surface-frost) !important;
 }

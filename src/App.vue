@@ -184,7 +184,7 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   background: transparent;
-  padding-top: 92px;
+  padding-top: 68px;
 }
 
 .page {
@@ -198,7 +198,7 @@ onUnmounted(() => {
   min-width: 0;
   display: flex;
   align-items: center;
-  gap: 0.85rem;
+  gap: 0.72rem;
 }
 
 .mobile-topbar {
@@ -243,7 +243,7 @@ onUnmounted(() => {
 
 @media (max-width: 768px) {
   .layout {
-    padding-top: 92px;
+    padding-top: 72px;
   }
 
   .desktop-topbar {
