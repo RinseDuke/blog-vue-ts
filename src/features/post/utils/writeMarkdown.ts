@@ -10,6 +10,12 @@ type TurndownNode = {
 
 const turndownService = new TurndownService({ headingStyle: 'atx' })
 turndownService.use(gfm)
+turndownService.addRule('strikethroughDoubleTilde', {
+  filter: ['del', 's', 'strike'],
+  replacement(content: string) {
+    return `~~${content}~~`
+  },
+})
 turndownService.addRule('tableCellParagraph', {
   filter(node: TurndownNode) {
     const parentName = node.parentNode?.nodeName

@@ -79,9 +79,9 @@ describe('top header layout source contract', () => {
     expect(searchBoxBlock).toContain('padding: 0 0.1rem;')
     expect(searchInputWrapperBlock).toContain('max-width: 700px;')
     expect(mobileTopbarBlock).toContain('padding: 0 0.75rem;')
-    expect(mobileTopbarInnerBlock).toContain('min-height: 72px;')
-    expect(mobileTopbarInnerBlock).toContain('padding: 0.55rem 0;')
-    expect(mobileLayoutBlock).toContain('padding-top: 72px;')
+    expect(mobileTopbarInnerBlock).toContain('min-height: 52px;')
+    expect(mobileTopbarInnerBlock).toContain('padding: 0.35rem 0;')
+    expect(mobileLayoutBlock).toContain('padding-top: 52px;')
   })
 
   it('removes the dark-mode glass override from the topbar inner shell', () => {

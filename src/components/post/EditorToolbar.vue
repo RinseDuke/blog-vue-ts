@@ -522,11 +522,9 @@ onBeforeUnmount(() => {
 
 <style scoped lang="less">
 .editor-toolbar {
-  position: sticky;
-  top: 0;
   z-index: 12;
-  padding: 6px 0 0;
-  margin-bottom: 8px;
+  padding: 0;
+  margin: 0;
 }
 
 .editor-toolbar__surface {
@@ -534,7 +532,6 @@ onBeforeUnmount(() => {
   border-radius: 20px;
   background: var(--write-toolbar-bg, var(--write-panel-bg));
   box-shadow: var(--write-toolbar-shadow, var(--write-panel-shadow)), var(--write-panel-inset-shadow);
-  backdrop-filter: blur(16px);
   overflow: visible;
 }
 
@@ -599,6 +596,7 @@ onBeforeUnmount(() => {
   background: var(--write-panel-inline-hover);
   border-color: color-mix(in srgb, var(--write-panel-inline-border) 76%, var(--brand-100) 24%);
   color: var(--ink-strong);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
 }
 
 .toolbar-btn.is-active,
@@ -613,7 +611,7 @@ onBeforeUnmount(() => {
 }
 
 .toolbar-btn:active:not(:disabled) {
-  transform: translateY(1px);
+  transform: translateY(1px) scale(0.97);
 }
 
 .toolbar-btn:disabled {
@@ -793,8 +791,8 @@ onBeforeUnmount(() => {
 
 @media (max-width: 768px) {
   .editor-toolbar {
-    padding-top: 4px;
-    margin-bottom: 6px;
+    padding-top: 0;
+    margin-bottom: 0;
   }
 
   .editor-toolbar__surface {

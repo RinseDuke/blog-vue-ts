@@ -56,8 +56,8 @@ const props = withDefaults(
 
   .topbar__inner {
     display: block;
-    min-height: 72px;
-    padding: 0.55rem 0;
+    min-height: 52px;
+    padding: 0.35rem 0;
   }
 }
 </style>

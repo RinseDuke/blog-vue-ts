@@ -1,7 +1,7 @@
 import source from './Write.vue?raw'
 
 describe('Write view source contract', () => {
-  it('keeps the toolbar above the editor card with a compact toolbar wrapper', () => {
+  it('keeps the toolbar above the editor card with a sticky wrapper', () => {
     expect(source).toContain('editor-toolbar-wrap')
     expect(source).toContain('editor-main-card')
     expect(source).toContain('editor-main-card__header')

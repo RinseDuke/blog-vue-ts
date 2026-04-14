@@ -240,12 +240,10 @@ function setViewMode(mode: string) {
     markdown.value = serializeEditorHtmlToMarkdown(html)
   }
 
-  // 输入模式切换到实时阅览， markdown 渲染成 HTML 注入编辑器
   if (newMode === 'live') {
     syncEditorFromMarkdown(markdown.value)
   }
 
-  // 输入模式切换到阅读视图
   viewMode.value = newMode
   localStorage.setItem(VIEW_MODE_KEY, mode)
 }
@@ -460,7 +458,10 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
 }
 
 .editor-toolbar-wrap {
-  margin-bottom: 6px;
+  position: sticky;
+  top: 68px;
+  z-index: 20;
+  margin-bottom: 8px;
 }
 
 .editor-main-card {
@@ -476,7 +477,7 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
 }
 
 .editor-main-card__header {
-  padding: 0 30px;
+  padding: 0 24px;
   border-bottom: 1px solid var(--write-editor-divider);
   background: var(--write-editor-header-bg);
 }
@@ -485,7 +486,7 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   display: flex;
   flex: 1;
   flex-direction: column;
-  padding: 16px 20px 24px;
+  padding: 0 24px 24px;
 }
 
 .editor-canvas {
@@ -493,22 +494,20 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   flex: 1;
   flex-direction: column;
   min-height: calc(100vh - 390px);
-  padding: 16px 18px 24px;
-  border: 1px solid var(--write-editor-canvas-border);
-  border-radius: 18px;
-  background: var(--write-editor-canvas-bg);
-  box-shadow: var(--write-editor-canvas-shadow);
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .editor-canvas--read {
-  padding: 20px 22px 24px;
+  padding: 4px 0 0;
 }
 
 .editor-canvas--source:focus-within {
-  border-color: color-mix(in srgb, var(--write-editor-canvas-border) 54%, var(--brand-100) 46%);
-  box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--brand-100) 58%, transparent),
-    var(--write-editor-canvas-shadow);
+  border-color: transparent;
+  box-shadow: none;
 }
 
 .title-input {
@@ -519,7 +518,7 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   font-weight: 700;
   color: var(--ink-strong);
   line-height: 1.4;
-  padding: 28px 0 22px;
+  padding: 20px 0 16px;
   background: transparent;
 
   &::placeholder {
@@ -786,7 +785,8 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   }
 
   .editor-toolbar-wrap {
-    margin-bottom: 4px;
+    top: 52px;
+    margin-bottom: 6px;
   }
 
   .editor-main-card {
@@ -794,26 +794,26 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   }
 
   .editor-main-card__header {
-    padding: 0 20px;
+    padding: 0 16px;
   }
 
   .editor-main-card__canvas {
-    padding: 10px;
+    padding: 0 16px 18px;
   }
 
   .editor-canvas {
     min-height: calc(100vh - 420px);
-    padding: 14px 12px 18px;
-    border-radius: 16px;
+    padding: 0;
+    border-radius: 0;
   }
 
   .editor-canvas--read {
-    padding: 16px 14px 18px;
+    padding: 2px 0 0;
   }
 
   .title-input {
-    padding-top: 22px;
-    padding-bottom: 18px;
+    padding-top: 16px;
+    padding-bottom: 12px;
   }
 
   :deep(.tiptap),

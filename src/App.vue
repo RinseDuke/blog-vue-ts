@@ -243,7 +243,7 @@ onUnmounted(() => {
 
 @media (max-width: 768px) {
   .layout {
-    padding-top: 72px;
+    padding-top: 52px;
   }
 
   .desktop-topbar {

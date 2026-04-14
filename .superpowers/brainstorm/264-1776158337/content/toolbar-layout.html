@@ -1,0 +1,90 @@
+<h2>方案 A：工具栏固定在导航栏下方</h2>
+<p class="subtitle">工具栏从编辑卡片中分离，sticky 在页面顶部（导航栏下方），滚动时始终可见</p>
+
+<div class="split">
+  <div class="mockup" data-choice="current" onclick="toggleSelect(this)">
+    <div class="mockup-header">当前：工具栏在卡片内部（会被滚走）</div>
+    <div class="mockup-body" style="font-family: system-ui; font-size: 13px; background: #f5f5f7; padding: 0;">
+      <!-- Navbar -->
+      <div style="background: #fff; padding: 10px 16px; border-bottom: 1px solid rgba(0,0,0,0.08); display: flex; align-items: center; justify-content: space-between;">
+        <span style="font-weight: 800; color: #1d1d1f;">Sign</span>
+        <span style="color: #6e6e73; font-size: 12px;">首页 文章 写作 个人中心</span>
+      </div>
+      <!-- Editor card with toolbar INSIDE -->
+      <div style="margin: 16px; border-radius: 16px; border: 1px solid rgba(0,0,0,0.08); background: #fff; overflow: hidden;">
+        <!-- Toolbar inside card -->
+        <div style="padding: 8px; border-bottom: 1px solid rgba(0,0,0,0.06); background: rgba(250,250,252,0.95); display: flex; gap: 4px; flex-wrap: wrap;">
+          <span style="padding: 4px 8px; border-radius: 8px; background: #f0f0f2; font-size: 11px; color: #6e6e73;">撤销</span>
+          <span style="padding: 4px 8px; border-radius: 8px; background: #f0f0f2; font-size: 11px; color: #6e6e73;">H2</span>
+          <span style="padding: 4px 8px; border-radius: 8px; background: #f0f0f2; font-size: 11px; color: #6e6e73;">加粗</span>
+          <span style="padding: 4px 8px; border-radius: 8px; background: #f0f0f2; font-size: 11px; color: #6e6e73;">斜体</span>
+          <span style="padding: 4px 8px; border-radius: 8px; background: #f0f0f2; font-size: 11px; color: #6e6e73;">列表</span>
+          <span style="padding: 4px 8px; border-radius: 8px; background: #f0f0f2; font-size: 11px; color: #6e6e73;">代码</span>
+        </div>
+        <div style="padding: 16px 20px;">
+          <div style="font-size: 20px; font-weight: 700; color: #1d1d1f; padding-bottom: 12px; border-bottom: 1px solid rgba(0,0,0,0.06);">请输入标题</div>
+          <div style="padding-top: 12px; color: #6e6e73; min-height: 120px;">
+            正文内容...<br><br>
+            <span style="color: #c0c0c4;">↓ 滚动后工具栏消失 ↓</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mockup" data-choice="proposed" onclick="toggleSelect(this)">
+    <div class="mockup-header">优化后：工具栏 sticky 在导航栏下方</div>
+    <div class="mockup-body" style="font-family: system-ui; font-size: 13px; background: #f5f5f7; padding: 0;">
+      <!-- Navbar -->
+      <div style="background: #fff; padding: 10px 16px; border-bottom: 1px solid rgba(0,0,0,0.08); display: flex; align-items: center; justify-content: space-between;">
+        <span style="font-weight: 800; color: #1d1d1f;">Sign</span>
+        <span style="color: #6e6e73; font-size: 12px;">首页 文章 写作 个人中心</span>
+      </div>
+      <!-- Toolbar OUTSIDE card, sticky -->
+      <div style="padding: 6px 16px; background: rgba(250,250,252,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(0,0,0,0.06); display: flex; gap: 4px; flex-wrap: wrap; position: sticky; top: 0;">
+        <span style="padding: 4px 8px; border-radius: 8px; background: rgba(255,255,255,0.8); border: 1px solid rgba(0,0,0,0.06); font-size: 11px; color: #6e6e73;">撤销</span>
+        <span style="padding: 4px 8px; border-radius: 8px; background: rgba(255,255,255,0.8); border: 1px solid rgba(0,0,0,0.06); font-size: 11px; color: #6e6e73;">H2</span>
+        <span style="padding: 4px 8px; border-radius: 8px; background: rgba(255,255,255,0.8); border: 1px solid rgba(0,0,0,0.06); font-size: 11px; color: #6e6e73;">加粗</span>
+        <span style="padding: 4px 8px; border-radius: 8px; background: rgba(255,255,255,0.8); border: 1px solid rgba(0,0,0,0.06); font-size: 11px; color: #6e6e73;">斜体</span>
+        <span style="padding: 4px 8px; border-radius: 8px; background: rgba(255,255,255,0.8); border: 1px solid rgba(0,0,0,0.06); font-size: 11px; color: #6e6e73;">列表</span>
+        <span style="padding: 4px 8px; border-radius: 8px; background: rgba(255,255,255,0.8); border: 1px solid rgba(0,0,0,0.06); font-size: 11px; color: #6e6e73;">代码</span>
+        <span style="padding: 4px 8px; border-radius: 8px; background: rgba(255,255,255,0.8); border: 1px solid rgba(0,0,0,0.06); font-size: 11px; color: #6e6e73;">更多 ▾</span>
+      </div>
+      <!-- Editor card WITHOUT toolbar -->
+      <div style="margin: 12px 16px; border-radius: 16px; border: 1px solid rgba(0,0,0,0.08); background: #fff; overflow: hidden;">
+        <div style="padding: 16px 20px;">
+          <div style="font-size: 20px; font-weight: 700; color: #1d1d1f; padding-bottom: 12px; border-bottom: 1px solid rgba(0,0,0,0.06);">请输入标题</div>
+          <div style="padding-top: 12px; color: #6e6e73; min-height: 120px;">
+            正文内容...<br><br>
+            <span style="color: #2d8a4e;">✓ 滚动时工具栏始终可见</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h3 style="margin-top: 24px;">关键设计细节</h3>
+<div class="options">
+  <div class="option" data-choice="detail-glass" onclick="toggleSelect(this)">
+    <div class="letter">1</div>
+    <div class="content">
+      <h3>毛玻璃背景</h3>
+      <p>工具栏使用 backdrop-filter: blur + 半透明背景，滚动时内容透过工具栏可见，视觉层次更丰富</p>
+    </div>
+  </div>
+  <div class="option" data-choice="detail-sticky" onclick="toggleSelect(this)">
+    <div class="letter">2</div>
+    <div class="content">
+      <h3>Sticky 定位</h3>
+      <p>position: sticky + top: 68px（导航栏高度），不用 fixed 避免脱离文档流。仅在实时阅览模式下显示</p>
+    </div>
+  </div>
+  <div class="option" data-choice="detail-flat" onclick="toggleSelect(this)">
+    <div class="letter">3</div>
+    <div class="content">
+      <h3>扁平化编辑卡片</h3>
+      <p>保留之前的优化：去掉内层 canvas 边框，收紧标题间距，编辑区域视觉更干净</p>
+    </div>
+  </div>
+</div>
