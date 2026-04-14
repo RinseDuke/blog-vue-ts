@@ -1,4 +1,4 @@
-﻿<!-- 编辑器底部状态栏 -->
+<!-- 编辑器底部状态栏 -->
 <template>
   <footer class="status-bar">
     <div class="status-bar__inner">
@@ -70,19 +70,21 @@
 
         <div class="status-bar__right">
           <button type="button" class="sb-btn sb-surface-btn" @click="$emit('clear-draft')">删除</button>
+
           <button
             type="button"
-            class="sb-btn sb-surface-btn sb-draft"
-            :disabled="isPublishing"
-            @click="$emit('save-draft')"
+            :class="['sb-btn sb-surface-btn sb-visibility', { 'sb-visibility--private': visibility === 'private' }]"
+            @click="toggleVisibility"
           >
-            草稿
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-              <path
-                d="M19.35 10.04A7.49 7.49 0 0 0 12 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 0 0 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"
-              />
+            <svg v-if="visibility === 'public'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
             </svg>
+            <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            {{ visibility === 'public' ? '公开' : '私密' }}
           </button>
+
           <button type="button" class="sb-btn sb-surface-btn" :disabled="isPublishing" @click="$emit('export-markdown')">
             导出
           </button>
@@ -98,11 +100,12 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 
-defineProps<{
+const props = defineProps<{
   wordCount: number
   currentModeLabel: string
   viewMode: string
   saveLabel: string
+  visibility: 'public' | 'private'
   isPublishing?: boolean
   publishLabel?: string
 }>()
@@ -113,6 +116,7 @@ const emit = defineEmits<{
   (e: 'export-markdown'): void
   (e: 'publish'): void
   (e: 'change-mode', mode: string): void
+  (e: 'update:visibility', value: 'public' | 'private'): void
 }>()
 
 const menuOpen = ref(false)
@@ -143,6 +147,10 @@ function toggleMenu() {
 function selectMode(mode: string) {
   emit('change-mode', mode)
   menuOpen.value = false
+}
+
+function toggleVisibility() {
+  emit('update:visibility', props.visibility === 'public' ? 'private' : 'public')
 }
 
 function onClickOutside(e: MouseEvent) {
@@ -278,6 +286,12 @@ onBeforeUnmount(() => {
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand-100) 72%, transparent), var(--write-panel-inset-shadow);
 }
 
+.sb-visibility--private {
+  color: var(--brand-500);
+  border-color: color-mix(in srgb, var(--brand-100) 80%, transparent);
+  background: color-mix(in srgb, var(--brand-100) 42%, var(--write-panel-inline-bg) 58%);
+}
+
 .mode-switcher {
   position: relative;
 }
@@ -375,10 +389,6 @@ onBeforeUnmount(() => {
   background: var(--write-panel-divider);
   display: block;
   flex-shrink: 0;
-}
-
-.sb-draft svg {
-  color: currentColor;
 }
 
 .sb-saved {

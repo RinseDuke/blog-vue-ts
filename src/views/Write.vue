@@ -56,12 +56,6 @@
         </section>
       </div>
 
-      <PublishPanel
-        :status="publishStatus"
-        :visibility="publishVisibility"
-        @update:status="handlePublishStatusChange"
-        @update:visibility="handlePublishVisibilityChange"
-      />
       <input
         ref="coverInputRef"
         type="file"
@@ -73,11 +67,12 @@
 
     <p v-if="publishError" class="write-page__feedback write-page__feedback--error">{{ publishError }}</p>
 
-    <StatusBar 
+    <StatusBar
       :word-count="wordCount"
       :current-mode-label="currentModeLabel"
       :view-mode="viewMode"
       :save-label="saveLabel"
+      :visibility="publishVisibility"
       :is-publishing="isPublishing"
       :publish-label="publishLabel"
       @change-mode="setViewMode"
@@ -85,6 +80,7 @@
       @save-draft="saveDraftNow"
       @export-markdown="onExportMarkdown"
       @publish="onPublish"
+      @update:visibility="handlePublishVisibilityChange"
     />
   </section>
 </template>
@@ -116,7 +112,6 @@ import {
 } from '@/features/post/utils/writeMarkdown'
 
 import EditorToolbar from '@/components/post/EditorToolbar.vue'
-import PublishPanel from '@/components/post/PublishPanel.vue'
 import StatusBar from '@/components/post/StatusBar.vue'
 import { createPost } from '@/services/postService'
 
@@ -126,7 +121,6 @@ const postsStore = usePostsStore()
 // 封面上传（bushi）
 type ViewMode = 'read' | 'source' | 'live'
 const VIEW_MODE_KEY = 'blog_write_view_mode_v1'
-const DEFAULT_PUBLISH_STATUS = 'published'
 const DEFAULT_PUBLISH_VISIBILITY = 'public'
 
 
@@ -155,7 +149,6 @@ const {
 const title = ref('')
 const markdown = ref('')
 const viewMode = ref<ViewMode>(readViewMode())
-const publishStatus = ref<'draft' | 'published'>(DEFAULT_PUBLISH_STATUS)
 const publishVisibility = ref<'public' | 'private'>(DEFAULT_PUBLISH_VISIBILITY)
 const isPublishing = ref(false)
 const publishError = ref('')
@@ -253,12 +246,6 @@ function onSourceInput() {
   onDirtyAndAutosave()
 }
 
-function handlePublishStatusChange(value: 'draft' | 'published') {
-  if (publishStatus.value === value) return
-  publishStatus.value = value
-  onDirtyAndAutosave()
-}
-
 function handlePublishVisibilityChange(value: 'public' | 'private') {
   if (publishVisibility.value === value) return
   publishVisibility.value = value
@@ -277,7 +264,6 @@ function hasPersistableDraft() {
     markdown.value.trim() ||
     selectedTags.value.length ||
     coverPreviewUrl.value ||
-    publishStatus.value !== DEFAULT_PUBLISH_STATUS ||
     publishVisibility.value !== DEFAULT_PUBLISH_VISIBILITY
   )
 }
@@ -294,7 +280,6 @@ function saveDraftNow() {
     markdown: markdown.value,
     tags: selectedTags.value,
     coverDataUrl: coverPreviewUrl.value,
-    status: publishStatus.value,
     visibility: publishVisibility.value,
     updatedAt: new Date().toISOString(),
   })
@@ -306,7 +291,6 @@ function onClearDraft() {
   publishError.value = ''
   title.value = ''
   markdown.value = ''
-  publishStatus.value = DEFAULT_PUBLISH_STATUS
   publishVisibility.value = DEFAULT_PUBLISH_VISIBILITY
   clearTags()
   removeCover()
@@ -349,7 +333,7 @@ async function onPublish() {
       title: finalTitle,
       markdown: content,
       html,
-      status: publishStatus.value,
+      status: 'published',
       visibility: publishVisibility.value,
       tags: selectedTags.value,
       coverImage: coverPreviewUrl.value,
@@ -380,7 +364,6 @@ onMounted(() => {
   const draft = readDraft()
   title.value = draft?.title ?? ''
   markdown.value = normalizeWriteMarkdown(draft?.markdown ?? '')
-  publishStatus.value = draft?.status ?? DEFAULT_PUBLISH_STATUS
   publishVisibility.value = draft?.visibility ?? DEFAULT_PUBLISH_VISIBILITY
   restoreTags(draft?.tags ?? [])
   restoreCoverFromUrl(draft?.coverDataUrl ?? null)
@@ -454,7 +437,7 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   max-width: var(--write-content-max-width, 980px);
   width: 100%;
   margin: 0 auto;
-  padding: 0 24px 36px;
+  padding: 16px 24px 36px;
 }
 
 .editor-toolbar-wrap {
@@ -493,7 +476,7 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   display: flex;
   flex: 1;
   flex-direction: column;
-  min-height: calc(100vh - 390px);
+  min-height: calc(100vh - 280px);
   padding: 0;
   border: none;
   border-radius: 0;
@@ -535,7 +518,7 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
 
 :deep(.tiptap) {
   outline: none !important;
-  min-height: calc(100vh - 430px);
+  min-height: calc(100vh - 320px);
   font-size: 16px;
   line-height: 1.7;
   color: var(--ink-main);
@@ -639,7 +622,7 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
 .source-editor {
   flex: 1;
   width: 100%;
-  min-height: calc(100vh - 430px);
+  min-height: calc(100vh - 320px);
   border: none;
   outline: none;
   resize: none;
@@ -677,7 +660,7 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-height: calc(100vh - 470px);
+    min-height: calc(100vh - 370px);
     gap: 16px;
     color: var(--ink-muted);
     font-size: 0.92rem;
@@ -802,7 +785,7 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   }
 
   .editor-canvas {
-    min-height: calc(100vh - 420px);
+    min-height: calc(100vh - 320px);
     padding: 0;
     border-radius: 0;
   }
@@ -819,7 +802,7 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   :deep(.tiptap),
   .source-editor,
   .read-preview--empty {
-    min-height: calc(100vh - 470px);
+    min-height: calc(100vh - 370px);
   }
 }
 </style>

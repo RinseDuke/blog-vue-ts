@@ -16,7 +16,6 @@
         </div>
 
         <h1 class="article-title">{{ post.title }}</h1>
-        <p class="article-excerpt">{{ post.excerpt }}</p>
 
         <div class="article-meta">
           <div class="author-info">
@@ -195,12 +194,6 @@ function formatDate(dateString: string) {
   color: var(--ink-strong);
   letter-spacing: -0.02em;
   margin: 0 0 1rem;
-}
-
-.article-excerpt {
-  font-size: clamp(1.02rem, 2vw, 1.2rem);
-  color: var(--ink-main);
-  margin: 0;
 }
 
 .article-meta {
