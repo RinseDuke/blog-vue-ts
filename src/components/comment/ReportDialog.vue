@@ -1,4 +1,3 @@
-<!-- 举报对话框：选择理由并提交举报(弃用中) -->
 <script setup lang="ts">
 import { ref } from 'vue'
 import type { ReportReason, ReportTargetType } from '@/types/post'

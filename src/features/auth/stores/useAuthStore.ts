@@ -1,8 +1,3 @@
-/**
- * 认证 Store
- * 管理用户会话（登录/注册/登出），兼容 Mock 模式与真实后端。
- */
-
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { apiFetch, isMockMode } from '@/services/apiClient'

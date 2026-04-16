@@ -1,4 +1,3 @@
-<!-- 文章详情组件：按后端 blogs 模型渲染正文 -->
 <template>
   <div class="article-container">
     <div v-if="loading" class="article-content" style="padding: 2rem">

@@ -1,4 +1,3 @@
-<!-- 编辑器底部状态栏 -->
 <template>
   <footer class="status-bar">
     <div class="status-bar__inner">

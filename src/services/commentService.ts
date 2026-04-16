@@ -1,17 +1,10 @@
-/**
- * 评论服务
- * 提供评论的加载、新增、点赞功能。Mock 模式下直接操作内存数组。
- */
-
 import type { Comment } from '@/types/post'
 import { mockComments } from '@/mocks/comments'
 import { readStoredAuthSession } from '@/features/auth/stores/useAuthStore'
 import { apiFetch, isMockMode, networkDelay } from './apiClient'
 
-/** Mock 自增 ID 计数器 */
 let nextMockId = 100
 
-/** 校验当前是否已登录 */
 function requireAuthSession(errorMessage: string) {
     const session = readStoredAuthSession()
     if (!session) {
@@ -21,7 +14,6 @@ function requireAuthSession(errorMessage: string) {
     return session
 }
 
-/** 按文章 ID 获取评论列表（按时间正序） */
 export async function fetchCommentsByPostId(postId: string): Promise<Comment[]> {
     if (isMockMode()) {
         await networkDelay()
@@ -33,14 +25,12 @@ export async function fetchCommentsByPostId(postId: string): Promise<Comment[]> 
     return apiFetch<Comment[]>(`/posts/${postId}/comments`)
 }
 
-/** 创建评论的请求体 */
 export interface CreateCommentPayload {
     postId: string
     content: string
-    parentId?: string  // 回复目标评论 ID（可选）
+    parentId?: string
 }
 
-/** 发表新评论 */
 export async function createComment(payload: CreateCommentPayload): Promise<Comment> {
     if (isMockMode()) {
         await networkDelay(200)
@@ -72,7 +62,6 @@ export async function createComment(payload: CreateCommentPayload): Promise<Comm
     })
 }
 
-/** 评论点赞 / 取消点赞，返回最新点赞数 */
 export async function setCommentLike(commentId: string, liked: boolean): Promise<number> {
     if (isMockMode()) {
         await networkDelay(100)

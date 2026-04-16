@@ -1,13 +1,8 @@
-/**
- * 文章服务
- * 真实后端模式对接 blogs 接口，Mock 模式仍保留本地发布能力。
- */
-
 import type { Post } from '@/types/post'
 import { toPlainText } from '@/features/post/utils/post'
 import { mockPosts } from '@/mocks/posts'
 import { readStoredAuthSession, requireAuthSession } from '@/features/auth/stores/useAuthStore'
-import { apiFetch, ApiError, isMockMode, networkDelay } from './apiClient'
+import { apiFetch, apiFetchPaginated, ApiError, isMockMode, networkDelay } from './apiClient'
 
 interface BackendBlogAuthor {
   id: string
@@ -239,11 +234,11 @@ export async function fetchPosts(params: FetchPostsParams = {}): Promise<Post[]>
 
   if (params.featuredOnly) {
     const latest = await apiFetch<BackendBlog[]>(`/blogs/latest?per_page=${params.limit ?? 12}`)
-    return latest.map(mapBackendBlogToPost)
+    return (Array.isArray(latest) ? latest : []).map(mapBackendBlogToPost)
   }
 
-  const blogs = await apiFetch<BackendBlog[]>(`/blogs?${buildBlogsQuery(params).toString()}`)
-  return blogs.map(mapBackendBlogToPost)
+  const { data: blogs } = await apiFetchPaginated<BackendBlog[]>(`/blogs?${buildBlogsQuery(params).toString()}`)
+  return (Array.isArray(blogs) ? blogs : []).map(mapBackendBlogToPost)
 }
 
 export async function fetchUserPosts(userId: string): Promise<Post[]> {
@@ -259,11 +254,11 @@ export async function fetchUserPosts(userId: string): Promise<Post[]> {
     return structuredClone(visiblePosts)
   }
 
-  const blogs = await apiFetch<BackendBlog[]>(
+  const { data: blogs } = await apiFetchPaginated<BackendBlog[]>(
     `/users/${userId}/blogs?page=1&per_page=${DEFAULT_REAL_LIMIT}`,
   )
 
-  return blogs.map(mapBackendBlogToPost)
+  return (Array.isArray(blogs) ? blogs : []).map(mapBackendBlogToPost)
 }
 
 export async function fetchPostById(id: string): Promise<Post | undefined> {

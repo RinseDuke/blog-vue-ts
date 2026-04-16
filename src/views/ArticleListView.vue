@@ -312,7 +312,6 @@ function isPostInDateRange(publishedAt: string) {
 </template>
 
 <style scoped lang="less">
-//文章卡片
 .article-page {
   width: 100%;
   padding: 60px 20px 48px;
@@ -335,7 +334,6 @@ function isPostInDateRange(publishedAt: string) {
   filter: blur(12px);
 }
 
-//文章列表布局
 .article-layout {
   width: 100%;
   max-width: 1200px;
@@ -346,7 +344,6 @@ function isPostInDateRange(publishedAt: string) {
   align-items: flex-start;
 }
 
-//文章列表主体
 .feed {
   display: flex;
   flex-direction: column;
@@ -427,7 +424,6 @@ function isPostInDateRange(publishedAt: string) {
   }
 }
 
-//筛选和排序控件
 .control-field {
   display: flex;
   flex-direction: column;
@@ -457,7 +453,6 @@ function isPostInDateRange(publishedAt: string) {
   }
 }
 
-//重置按钮
 .empty-reset {
   border: 1px solid var(--line-soft);
   background: linear-gradient(180deg, var(--surface-strong), var(--surface));
@@ -500,7 +495,6 @@ function isPostInDateRange(publishedAt: string) {
   }
 }
 
-//针对不同的屏幕尺寸进行响应式调整
 @media (max-width: 1100px) {
   .article-layout {
     grid-template-columns: 1fr;

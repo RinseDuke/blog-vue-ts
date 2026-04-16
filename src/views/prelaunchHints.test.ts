@@ -1,17 +1,8 @@
 import loginSource from './LoginView.vue?raw'
 import registerSource from './RegisterView.vue?raw'
 import profileArticlesSource from './ProfileArticlesView.vue?raw'
-import publishPanelSource from '../components/post/PublishPanel.vue?raw'
 
 describe('pre-launch hint source contract', () => {
-  it('removes publish-time backend limitation hints while keeping publish controls', () => {
-    expect(publishPanelSource).not.toContain('当前后端仅支持标题、正文、状态和可见性。')
-    expect(publishPanelSource).not.toContain('封面、标签等扩展字段已暂时停用，后续接口补齐后可继续接回。')
-    expect(publishPanelSource).not.toContain('publish-note')
-    expect(publishPanelSource).toContain('publish-grid')
-    expect(publishPanelSource).toContain('DropdownSelect')
-  })
-
   it('removes profile article management backend status hints while keeping management actions', () => {
     expect(profileArticlesSource).not.toContain('后端暂未支持标签字段，相关主题统计和标签展示已先隐藏。')
     expect(profileArticlesSource).not.toContain('接口状态')

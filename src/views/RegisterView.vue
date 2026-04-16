@@ -1,4 +1,3 @@
-<!-- 注册页：按后端规范使用用户名 / 昵称 / 邮箱 / 密码注册 -->
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'

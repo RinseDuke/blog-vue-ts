@@ -1,4 +1,3 @@
-<!-- 写作页编辑器工具栏 -->
 <template>
   <div v-if="editor" class="editor-toolbar">
     <div class="editor-toolbar__surface">

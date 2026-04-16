@@ -89,7 +89,6 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
-// Tiptap imports
 import { useEditor, EditorContent } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
@@ -113,12 +112,12 @@ import {
 
 import EditorToolbar from '@/components/post/EditorToolbar.vue'
 import StatusBar from '@/components/post/StatusBar.vue'
+import { LivePreviewPlugin } from '@/extensions/LivePreviewPlugin'
 import { createPost } from '@/services/postService'
 
 const router = useRouter()
 const postsStore = usePostsStore()
 
-// 封面上传（bushi）
 type ViewMode = 'read' | 'source' | 'live'
 const VIEW_MODE_KEY = 'blog_write_view_mode_v1'
 const DEFAULT_PUBLISH_VISIBILITY = 'public'
@@ -130,7 +129,6 @@ const {
   markDirty, queueAutosave, cancelPendingAutosave, flushPendingAutosave,
 } = useDraft()
 
-//自动保存
 function onDirtyAndAutosave() {
   markDirty()
   queueAutosave(saveDraftNow)
@@ -155,7 +153,6 @@ const publishError = ref('')
 const isSyncingEditorContent = ref(false)
 
 
-//顶部编辑栏
 const editor = useEditor({
   extensions: [
     StarterKit,
@@ -176,19 +173,18 @@ const editor = useEditor({
     TableRow,
     TableHeader,
     TableCell,
+    LivePreviewPlugin,
   ],
   content: '',
   onUpdate: ({ editor }) => {
     if (isSyncingEditorContent.value) return
 
-    // 生成 HTML → 转 Markdown → 更新状态
     const html = editor.getHTML()
     markdown.value = serializeEditorHtmlToMarkdown(html)
     onDirtyAndAutosave()
   },
 })
 
-// 计算字数
 const wordCount = computed(() => {
   const zh = (markdown.value.match(/[\u4e00-\u9fff]/g) ?? []).length
   const en = (markdown.value.replace(/[\u4e00-\u9fff]/g, '').match(/[A-Za-z0-9_]+/g) ?? []).length
@@ -210,7 +206,6 @@ const MODE_LABELS: Record<ViewMode, string> = {
 const currentModeLabel = computed(() => MODE_LABELS[viewMode.value])
 const publishLabel = computed(() => (isPublishing.value ? '发布中...' : '发布'))
 
-// 实时渲染 Markdown 为 HTML
 const renderedHtml = computed(() => renderWriteMarkdownToHtml(markdown.value))
 
 function syncEditorFromMarkdown(source: string) {
@@ -241,7 +236,6 @@ function setViewMode(mode: string) {
   localStorage.setItem(VIEW_MODE_KEY, mode)
 }
 
-// 同步状态
 function onSourceInput() {
   onDirtyAndAutosave()
 }
@@ -252,7 +246,6 @@ function handlePublishVisibilityChange(value: 'public' | 'private') {
   onDirtyAndAutosave()
 }
 
-// 封面图片选择
 function onCoverChange(event: Event) {
   const errMsg = handleCoverSelect(event)
   if (errMsg) alert(errMsg)
@@ -268,7 +261,6 @@ function hasPersistableDraft() {
   )
 }
 
-// 草稿保存
 function saveDraftNow() {
   if (!hasPersistableDraft()) {
     clearPersistedDraft()
@@ -285,7 +277,6 @@ function saveDraftNow() {
   })
 }
 
-//清空草稿
 function onClearDraft() {
   if (!window.confirm('确定要清空当前草稿吗？此操作不可撤销。')) return
   publishError.value = ''
@@ -299,7 +290,6 @@ function onClearDraft() {
   syncEditorFromMarkdown('')
 }
 
-//导出Markdown
 function onExportMarkdown() {
   const content = markdown.value
   if (!content.trim()) {
@@ -352,14 +342,12 @@ async function onPublish() {
   }
 }
 
-// 模式选择
 function readViewMode(): ViewMode {
   const stored = localStorage.getItem(VIEW_MODE_KEY)
   if (stored === 'read' || stored === 'source' || stored === 'live') return stored
   return 'live'
 }
 
-// 加载草稿
 onMounted(() => {
   const draft = readDraft()
   title.value = draft?.title ?? ''
@@ -372,7 +360,6 @@ onMounted(() => {
     lastSavedAt.value = draft.updatedAt
   }
 
-  //加载markdown草稿
   if (markdown.value) {
     syncEditorFromMarkdown(markdown.value)
   }
@@ -380,14 +367,12 @@ onMounted(() => {
   window.addEventListener('beforeunload', onBeforeUnload)
 })
 
-// 卸载前清理
 onBeforeUnmount(() => {
   flushPendingAutosave(saveDraftNow)
   cancelPendingAutosave()
   window.removeEventListener('beforeunload', onBeforeUnload)
 })
 
-// 离开页面前提示保存
 function onBeforeUnload(e: BeforeUnloadEvent) {
   if (flushPendingAutosave(saveDraftNow)) {
     return
@@ -469,7 +454,7 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   display: flex;
   flex: 1;
   flex-direction: column;
-  padding: 0 24px 24px;
+  padding: 8px 24px 24px;
 }
 
 .editor-canvas {
@@ -501,7 +486,7 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   font-weight: 700;
   color: var(--ink-strong);
   line-height: 1.4;
-  padding: 20px 0 16px;
+  padding: 24px 0 20px;
   background: transparent;
 
   &::placeholder {
@@ -520,8 +505,12 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   outline: none !important;
   min-height: calc(100vh - 320px);
   font-size: 16px;
-  line-height: 1.7;
+  line-height: 1.6;
   color: var(--ink-main);
+
+  p {
+    margin: 0.1em 0;
+  }
 
   p.is-editor-empty:first-child::before {
     color: var(--ink-muted);
@@ -534,28 +523,28 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   h1, h2, h3, h4, h5, h6 {
     line-height: 1.3;
     color: var(--ink-strong);
-    margin-top: 1.5em;
-    margin-bottom: 0.5em;
+    margin-top: 0.8em;
+    margin-bottom: 0.15em;
   }
 
   h2 {
     font-size: 1.5em;
-    border-bottom: 1px solid var(--line-soft);
-    padding-bottom: 0.3em;
+    border-bottom: none;
+    padding-bottom: 0;
   }
 
   h3 { font-size: 1.25em; }
 
   ul, ol {
     padding-left: 1.5rem;
-    margin: 1em 0;
+    margin: 0.35em 0;
   }
 
   blockquote {
     border-left: 4px solid var(--line-strong);
     padding-left: 1rem;
     color: var(--ink-muted);
-    margin: 1em 0;
+    margin: 0.4em 0;
     background: var(--bg-canvas-soft);
     padding: 0.5rem 1rem;
     border-radius: 0 4px 4px 0;
@@ -567,7 +556,7 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
     font-family: inherit;
     padding: 1rem;
     border-radius: 8px;
-    margin: 1em 0;
+    margin: 0.5em 0;
     overflow-x: auto;
 
     code {
@@ -590,7 +579,7 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   hr {
     border: none;
     border-top: 2px solid var(--line-soft);
-    margin: 2rem 0;
+    margin: 0.8rem 0;
   }
 
   table {
@@ -616,6 +605,36 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
       font-weight: 600;
       text-align: left;
     }
+  }
+}
+
+:deep(.live-preview-syntax) {
+  display: inline;
+  color: var(--ink-muted);
+  opacity: 0.52;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+  font-size: 0.82em;
+  font-weight: 400;
+  line-height: inherit;
+  letter-spacing: 0;
+  user-select: none;
+  pointer-events: none;
+  vertical-align: baseline;
+  animation: lpSyntaxIn 0.15s ease-out;
+}
+
+:deep(.live-preview-syntax[data-side='after']) {
+  margin-left: 0;
+}
+
+@keyframes lpSyntaxIn {
+  from {
+    opacity: 0;
+    transform: translateY(-1px);
+  }
+  to {
+    opacity: 0.52;
+    transform: translateY(0);
   }
 }
 
@@ -652,7 +671,7 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   margin-top: 0;
   padding-bottom: 0;
   font-size: 16px;
-  line-height: 1.7;
+  line-height: 1.6;
   color: var(--ink-main);
 
   &--empty {
@@ -666,30 +685,34 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
     font-size: 0.92rem;
   }
 
+  :deep(p) {
+    margin: 0.1em 0;
+  }
+
   :deep(h1), :deep(h2), :deep(h3), :deep(h4), :deep(h5), :deep(h6) {
     line-height: 1.3;
     color: var(--ink-strong);
-    margin-top: 1.5em;
-    margin-bottom: 0.5em;
+    margin-top: 0.8em;
+    margin-bottom: 0.15em;
   }
 
   :deep(h2) {
     font-size: 1.5em;
-    border-bottom: 1px solid var(--line-soft);
-    padding-bottom: 0.3em;
+    border-bottom: none;
+    padding-bottom: 0;
   }
 
   :deep(h3) { font-size: 1.25em; }
 
   :deep(ul), :deep(ol) {
     padding-left: 1.5rem;
-    margin: 1em 0;
+    margin: 0.35em 0;
   }
 
   :deep(blockquote) {
     border-left: 4px solid var(--line-strong);
     color: var(--ink-muted);
-    margin: 1em 0;
+    margin: 0.4em 0;
     background: var(--bg-canvas-soft);
     padding: 0.5rem 1rem;
     border-radius: 0 4px 4px 0;
@@ -700,7 +723,7 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
     color: var(--bg-canvas-soft);
     padding: 1rem;
     border-radius: 8px;
-    margin: 1em 0;
+    margin: 0.5em 0;
     overflow-x: auto;
 
     code {
@@ -723,7 +746,7 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   :deep(hr) {
     border: none;
     border-top: 2px solid var(--line-soft);
-    margin: 2rem 0;
+    margin: 0.8rem 0;
   }
 
   :deep(table) {

@@ -1,4 +1,3 @@
-<!-- 个人中心页：展示个人资料、活动动态、草稿进度、关系摘要和快捷入口 -->
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
@@ -13,7 +12,7 @@ const authStore = useAuthStore()
 const postsStore = usePostsStore()
 const { readDraft } = useDraft()
 const router = useRouter()
-const { isLoggedIn, userEmail } = storeToRefs(authStore)
+const { isLoggedIn, userEmail, session } = storeToRefs(authStore)
 const { ensurePosts } = postsStore
 
 function handleLogout() {
@@ -39,26 +38,20 @@ const isSaving = ref(false)
 const editedBio = ref('')
 const currentDraft = ref<DraftPayload | null>(null)
 
-const activityFeed = [
-  {
-    type: '更新草稿',
-    title: '从零搭建可维护博客',
-    detail: '补齐了搜索链路、主题切换和资料页改版这三部分内容。',
-    time: '今天 09:30',
-  },
-  {
-    type: '发布文章',
-    title: '前端结构复盘',
-    detail: '整理了最近一轮页面收口、权限校验和状态同步的改动。',
-    time: '昨天 20:10',
-  },
-  {
-    type: '回复评论',
-    title: '评论区互动',
-    detail: '集中回复了 12 条关于暗色模式、搜索体验和个人中心布局的问题。',
-    time: '昨天 16:40',
-  },
-]
+const activityFeed = computed(() => {
+  const userId = session.value?.user?.id
+  if (!userId) return []
+
+  return postsStore.sortedPosts
+    .filter((post) => post.author.id === userId)
+    .slice(0, 5)
+    .map((post) => ({
+      type: post.status === 'draft' ? '更新草稿' : '发布文章',
+      title: post.title,
+      detail: post.excerpt || '暂无摘要',
+      time: formatPostDate(post.publishedAt),
+    }))
+})
 
 const creatorShortcuts = [
   { label: '开始创作', to: '/write', accent: true },
@@ -226,6 +219,9 @@ function enterEditMode() {
                 <h3>{{ item.title }}</h3>
                 <p>{{ item.detail }}</p>
               </article>
+              <div v-if="activityFeed.length === 0" class="draft-empty">
+                <p>还没有发布过文章，去写一篇吧。</p>
+              </div>
             </div>
           </article>
 

@@ -1,8 +1,3 @@
-/**
- * 个人资料服务
- * 真实后端模式下走用户接口，Mock 模式下按账号隔离本地数据。
- */
-
 import { apiFetch, isMockMode } from '@/services/apiClient'
 import { readStoredAuthSession } from '@/features/auth/stores/useAuthStore'
 

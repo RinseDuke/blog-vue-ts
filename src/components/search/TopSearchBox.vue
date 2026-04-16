@@ -1,4 +1,3 @@
-<!-- 顶部搜索框组件 -->
 <template>
   <div class="search-box">
     <div class="search-input-wrapper">

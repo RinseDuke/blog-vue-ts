@@ -1,8 +1,3 @@
-/**
- * 文章 Store
- * 管理全局文章列表，提供加载一次 + 并发请求去重机制。
- */
-
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { Post } from '@/types/post'
@@ -14,18 +9,14 @@ export const usePostsStore = defineStore('posts', () => {
   const loading = ref(false)
   const error = ref<string | null>(null)
 
-  let hasLoaded = false                          // 是否已加载过
-  let inflight: Promise<Post[]> | null = null    // 当前飞行中的请求（去重复用）
+  let hasLoaded = false
+  let inflight: Promise<Post[]> | null = null
 
   function getErrorMessage(err: unknown, fallback: string) {
     return err instanceof Error ? err.message : fallback
   }
 
-  /**
-   * 确保文章已加载
-   * - 已加载过且非强制刷新 → 直接返回缓存
-   * - 有飞行中的请求 → 复用同一个 Promise（并发去重）
-   */
+  // 已加载则返回缓存；有飞行中请求则复用同一 Promise
   async function ensurePosts(options: { force?: boolean } = {}) {
     const { force = false } = options
 
@@ -53,12 +44,10 @@ export const usePostsStore = defineStore('posts', () => {
     return inflight
   }
 
-  /** 强制重新加载文章 */
   function refreshPosts() {
     return ensurePosts({ force: true })
   }
 
-  /** 按发布日期倒序排列的计算属性 */
   const sortedPosts = computed(() => posts.value.slice().sort(sortPostsByDateDesc))
 
   return {

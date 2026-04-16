@@ -1,4 +1,3 @@
-<!-- 顶部导航栏布局容器 -->
 <template>
   <header class="topbar" :class="{ hidden: props.isHidden }">
     <div class="topbar__inner">

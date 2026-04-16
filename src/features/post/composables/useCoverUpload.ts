@@ -1,11 +1,5 @@
-/**
- * 封面图上传 Composable
- * 使用稳定的 Data URL 作为预览与草稿持久化值，避免刷新后 blob 地址失效。
- */
-
 import { ref } from 'vue'
 
-/** 允许的图片格式 */
 const ACCEPTED_TYPES = new Set(['image/jpeg', 'image/jpg', 'image/png'])
 
 function resetInputValue(input: HTMLInputElement | null | undefined) {
@@ -40,12 +34,10 @@ export function useCoverUpload(onDirty: () => void) {
   const coverFile = ref<File | null>(null)
   const coverPreviewUrl = ref<string | null>(null)
 
-  /** 触发文件选择对话框 */
   function triggerCoverInput() {
     coverInputRef.value?.click()
   }
 
-  /** 处理文件选择，返回错误信息或 null */
   async function handleCoverSelect(event: Event): Promise<string | null> {
     const input = event.target as HTMLInputElement
     const file = input.files?.[0]
@@ -70,7 +62,6 @@ export function useCoverUpload(onDirty: () => void) {
     }
   }
 
-  /** 移除封面图 */
   function removeCover(options: { markDirty?: boolean } = {}) {
     const { markDirty = true } = options
     coverFile.value = null
@@ -82,7 +73,6 @@ export function useCoverUpload(onDirty: () => void) {
     }
   }
 
-  /** 从草稿恢复封面预览地址 */
   function restoreCoverFromUrl(url: string | null) {
     coverFile.value = null
     coverPreviewUrl.value = url && !url.startsWith('blob:') ? url : null

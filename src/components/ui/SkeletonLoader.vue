@@ -1,4 +1,3 @@
-<!-- 骨架屏加载占位组件 -->
 <template>
   <div class="skeleton" :class="`skeleton--${variant}`">
     <div v-if="variant === 'article-detail'" class="skeleton__article">

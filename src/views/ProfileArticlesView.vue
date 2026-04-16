@@ -1,4 +1,3 @@
-<!-- 我的文章管理页：查看/删除已发布文章、查看/清空本地草稿 -->
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'

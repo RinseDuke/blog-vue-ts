@@ -1,8 +1,3 @@
-/**
- * 主题 Store
- * 管理亮/暗模式切换，支持系统偏好检测和持久化存储。
- */
-
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 
@@ -14,7 +9,6 @@ function isThemeMode(value: unknown): value is ThemeMode {
   return value === 'light' || value === 'dark'
 }
 
-/** 检测系统偏好的主题模式 */
 function getPreferredTheme(): ThemeMode {
   if (typeof window !== 'undefined' && window.matchMedia?.('(prefers-color-scheme: dark)').matches) {
     return 'dark'
@@ -23,7 +17,6 @@ function getPreferredTheme(): ThemeMode {
   return 'light'
 }
 
-/** 将主题应用到 <html> 元素的 data-theme 和 colorScheme */
 function applyThemeToDocument(theme: ThemeMode) {
   if (typeof document === 'undefined') return
 
@@ -35,7 +28,6 @@ export const useThemeStore = defineStore('theme', () => {
   const theme = ref<ThemeMode>('light')
   const isDark = computed(() => theme.value === 'dark')
 
-  /** 设置主题并可选持久化到 localStorage */
   function setTheme(nextTheme: ThemeMode, options: { persist?: boolean } = {}) {
     const { persist = true } = options
 
@@ -47,14 +39,10 @@ export const useThemeStore = defineStore('theme', () => {
     try {
       localStorage.setItem(THEME_STORAGE_KEY, nextTheme)
     } catch {
-      // Ignore storage failures and keep the in-memory theme.
     }
   }
 
-  /**
-   * 主题水合（应用启动时调用）
-   * 优先读取 localStorage → 回退到系统偏好
-   */
+  // 优先读取 localStorage，回退到系统偏好
   function hydrateTheme() {
     let initialTheme = getPreferredTheme()
 
@@ -64,13 +52,11 @@ export const useThemeStore = defineStore('theme', () => {
         initialTheme = storedTheme
       }
     } catch {
-      // Fall back to the system preference when storage is unavailable.
     }
 
     setTheme(initialTheme, { persist: false })
   }
 
-  /** 切换亮/暗模式 */
   function toggleTheme() {
     setTheme(isDark.value ? 'light' : 'dark')
   }

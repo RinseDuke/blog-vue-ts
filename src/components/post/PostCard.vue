@@ -1,4 +1,3 @@
-<!-- 文章卡片：展示标题、摘要、作者 -->
 <template>
   <article class="post-card post-card--list">
     <RouterLink :to="{ name: 'article-detail', params: { id: post.id } }" class="card-link-wrapper">

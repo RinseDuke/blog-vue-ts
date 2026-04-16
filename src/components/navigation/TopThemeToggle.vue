@@ -1,4 +1,3 @@
-<!-- 亮暗主题切换按钮 -->
 <template>
   <button
     type="button"

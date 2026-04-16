@@ -1,8 +1,3 @@
-/**
- * 评论 Store
- * 管理评论的加载、新增、点赞（乐观更新 + 失败回滚）。
- */
-
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import type { Comment } from '@/types/post'
@@ -22,7 +17,6 @@ export const useCommentStore = defineStore('comments', () => {
     const submitting = ref(false)
     const likedCommentIds = ref<Set<string>>(new Set())
 
-    /** 加载指定文章的评论 */
     async function loadComments(postId: string) {
         loading.value = true
         error.value = null
@@ -37,7 +31,6 @@ export const useCommentStore = defineStore('comments', () => {
         }
     }
 
-    /** 发表新评论 */
     async function addComment(payload: CreateCommentPayload) {
         submitting.value = true
         error.value = null
@@ -55,10 +48,7 @@ export const useCommentStore = defineStore('comments', () => {
         }
     }
 
-    /**
-     * 评论点赞 / 取消点赞
-     * 采用乐观更新策略：先更新 UI → 请求后端 → 失败时回滚
-     */
+    // 乐观更新：先更新 UI，失败时回滚
     async function likeComment(postId: string, commentId: string) {
         if (!authStore.isLoggedIn) {
             const authError = new Error('请先登录后再点赞评论')
@@ -70,7 +60,6 @@ export const useCommentStore = defineStore('comments', () => {
         const wasLiked = likedCommentIds.value.has(commentId)
         const delta = wasLiked ? -1 : 1
 
-        //切换点赞状态
         if (wasLiked) {
             likedCommentIds.value.delete(commentId)
         } else {
@@ -86,14 +75,12 @@ export const useCommentStore = defineStore('comments', () => {
         }
 
         try {
-            //请求，用服务端返回值纠正
             const serverLikes = await setCommentLikeApi(commentId, !wasLiked)
             const target = comments?.find((c) => c.id === commentId)
             if (target) {
                 target.likes = serverLikes
             }
         } catch (err: unknown) {
-            // 失败时回滚点赞状态和计数
             if (wasLiked) {
                 likedCommentIds.value.add(commentId)
             } else {
@@ -108,12 +95,10 @@ export const useCommentStore = defineStore('comments', () => {
         }
     }
 
-    /** 查询评论是否已点赞 */
     function isCommentLiked(commentId: string): boolean {
         return likedCommentIds.value.has(commentId)
     }
 
-    /** 获取指定文章的评论列表 */
     function getComments(postId: string): Comment[] {
         return commentsByPost.value[postId] ?? []
     }

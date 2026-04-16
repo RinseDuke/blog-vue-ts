@@ -1,4 +1,3 @@
-<!-- 全局页脚 -->
 <template>
   <footer class="footer">
     <p>&copy; {{ new Date().getFullYear() }} Sign 博客</p>
