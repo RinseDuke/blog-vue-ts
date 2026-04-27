@@ -8,7 +8,6 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
-.codex-artifacts/
 .worktrees/
 .DS_Store
 dist
@@ -30,6 +29,28 @@ coverage
 *.sw?
 
 *.tsbuildinfo
+
+# AI / vibe work artifacts
+.superpowers/
+.codex-artifacts/
+.codex-cache/
+.claude/
+.gemini/
+.aider*
+.review-*.png
+.review-*.jpg
+.review-*.jpeg
+.review-*.webp
+review-*.png
+review-*.jpg
+review-*.jpeg
+review-*.webp
+*-screenshot.png
+*-screenshot.jpg
+*-screenshot.jpeg
+*-screenshot.webp
+playwright-report/
+test-results/
 
 # AI Instructions
 CLAUDE.md
