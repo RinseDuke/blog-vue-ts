@@ -3,13 +3,16 @@ import { computed, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { usePostsStore } from '@/features/post/composables/usePostsStore'
 import PostList from '@/components/post/PostList.vue'
+import FeaturedHero from '@/components/post/FeaturedHero.vue'
 
 const HOME_POST_LIMIT = 12
 
 const postsStore = usePostsStore()
 const { sortedPosts, loading, error } = storeToRefs(postsStore)
 const { ensurePosts, refreshPosts } = postsStore
-const latestPosts = computed(() => sortedPosts.value.slice(0, HOME_POST_LIMIT))
+
+const heroPost = computed(() => sortedPosts.value[0] ?? null)
+const latestPosts = computed(() => sortedPosts.value.slice(1, HOME_POST_LIMIT + 1))
 
 async function loadHomePosts(force = false) {
   try {
@@ -31,6 +34,8 @@ onMounted(() => {
 
 <template>
   <section class="front">
+    <FeaturedHero v-if="!loading && !error && heroPost" :post="heroPost" />
+
     <section class="feed" aria-live="polite">
       <div v-if="loading" class="feed__state">正在加载文章...</div>
       <div v-else-if="error" class="feed__state feed__state--error">
@@ -42,7 +47,10 @@ onMounted(() => {
         <header class="feed__head">
           <h2>最新文章</h2>
         </header>
-        <PostList class="feed__grid feed__grid--list" :posts="latestPosts" />
+        <PostList v-if="latestPosts.length" class="feed__grid feed__grid--list" :posts="latestPosts" />
+        <div v-else class="feed__state feed__state--empty">
+          <p>暂无文章</p>
+        </div>
       </div>
     </section>
   </section>

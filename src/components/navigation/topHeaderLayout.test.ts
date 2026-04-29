@@ -61,8 +61,9 @@ describe('top header layout source contract', () => {
     const mobileLayoutBlock = extractBlock(mobileLayoutMediaBlock, '.layout')
 
     expect(topbarBlock).toContain('padding: 0 1rem;')
-    expect(topbarBlock).toContain('background: color-mix(in srgb, var(--surface-strong) 96%, var(--bg-canvas) 4%);')
-    expect(topbarBlock).toContain('border-bottom: 1px solid color-mix(in srgb, var(--line-strong) 82%, transparent);')
+    expect(topbarBlock).toContain('background: var(--nav-backdrop);')
+    expect(topbarBlock).toContain('backdrop-filter: blur(20px) saturate(1.8);')
+    expect(topbarBlock).toContain('border-bottom: 1px solid transparent;')
     expect(topbarBlock).not.toContain('background: transparent;')
 
     expect(topbarInnerBlock).toContain('width: min(1360px, 100%);')

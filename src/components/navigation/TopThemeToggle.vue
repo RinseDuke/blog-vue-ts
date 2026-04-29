@@ -66,7 +66,11 @@ const themeToggleTitle = computed(() => themeToggleLabel.value)
   justify-content: center;
   box-shadow: 0 6px 14px rgba(15, 23, 42, 0.16);
   transform: translateX(0);
-  transition: transform 0.24s ease, background-color 0.24s ease, color 0.24s ease, box-shadow 0.24s ease;
+  transition:
+    transform 0.24s var(--ease-out-quint),
+    background-color 0.24s ease,
+    color 0.24s ease,
+    box-shadow 0.24s ease;
 
   svg {
     width: 13px;
@@ -76,6 +80,7 @@ const themeToggleTitle = computed(() => themeToggleLabel.value)
     stroke-width: 1.8;
     stroke-linecap: round;
     stroke-linejoin: round;
+    transition: transform 0.4s var(--ease-out-quint);
   }
 }
 
@@ -87,6 +92,10 @@ const themeToggleTitle = computed(() => themeToggleLabel.value)
     transform: translateX(24px);
     color: var(--brand-400);
     box-shadow: 0 10px 22px rgba(0, 0, 0, 0.28);
+
+    svg {
+      transform: rotate(360deg);
+    }
   }
 }
 

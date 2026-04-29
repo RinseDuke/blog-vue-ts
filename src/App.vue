@@ -5,6 +5,7 @@ import { storeToRefs } from 'pinia'
 import { usePostsStore } from '@/features/post/composables/usePostsStore'
 import { usePostSearchBundle } from '@/features/search/composables/usePostSearchBundle'
 import { useSearchHistory } from '@/features/search/composables/useSearchHistory'
+import { useScrollCondense } from '@/features/ui/composables/useScrollCondense'
 import TopBrand from '@/components/navigation/TopBrand.vue'
 import TopFooter from '@/components/navigation/TopFooter.vue'
 import TopHeaderLayout from '@/components/navigation/TopHeaderLayout.vue'
@@ -13,6 +14,7 @@ import TopNavigation from '@/components/navigation/TopNavigation.vue'
 import TopThemeToggle from '@/components/navigation/TopThemeToggle.vue'
 import MobileTopTabs from '@/components/navigation/MobileTopTabs.vue'
 import MobileSearchSheet from '@/components/search/MobileSearchSheet.vue'
+import BackToTop from '@/components/ui/BackToTop.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -22,6 +24,8 @@ const isMobileSearchOpen = ref(false)
 
 const isWritePage = computed(() => route.name === 'write')
 let lastScrollTop = 0
+
+const { isCondensed } = useScrollCondense()
 
 const postsStore = usePostsStore()
 const { posts } = storeToRefs(postsStore)
@@ -117,7 +121,9 @@ onUnmounted(() => {
 
 <template>
   <div class="layout">
-    <TopHeaderLayout :is-hidden="isNavHidden">
+    <div id="scroll-condense-sentinel" style="position: absolute; top: 0; left: 0; width: 1px; height: 1px; pointer-events: none;" />
+
+    <TopHeaderLayout :is-hidden="isNavHidden" :is-condensed="isCondensed">
       <div class="desktop-topbar">
         <TopBrand />
         <TopSearchBox
@@ -174,6 +180,7 @@ onUnmounted(() => {
     </main>
 
     <TopFooter v-if="!isWritePage" />
+    <BackToTop />
   </div>
 </template>
 

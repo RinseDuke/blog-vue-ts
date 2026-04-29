@@ -35,20 +35,31 @@ const { isLoggedIn } = storeToRefs(useAuthStore())
     position: relative;
     padding: 0.42rem 0.8rem;
     border-radius: 999px;
-    transition: color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    transition: color var(--motion-base) var(--ease-out-quint);
+
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 0.3rem;
+      left: 50%;
+      transform: translateX(-50%) scaleX(0);
+      width: calc(100% - 1.6rem);
+      height: 2px;
+      background: var(--brand-500);
+      border-radius: 2px;
+      transition: transform var(--motion-base) var(--ease-out-quint);
+    }
 
     &.router-link-active {
       color: var(--ink-strong);
-      background: var(--surface-strong);
-      box-shadow:
-        0 8px 20px rgba(15, 23, 42, 0.08),
-        inset 0 1px 0 rgba(255, 255, 255, 0.4);
+
+      &::after {
+        transform: translateX(-50%) scaleX(1);
+      }
     }
 
     &:hover {
       color: var(--ink-strong);
-      background: var(--surface-hover);
-      transform: translateY(-1px);
     }
   }
 }

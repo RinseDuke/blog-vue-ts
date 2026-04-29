@@ -1,6 +1,10 @@
 <template>
-  <div class="search-box">
+  <div class="search-box" :class="{ 'search-box--focused': isFocused }">
     <div class="search-input-wrapper">
+      <svg class="search-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
       <input
         v-model="searchValue"
         ref="inputEl"
@@ -8,10 +12,12 @@
         placeholder="搜索文章..."
         autocomplete="off"
         @keyup.enter="triggerSearch"
-        @focus="openDropdown"
+        @focus="handleFocus"
+        @blur="handleBlur"
         @input="openDropdown"
       />
-      <button class="search-btn" @click="triggerSearch">
+      <kbd v-if="!isFocused" class="search-shortcut" aria-hidden="true">{{ shortcutLabel }}</kbd>
+      <button class="search-btn" @click="triggerSearch" aria-label="搜索">
         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="11" cy="11" r="8"></circle>
           <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -36,7 +42,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 import type { Post } from '@/types/post'
 import { useSearchDropdown } from '@/features/search/composables/useSearchDropdown'
 import SearchDropdownContent from '@/components/search/SearchDropdownContent.vue'
@@ -55,6 +61,10 @@ const emit = defineEmits<{
   (e: 'clearHistory'): void
 }>()
 
+const isFocused = ref(false)
+const isMac = typeof navigator !== 'undefined' && /Mac/.test(navigator.userAgent)
+const shortcutLabel = isMac ? '⌘K' : 'Ctrl+K'
+
 const searchValue = computed({
   get: () => props.modelValue,
   set: (value: string) => emit('update:modelValue', value),
@@ -72,9 +82,33 @@ const { showDropdown, inputEl, dropdownEl, openDropdown, triggerSearch, selectSu
   },
 })
 
+function handleFocus() {
+  isFocused.value = true
+  openDropdown()
+}
+
+function handleBlur() {
+  isFocused.value = false
+}
+
+function handleGlobalShortcut(e: KeyboardEvent) {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+    e.preventDefault()
+    inputEl.value?.focus()
+  }
+}
+
 function formatSuggestionMeta(post: Post) {
   return `${post.author.name} - ${new Date(post.publishedAt).toLocaleDateString('zh-CN')}`
 }
+
+onMounted(() => {
+  document.addEventListener('keydown', handleGlobalShortcut)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('keydown', handleGlobalShortcut)
+})
 </script>
 
 <style scoped lang="less">
@@ -92,11 +126,29 @@ function formatSuggestionMeta(post: Post) {
   max-width: 700px;
   display: flex;
   align-items: center;
+  transition: max-width var(--motion-base) var(--ease-out-quint);
+}
+
+.search-box--focused .search-input-wrapper {
+  max-width: 800px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 1rem;
+  color: var(--ink-muted);
+  pointer-events: none;
+  z-index: 1;
+  transition: color var(--motion-base) var(--ease-out);
+}
+
+.search-box--focused .search-icon {
+  color: var(--brand-500);
 }
 
 .search-box input {
   width: 100%;
-  padding: 0.72rem 3.4rem 0.72rem 1.05rem;
+  padding: 0.72rem 3.4rem 0.72rem 2.6rem;
   background: linear-gradient(180deg, var(--surface-strong), var(--surface));
   border: 1px solid color-mix(in srgb, var(--line-strong) 90%, transparent);
   border-radius: 999px;
@@ -106,7 +158,7 @@ function formatSuggestionMeta(post: Post) {
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.48),
     0 10px 22px rgba(15, 23, 42, 0.04);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
+  transition: border-color var(--motion-base) var(--ease-out), box-shadow var(--motion-base) var(--ease-out), background-color var(--motion-base) var(--ease-out);
 }
 
 .search-box input::placeholder {
@@ -119,6 +171,20 @@ function formatSuggestionMeta(post: Post) {
     0 0 0 4px rgba(0, 113, 227, 0.1),
     0 16px 34px rgba(15, 23, 42, 0.08);
   background: var(--surface-strong);
+}
+
+.search-shortcut {
+  position: absolute;
+  right: 3rem;
+  padding: 0.2rem 0.5rem;
+  background: var(--surface-hover);
+  border: 1px solid var(--line-soft);
+  border-radius: 6px;
+  color: var(--ink-muted);
+  font-size: 0.75rem;
+  font-family: inherit;
+  pointer-events: none;
+  line-height: 1;
 }
 
 .search-btn {
@@ -136,7 +202,7 @@ function formatSuggestionMeta(post: Post) {
   align-items: center;
   justify-content: center;
   box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
-  transition: color 0.2s;
+  transition: color var(--motion-base) var(--ease-out);
 }
 
 .search-btn:hover {

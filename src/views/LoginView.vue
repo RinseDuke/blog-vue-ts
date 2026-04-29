@@ -52,53 +52,69 @@ async function handleSubmit() {
 
 <template>
   <section class="login-page">
-    <div class="login-card">
-      <p class="login-card__eyebrow">账号</p>
-      <h1>登录</h1>
-      <p class="login-card__hint">使用已注册用户名登录，未注册请先创建账号。</p>
+    <div class="login-page__brand">
+      <div class="login-page__brand-content">
+        <svg class="login-page__logo" viewBox="0 0 120 120" fill="none" aria-hidden="true">
+          <rect width="120" height="120" rx="28" fill="url(#brand-grad)"/>
+          <path d="M35 75V45l25 15-25 15z" fill="rgba(255,255,255,0.9)"/>
+          <path d="M55 75V45l25 15-25 15z" fill="rgba(255,255,255,0.6)"/>
+          <defs><linearGradient id="brand-grad" x1="0" y1="0" x2="120" y2="120"><stop stop-color="var(--brand-400)"/><stop offset="1" stop-color="var(--brand-500)"/></linearGradient></defs>
+        </svg>
+        <h2>Sign Blog</h2>
+        <p>记录思考，分享见解</p>
+      </div>
+    </div>
 
-      <form class="login-form" @submit.prevent="handleSubmit">
-        <label class="field">
-          <span>用户名</span>
-          <input v-model="username" type="text" autocomplete="username" placeholder="请输入用户名" />
-        </label>
+    <div class="login-page__form-side">
+      <div class="login-card">
+        <p class="login-card__eyebrow">账号</p>
+        <h1>登录</h1>
+        <p class="login-card__hint">使用已注册用户名登录，未注册请先创建账号。</p>
 
-        <label class="field">
-          <span>密码</span>
-          <div class="field__control">
-            <input
-              v-model="password"
-              :type="passwordVisibility.inputType.value"
-              autocomplete="current-password"
-              placeholder="至少 8 位"
-            />
-            <button
-              type="button"
-              class="field__toggle"
-              :aria-label="passwordVisibility.toggleLabel.value"
-              @click="passwordVisibility.toggle"
-            >
-              {{ passwordVisibility.buttonText.value }}
-            </button>
-          </div>
-        </label>
+        <form class="login-form" @submit.prevent="handleSubmit">
+          <label class="field">
+            <span>用户名</span>
+            <input v-model="username" type="text" autocomplete="username" placeholder="请输入用户名" />
+          </label>
 
-        <label class="check-row">
-          <input v-model="rememberMe" type="checkbox" />
-          <span>记住登录状态</span>
-        </label>
+          <label class="field">
+            <span>密码</span>
+            <div class="field__control">
+              <input
+                v-model="password"
+                :type="passwordVisibility.inputType.value"
+                autocomplete="current-password"
+                placeholder="至少 8 位"
+              />
+              <button
+                type="button"
+                class="field__toggle"
+                :aria-label="passwordVisibility.toggleLabel.value"
+                @click="passwordVisibility.toggle"
+              >
+                {{ passwordVisibility.buttonText.value }}
+              </button>
+            </div>
+          </label>
 
-        <p v-if="errorMessage" class="feedback feedback--error">{{ errorMessage }}</p>
+          <label class="check-row">
+            <input v-model="rememberMe" type="checkbox" />
+            <span>记住登录状态</span>
+          </label>
 
-        <button type="submit" class="submit-btn" :disabled="!canSubmit">
-          {{ isSubmitting ? '登录中...' : '登录' }}
-        </button>
-      </form>
+          <p v-if="errorMessage" class="feedback feedback--error">{{ errorMessage }}</p>
 
-      <p class="login-card__switch">
-        还没有账号？
-        <RouterLink :to="registerLocation">立即注册</RouterLink>
-      </p>
+          <button type="submit" class="submit-btn" :disabled="!canSubmit">
+            <span v-if="isSubmitting" class="submit-btn__spinner"></span>
+            {{ isSubmitting ? '登录中...' : '登录' }}
+          </button>
+        </form>
+
+        <p class="login-card__switch">
+          还没有账号？
+          <RouterLink :to="registerLocation">立即注册</RouterLink>
+        </p>
+      </div>
     </div>
   </section>
 </template>
@@ -106,19 +122,57 @@ async function handleSubmit() {
 <style scoped lang="less">
 .login-page {
   width: 100%;
-  min-height: calc(100vh - 180px);
-  padding: 40px 20px;
+  min-height: calc(100vh - 68px);
   display: grid;
-  place-items: center;
+  grid-template-columns: 1fr 1fr;
+}
+
+.login-page__brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(circle at 20% 30%, rgba(47, 143, 255, 0.18), transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(255, 255, 255, 0.1), transparent 40%),
+    linear-gradient(135deg, var(--brand-500), var(--brand-400));
+  padding: 2rem;
+}
+
+.login-page__brand-content {
+  text-align: center;
+  color: white;
+}
+
+.login-page__logo {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 1.5rem;
+  filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.2));
+}
+
+.login-page__brand-content h2 {
+  margin: 0 0 0.5rem;
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.login-page__brand-content p {
+  margin: 0;
+  font-size: 1rem;
+  opacity: 0.85;
+}
+
+.login-page__form-side {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
 }
 
 .login-card {
-  width: min(100%, 460px);
-  border: 1px solid var(--line-soft);
-  border-radius: 22px;
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: var(--shadow-sm);
-  padding: 1.5rem 1.4rem;
+  width: min(100%, 420px);
+  padding: 0;
 
   h1 {
     margin: 0.25rem 0 0.35rem;
@@ -151,14 +205,13 @@ async function handleSubmit() {
       font-weight: 700;
     }
   }
-
 }
 
 .login-form {
-  margin-top: 1rem;
+  margin-top: 1.2rem;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.85rem;
 }
 
 .field {
@@ -181,16 +234,16 @@ async function handleSubmit() {
   input {
     width: 100%;
     border: 1px solid var(--line-soft);
-    border-radius: 10px;
-    background: #fff;
+    border-radius: var(--radius-sm);
+    background: var(--surface-strong);
     color: var(--ink-strong);
-    padding: 0.62rem 4.9rem 0.62rem 0.72rem;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    padding: 0.72rem 4.9rem 0.72rem 0.85rem;
+    transition: border-color var(--motion-base) var(--ease-out), box-shadow var(--motion-base) var(--ease-out);
 
     &:focus {
       outline: none;
       border-color: rgba(0, 113, 227, 0.35);
-      box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.1);
+      box-shadow: var(--focus-ring);
     }
   }
 
@@ -208,20 +261,11 @@ async function handleSubmit() {
     font-size: 0.78rem;
     font-weight: 700;
     cursor: pointer;
-    transition:
-      border-color 0.2s ease,
-      color 0.2s ease,
-      background 0.2s ease;
+    transition: border-color var(--motion-base) var(--ease-out), color var(--motion-base) var(--ease-out);
 
     &:hover {
       border-color: rgba(0, 113, 227, 0.24);
       color: var(--brand-500);
-    }
-
-    &:focus-visible {
-      outline: none;
-      border-color: rgba(0, 113, 227, 0.35);
-      box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.1);
     }
   }
 }
@@ -247,22 +291,54 @@ async function handleSubmit() {
 .submit-btn {
   margin-top: 0.15rem;
   border: none;
-  border-radius: 10px;
-  padding: 0.65rem 0.9rem;
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 0.9rem;
   font-weight: 700;
   color: #fff;
-  background: var(--brand-500);
+  background: linear-gradient(135deg, var(--brand-500), var(--brand-400));
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: transform var(--motion-base) var(--ease-out-quint), box-shadow var(--motion-base) var(--ease-out-quint);
 
   &:hover:enabled {
     transform: translateY(-1px);
-    box-shadow: 0 10px 20px rgba(0, 113, 227, 0.24);
+    box-shadow: 0 10px 24px rgba(0, 113, 227, 0.28);
   }
 
   &:disabled {
     cursor: not-allowed;
-    background: #9ca3af;
+    opacity: 0.5;
+  }
+}
+
+.submit-btn__spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 768px) {
+  .login-page {
+    grid-template-columns: 1fr;
+  }
+
+  .login-page__brand {
+    display: none;
+  }
+
+  .login-page__form-side {
+    min-height: calc(100vh - 68px);
+    padding: 2rem 1.25rem;
   }
 }
 </style>

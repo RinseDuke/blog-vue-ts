@@ -5,40 +5,78 @@
     </div>
     <div v-else-if="error" class="status-message error">{{ error }}</div>
 
-    <article v-else-if="post" class="article-content">
-      <header class="article-header">
-        <div class="article-header__meta">
-          <span class="article-badge">{{ post.status === 'draft' ? '草稿' : '文章' }}</span>
-          <span class="article-badge article-badge--ghost">
-            {{ post.visibility === 'private' ? '仅自己可见' : '公开' }}
-          </span>
+    <article v-else-if="post" class="article-wrapper">
+      <header class="article-hero">
+        <div v-if="post.coverImage" class="article-hero__image">
+          <img :src="post.coverImage" :alt="post.title" loading="eager" decoding="async" />
+          <div class="article-hero__overlay"></div>
+          <div class="article-hero__content">
+            <div class="article-hero__tags">
+              <span v-for="tag in post.tags" :key="tag" class="tag-chip">{{ tag }}</span>
+            </div>
+            <h1 class="article-hero__title">{{ post.title }}</h1>
+            <div class="article-hero__meta">
+              <img
+                v-if="post.author.avatarUrl"
+                :src="post.author.avatarUrl"
+                :alt="post.author.name"
+                class="author-avatar"
+                loading="eager"
+                decoding="async"
+              />
+              <div class="author-details">
+                <span class="author-name">{{ post.author.name }}</span>
+                <span class="publish-info">
+                  {{ formatDate(post.publishedAt) }} · {{ post.readMinutes }} 分钟阅读
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
-
-        <h1 class="article-title">{{ post.title }}</h1>
-
-        <div class="article-meta">
-          <div class="author-info">
+        <div v-else class="article-hero__fallback">
+          <div class="article-hero__tags">
+            <span v-for="tag in post.tags" :key="tag" class="tag-chip">{{ tag }}</span>
+          </div>
+          <h1 class="article-hero__title">{{ post.title }}</h1>
+          <div class="article-hero__meta">
             <img
               v-if="post.author.avatarUrl"
               :src="post.author.avatarUrl"
               :alt="post.author.name"
               class="author-avatar"
+              loading="eager"
+              decoding="async"
             />
-            <div>
+            <div class="author-details">
               <span class="author-name">{{ post.author.name }}</span>
-              <span class="publish-date">
-                发布于 {{ formatDate(post.publishedAt) }}
-                <template v-if="post.updatedAt"> · 更新于 {{ formatDate(post.updatedAt) }}</template>
+              <span class="publish-info">
+                {{ formatDate(post.publishedAt) }} · {{ post.readMinutes }} 分钟阅读
               </span>
             </div>
           </div>
         </div>
       </header>
 
-      <div class="article-body" v-html="safeHtml"></div>
+      <div class="article-prose">
+        <div class="article-body" v-html="safeHtml"></div>
+      </div>
 
       <footer class="article-footer">
-        <router-link to="/article" class="back-line">返回文章列表</router-link>
+        <div v-if="post.author" class="author-card">
+          <img
+            v-if="post.author.avatarUrl"
+            :src="post.author.avatarUrl"
+            :alt="post.author.name"
+            class="author-card__avatar"
+            loading="lazy"
+            decoding="async"
+          />
+          <div class="author-card__info">
+            <h3 class="author-card__name">{{ post.author.name }}</h3>
+            <p class="author-card__bio">{{ post.author.bio || '这位作者很神秘，什么都没有留下。' }}</p>
+          </div>
+        </div>
+        <router-link to="/article" class="back-link">← 返回文章列表</router-link>
       </footer>
     </article>
   </div>
@@ -113,31 +151,21 @@ function formatDate(dateString: string) {
 
 <style scoped lang="less">
 .article-container {
-  max-width: 920px;
-  margin: 2.8rem auto 2.6rem;
-  padding: 0 1.2rem;
-  position: relative;
-}
-
-.article-container::before {
-  content: '';
-  position: absolute;
-  inset: -24px 12% auto;
-  height: 160px;
-  border-radius: 999px;
-  background: radial-gradient(circle, rgba(0, 113, 227, 0.08), transparent 72%);
-  filter: blur(12px);
-  pointer-events: none;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 .status-message {
+  max-width: 720px;
+  margin: 2rem auto;
   text-align: center;
   color: var(--ink-muted);
   font-size: 1.05rem;
   padding: 2rem 1.2rem;
   border: 1px solid var(--line-soft);
   border-radius: var(--radius-lg);
-  background: linear-gradient(180deg, var(--surface-overlay), var(--surface));
+  background: var(--surface-overlay);
   box-shadow: var(--shadow-sm);
 }
 
@@ -145,138 +173,280 @@ function formatDate(dateString: string) {
   color: var(--danger-500);
 }
 
-.article-content {
-  border: 1px solid var(--line-soft);
-  border-radius: var(--radius-lg);
-  background:
-    radial-gradient(circle at top left, rgba(0, 113, 227, 0.05), transparent 28%),
-    linear-gradient(180deg, color-mix(in srgb, var(--card-top) 98%, transparent), color-mix(in srgb, var(--surface-overlay) 96%, transparent));
-  box-shadow: var(--shadow-md);
-  padding: clamp(1.25rem, 2.8vw, 2.2rem);
+.article-wrapper {
+  min-height: 100vh;
 }
 
-.article-header {
-  margin-bottom: 2rem;
-  border-bottom: 1px solid var(--line-soft);
-  padding-bottom: 1.5rem;
+.article-hero {
+  position: relative;
+  margin-bottom: 3rem;
 }
 
-.article-header__meta {
+.article-hero__image {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 7;
+  overflow: hidden;
+  background: var(--surface-strong);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.article-hero__overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 40%, rgba(0, 0, 0, 0.55));
+}
+
+.article-hero__content {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 2rem min(5vw, 3rem) 2.5rem;
+  color: white;
+}
+
+.article-hero__fallback {
+  padding: 3rem min(5vw, 3rem) 2rem;
+  background: linear-gradient(135deg, var(--brand-500), var(--brand-400));
+  color: white;
+  text-align: center;
+}
+
+.article-hero__tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.55rem;
+  gap: 0.5rem;
   margin-bottom: 1rem;
 }
 
-.article-badge {
+.tag-chip {
   display: inline-flex;
   align-items: center;
-  min-height: 30px;
-  padding: 0.3rem 0.72rem;
+  padding: 0.35rem 0.8rem;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
   border-radius: 999px;
-  background: var(--brand-500);
-  color: #fff;
-  font-size: 0.8rem;
-  font-weight: 700;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: white;
 }
 
-.article-badge--ghost {
-  background: var(--surface-strong);
-  color: var(--ink-main);
-  border: 1px solid var(--line-soft);
-}
-
-.article-title {
-  font-size: clamp(2rem, 4.5vw, 3rem);
+.article-hero__title {
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
   font-weight: 800;
-  line-height: 1.12;
-  color: var(--ink-strong);
+  line-height: 1.2;
   letter-spacing: -0.02em;
-  margin: 0 0 1rem;
+  margin: 0 0 1.5rem;
+  color: white;
 }
 
-.article-meta {
-  margin-top: 1.5rem;
-}
-
-.author-info {
+.article-hero__meta {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.8rem;
 }
 
 .author-avatar {
-  width: 42px;
-  height: 42px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   object-fit: cover;
-  border: 1px solid var(--line-soft);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.author-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
 }
 
 .author-name {
-  display: block;
   font-weight: 700;
-  color: var(--ink-strong);
+  font-size: 1rem;
+  color: white;
 }
 
-.publish-date {
-  font-size: 0.84rem;
-  color: var(--ink-muted);
+.publish-info {
+  font-size: 0.88rem;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.article-prose {
+  max-width: min(720px, 92vw);
+  margin: 0 auto;
+  padding: 0 1.5rem;
 }
 
 .article-body {
-  line-height: 1.76;
-  color: var(--ink-main);
-  font-size: 1.02rem;
+  line-height: 1.8;
+  color: var(--article-prose-text);
+  font-size: 17px;
 
   :deep(p) {
-    margin-bottom: 1.3rem;
+    margin-bottom: 1.5em;
   }
 
-  :deep(h2),
-  :deep(h3) {
+  :deep(h1) {
+    font-size: 2rem;
     font-weight: 800;
-    color: var(--ink-strong);
-    margin-top: 2rem;
+    color: var(--article-prose-heading);
+    margin-top: 2.5rem;
+    margin-bottom: 1rem;
+    letter-spacing: -0.01em;
+  }
+
+  :deep(h2) {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--article-prose-heading);
+    margin-top: 2.5rem;
     margin-bottom: 0.85rem;
+    letter-spacing: -0.01em;
+  }
+
+  :deep(h3) {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--article-prose-heading);
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
     letter-spacing: -0.01em;
   }
 
   :deep(blockquote) {
     margin: 1.8rem 0;
     padding: 1rem 1.2rem;
-    border-left: 3px solid rgba(0, 113, 227, 0.42);
-    background: rgba(0, 113, 227, 0.08);
-    border-radius: 12px;
+    border-left: 3px solid var(--brand-500);
+    background: var(--article-quote-bg);
+    border-radius: var(--radius-sm);
     color: var(--ink-main);
+  }
+
+  :deep(code) {
+    background: var(--article-code-bg);
+    padding: 0.2em 0.4em;
+    border-radius: 4px;
+    font-size: 0.9em;
+    font-family: 'Consolas', 'Monaco', monospace;
+  }
+
+  :deep(pre) {
+    background: var(--article-code-block-bg);
+    padding: 1.2rem;
+    border-radius: var(--radius-md);
+    overflow-x: auto;
+    margin: 1.5rem 0;
+
+    code {
+      background: none;
+      padding: 0;
+      color: #e6edf3;
+    }
+  }
+
+  :deep(img) {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    margin: 1.5rem 0;
   }
 }
 
 .article-footer {
-  margin-top: 2rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--line-soft);
-  display: flex;
-  justify-content: flex-end;
+  max-width: min(720px, 92vw);
+  margin: 3rem auto 2rem;
+  padding: 0 1.5rem;
 }
 
-.back-line {
+.author-card {
+  display: flex;
+  gap: 1.2rem;
+  padding: 1.5rem;
+  background: var(--surface-overlay);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-lg);
+  margin-bottom: 2rem;
+}
+
+.author-card__avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.author-card__info {
+  flex: 1;
+}
+
+.author-card__name {
+  font-size: 1.13rem;
+  font-weight: 700;
+  color: var(--ink-strong);
+  margin: 0 0 0.5rem;
+}
+
+.author-card__bio {
+  font-size: 0.94rem;
+  color: var(--ink-muted);
+  margin: 0;
+  line-height: 1.6;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
   color: var(--brand-500);
   text-decoration: none;
-  font-weight: 700;
+  font-weight: 600;
+  font-size: 0.94rem;
+  transition: color var(--motion-base) var(--ease-out);
 
   &:hover {
-    opacity: 0.8;
+    color: var(--brand-400);
   }
 }
 
-@media (max-width: 640px) {
-  .article-container {
-    padding: 0 0.7rem;
+@media (max-width: 768px) {
+  .article-hero__content,
+  .article-hero__fallback {
+    padding: 1.5rem 1rem 1.8rem;
   }
 
-  .article-content {
-    border-radius: 18px;
+  .article-hero__title {
+    font-size: clamp(1.5rem, 5vw, 2rem);
+    margin-bottom: 1rem;
+  }
+
+  .author-avatar {
+    width: 40px;
+    height: 40px;
+  }
+
+  .article-prose {
+    padding: 0 1rem;
+  }
+
+  .article-body {
+    font-size: 16px;
+  }
+
+  .article-footer {
+    padding: 0 1rem;
+  }
+
+  .author-card {
+    flex-direction: column;
+    text-align: center;
+    align-items: center;
   }
 }
 </style>

@@ -40,7 +40,7 @@ import { RouterLink } from 'vue-router'
 .brand__text strong {
   font-size: 0.97rem;
   font-weight: 800;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.03em;
 }
 
 .brand__text em {

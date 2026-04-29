@@ -15,6 +15,8 @@ const router = useRouter()
 const { isLoggedIn, userEmail, session } = storeToRefs(authStore)
 const { ensurePosts } = postsStore
 
+const activeTab = ref<'articles' | 'likes' | 'comments' | 'about'>('articles')
+
 function handleLogout() {
   authStore.logout()
   void router.replace('/about')
@@ -199,8 +201,24 @@ function enterEditMode() {
 
       </header>
 
+      <nav class="profile-tabs">
+        <button
+          v-for="tab in [
+            { key: 'articles', label: '文章' },
+            { key: 'likes', label: '喜欢' },
+            { key: 'comments', label: '评论' },
+            { key: 'about', label: '关于' }
+          ]"
+          :key="tab.key"
+          :class="['profile-tab', { 'profile-tab--active': activeTab === tab.key }]"
+          @click="activeTab = tab.key as typeof activeTab"
+        >
+          {{ tab.label }}
+        </button>
+      </nav>
+
       <div class="profile-layout">
-        <section class="profile-main">
+        <section v-if="activeTab === 'articles'" class="profile-main">
           <article class="panel section-card">
             <header class="section-card__head">
               <div>
@@ -259,6 +277,42 @@ function enterEditMode() {
                 <p>当前没有可继续编辑的草稿。</p>
               </div>
             </div>
+          </article>
+        </section>
+
+        <section v-else-if="activeTab === 'likes'" class="profile-main">
+          <article class="panel section-card">
+            <div class="draft-empty">
+              <p>暂无喜欢的内容</p>
+            </div>
+          </article>
+        </section>
+
+        <section v-else-if="activeTab === 'comments'" class="profile-main">
+          <article class="panel section-card">
+            <div class="draft-empty">
+              <p>暂无评论记录</p>
+            </div>
+          </article>
+        </section>
+
+        <section v-else-if="activeTab === 'about'" class="profile-main">
+          <article class="panel section-card">
+            <header class="section-card__head">
+              <div>
+                <p class="section-card__eyebrow">关于</p>
+                <h2>个人信息</h2>
+              </div>
+            </header>
+            <div class="bio-block">
+              <p>{{ profile.bio }}</p>
+            </div>
+            <dl class="fact-list">
+              <div v-for="fact in accountFacts" :key="fact.label" class="fact-list__row">
+                <dt>{{ fact.label }}</dt>
+                <dd>{{ fact.value }}</dd>
+              </div>
+            </dl>
           </article>
         </section>
 
@@ -355,16 +409,15 @@ function enterEditMode() {
 }
 
 .profile-hero__banner {
-  min-height: 164px;
+  min-height: 200px;
   padding: 1.25rem 1.5rem;
   display: flex;
   justify-content: flex-end;
   align-items: flex-start;
   background:
-    radial-gradient(circle at 16% 22%, rgba(47, 143, 255, 0.22), transparent 30%),
-    radial-gradient(circle at 84% 18%, rgba(255, 255, 255, 0.16), transparent 24%),
-    linear-gradient(135deg, rgba(47, 143, 255, 0.18), rgba(0, 113, 227, 0.04)),
-    linear-gradient(180deg, var(--surface-overlay), var(--surface-frost));
+    radial-gradient(circle at 16% 22%, rgba(47, 143, 255, 0.28), transparent 35%),
+    radial-gradient(circle at 84% 18%, rgba(255, 255, 255, 0.2), transparent 28%),
+    linear-gradient(135deg, var(--brand-400), var(--brand-500));
   position: relative;
   border-bottom: 1px solid var(--line-soft);
 }
@@ -374,7 +427,8 @@ function enterEditMode() {
   content: '';
   position: absolute;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(40px);
 }
 
 .profile-hero__banner::before {
@@ -409,8 +463,8 @@ function enterEditMode() {
   justify-content: space-between;
   align-items: flex-end;
   gap: 1.2rem;
-  padding: 0 1.75rem 1.25rem;
-  margin-top: -64px;
+  padding: 0 1.75rem 1.5rem;
+  margin-top: -70px;
   position: relative;
   z-index: 1;
   flex-wrap: wrap;
@@ -424,19 +478,20 @@ function enterEditMode() {
 }
 
 .profile-avatar {
-  width: 140px;
-  height: 140px;
-  border-radius: var(--radius-lg);
-  border: 6px solid var(--surface-strong);
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 4px solid var(--surface-strong);
   background:
-    radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.3), transparent 28%),
+    radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.35), transparent 32%),
     linear-gradient(145deg, var(--brand-400) 0%, var(--brand-500) 100%);
   display: grid;
   place-items: center;
   color: #fff;
-  font-size: 3rem;
+  font-size: 2.5rem;
   font-weight: 800;
-  box-shadow: 0 18px 36px rgba(0, 113, 227, 0.22);
+  box-shadow: 0 20px 40px rgba(0, 113, 227, 0.3);
+  flex-shrink: 0;
 }
 
 .profile-hero__meta {
@@ -537,6 +592,50 @@ function enterEditMode() {
 .hero-btn--secondary:hover {
   border-color: rgba(0, 113, 227, 0.26);
   background: var(--surface-hover);
+}
+
+.profile-tabs {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0 1.75rem;
+  margin-top: 1.5rem;
+  border-bottom: 2px solid var(--line-soft);
+}
+
+.profile-tab {
+  position: relative;
+  padding: 0.8rem 1.2rem;
+  background: transparent;
+  border: none;
+  color: var(--ink-muted);
+  font-size: 0.94rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color var(--motion-base) var(--ease-out);
+}
+
+.profile-tab::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--brand-500);
+  transform: scaleX(0);
+  transition: transform var(--motion-base) var(--ease-out-quint);
+}
+
+.profile-tab:hover {
+  color: var(--ink-strong);
+}
+
+.profile-tab--active {
+  color: var(--brand-500);
+}
+
+.profile-tab--active::after {
+  transform: scaleX(1);
 }
 
 .profile-layout {

@@ -16,7 +16,67 @@
               placeholder="请输入标题（最多 100 个字）"
               @input="onDirtyAndAutosave"
             />
+            <div class="meta-toggle-row">
+              <button type="button" class="meta-toggle" @click="showMeta = !showMeta">
+                <svg
+                  class="meta-toggle__chevron"
+                  :class="{ 'meta-toggle__chevron--open': showMeta }"
+                  width="12" height="12" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                >
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+                文章设置
+                <span v-if="metaBadge && !showMeta" class="meta-toggle__badge">{{ metaBadge }}</span>
+              </button>
+            </div>
           </header>
+
+          <div v-if="showMeta" class="meta-panel">
+            <div class="meta-panel__section">
+              <h4 class="meta-panel__label">封面图</h4>
+              <div v-if="coverPreviewUrl" class="meta-panel__cover-preview">
+                <img :src="coverPreviewUrl" alt="封面预览" />
+                <button type="button" class="meta-panel__cover-remove" @click="removeCover()">移除封面</button>
+              </div>
+              <button v-else type="button" class="meta-panel__cover-upload" @click="triggerCoverInput">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                  <circle cx="8.5" cy="8.5" r="1.5" />
+                  <polyline points="21 15 16 10 5 21" />
+                </svg>
+                <span>点击上传封面</span>
+                <span class="meta-panel__hint">支持 JPG、PNG</span>
+              </button>
+            </div>
+
+            <div class="meta-panel__section">
+              <h4 class="meta-panel__label">标签 ({{ selectedTags.length }}/5)</h4>
+              <div class="meta-panel__tags">
+                <span v-for="tag in selectedTags" :key="tag" class="meta-panel__tag">
+                  {{ tag }}
+                  <button type="button" @click="removeTag(tag)" aria-label="移除标签">&times;</button>
+                </span>
+                <input
+                  v-if="selectedTags.length < 5"
+                  v-model="tagInput"
+                  type="text"
+                  class="meta-panel__tag-input"
+                  placeholder="输入标签，回车添加"
+                  @keydown.enter.prevent="addCustomTag"
+                />
+              </div>
+              <div v-if="suggestedTags.length" class="meta-panel__presets">
+                <button
+                  v-for="tag in suggestedTags"
+                  :key="tag"
+                  type="button"
+                  class="meta-panel__preset"
+                  @click="addTag(tag)"
+                >+ {{ tag }}</button>
+              </div>
+            </div>
+          </div>
 
           <div class="editor-main-card__canvas">
             <template v-if="viewMode === 'live'">
@@ -69,6 +129,7 @@
 
     <StatusBar
       :word-count="wordCount"
+      :read-minutes="readMinutes"
       :current-mode-label="currentModeLabel"
       :view-mode="viewMode"
       :save-label="saveLabel"
@@ -135,12 +196,14 @@ function onDirtyAndAutosave() {
 }
 
 const {
-  coverInputRef, coverPreviewUrl,
+  coverInputRef, coverPreviewUrl, triggerCoverInput,
   handleCoverSelect, removeCover, restoreCoverFromUrl,
 } = useCoverUpload(onDirtyAndAutosave)
 
 const {
-  selectedTags, restoreTags, clearTags,
+  selectedTags, tagInput, suggestedTags,
+  addTag, removeTag, addCustomTag,
+  restoreTags, clearTags,
 } = useTagManager(onDirtyAndAutosave)
 
 
@@ -151,6 +214,7 @@ const publishVisibility = ref<'public' | 'private'>(DEFAULT_PUBLISH_VISIBILITY)
 const isPublishing = ref(false)
 const publishError = ref('')
 const isSyncingEditorContent = ref(false)
+const showMeta = ref(false)
 
 
 const editor = useEditor({
@@ -189,6 +253,15 @@ const wordCount = computed(() => {
   const zh = (markdown.value.match(/[\u4e00-\u9fff]/g) ?? []).length
   const en = (markdown.value.replace(/[\u4e00-\u9fff]/g, '').match(/[A-Za-z0-9_]+/g) ?? []).length
   return zh + en
+})
+
+const readMinutes = computed(() => Math.max(1, Math.ceil(wordCount.value / 400)))
+
+const metaBadge = computed(() => {
+  const parts: string[] = []
+  if (coverPreviewUrl.value) parts.push('\u5df2\u8bbe\u5c01\u9762')
+  if (selectedTags.value.length) parts.push(`${selectedTags.value.length} \u6807\u7b7e`)
+  return parts.join(' \u00b7 ')
 })
 
 const saveLabel = computed(() => {
@@ -457,6 +530,210 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   padding: 8px 24px 24px;
 }
 
+.meta-toggle-row {
+  padding-bottom: 12px;
+}
+
+.meta-toggle {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  background: transparent;
+  color: var(--ink-muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 0;
+  transition: color var(--motion-base) var(--ease-out);
+
+  &:hover {
+    color: var(--brand-500);
+  }
+}
+
+.meta-toggle__chevron {
+  transition: transform var(--motion-base) var(--ease-out-quint);
+}
+
+.meta-toggle__chevron--open {
+  transform: rotate(180deg);
+}
+
+.meta-toggle__badge {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--brand-100) 60%, transparent);
+  color: var(--brand-500);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.meta-panel {
+  display: flex;
+  gap: 20px;
+  padding: 0 24px 16px;
+  border-bottom: 1px solid var(--write-editor-divider);
+}
+
+.meta-panel__section {
+  flex: 1;
+  min-width: 0;
+}
+
+.meta-panel__label {
+  margin: 0 0 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.meta-panel__cover-upload {
+  appearance: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 100px;
+  border: 2px dashed var(--line-strong);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--surface-strong) 60%, transparent);
+  color: var(--ink-muted);
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: border-color var(--motion-base) var(--ease-out), color var(--motion-base) var(--ease-out);
+
+  &:hover {
+    border-color: var(--brand-500);
+    color: var(--brand-500);
+  }
+}
+
+.meta-panel__hint {
+  font-size: 0.72rem;
+  opacity: 0.7;
+}
+
+.meta-panel__cover-preview {
+  position: relative;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+
+  img {
+    width: 100%;
+    max-height: 160px;
+    object-fit: cover;
+    display: block;
+  }
+}
+
+.meta-panel__cover-remove {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  appearance: none;
+  border: none;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  transition: background var(--motion-base) var(--ease-out);
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.8);
+  }
+}
+
+.meta-panel__tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--surface-strong) 60%, transparent);
+  min-height: 40px;
+}
+
+.meta-panel__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px 3px 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--brand-100) 66%, transparent);
+  color: var(--brand-500);
+  font-size: 0.78rem;
+  font-weight: 600;
+
+  button {
+    appearance: none;
+    border: none;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    font-size: 0.9rem;
+    line-height: 1;
+    padding: 0 2px;
+    opacity: 0.7;
+    transition: opacity var(--motion-fast) var(--ease-out);
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+}
+
+.meta-panel__tag-input {
+  flex: 1;
+  min-width: 100px;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--ink-strong);
+  font-size: 0.82rem;
+  padding: 2px 0;
+
+  &::placeholder {
+    color: var(--ink-muted);
+  }
+}
+
+.meta-panel__presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.meta-panel__preset {
+  appearance: none;
+  border: 1px solid var(--line-soft);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  cursor: pointer;
+  transition: color var(--motion-base) var(--ease-out), border-color var(--motion-base) var(--ease-out);
+
+  &:hover {
+    color: var(--brand-500);
+    border-color: color-mix(in srgb, var(--brand-100) 80%, transparent);
+  }
+}
+
 .editor-canvas {
   display: flex;
   flex: 1;
@@ -541,18 +818,18 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   }
 
   blockquote {
-    border-left: 4px solid var(--line-strong);
+    border-left: 3px solid var(--brand-500);
     padding-left: 1rem;
-    color: var(--ink-muted);
+    color: var(--ink-main);
     margin: 0.4em 0;
-    background: var(--bg-canvas-soft);
+    background: var(--article-quote-bg);
     padding: 0.5rem 1rem;
-    border-radius: 0 4px 4px 0;
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
   }
 
   pre {
-    background: var(--ink-strong);
-    color: var(--bg-canvas-soft);
+    background: var(--article-code-block-bg);
+    color: #e6edf3;
     font-family: inherit;
     padding: 1rem;
     border-radius: 8px;
@@ -710,17 +987,17 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   }
 
   :deep(blockquote) {
-    border-left: 4px solid var(--line-strong);
-    color: var(--ink-muted);
+    border-left: 3px solid var(--brand-500);
+    color: var(--ink-main);
     margin: 0.4em 0;
-    background: var(--bg-canvas-soft);
+    background: var(--article-quote-bg);
     padding: 0.5rem 1rem;
-    border-radius: 0 4px 4px 0;
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
   }
 
   :deep(pre) {
-    background: var(--ink-strong);
-    color: var(--bg-canvas-soft);
+    background: var(--article-code-block-bg);
+    color: #e6edf3;
     padding: 1rem;
     border-radius: 8px;
     margin: 0.5em 0;
@@ -805,6 +1082,12 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
 
   .editor-main-card__canvas {
     padding: 0 16px 18px;
+  }
+
+  .meta-panel {
+    flex-direction: column;
+    gap: 14px;
+    padding: 0 16px 14px;
   }
 
   .editor-canvas {

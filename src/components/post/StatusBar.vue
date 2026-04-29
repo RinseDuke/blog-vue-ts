@@ -3,7 +3,7 @@
     <div class="status-bar__inner">
       <div class="status-bar__shell">
         <div class="status-bar__left">
-          <span class="sb-chip">字数 {{ wordCount }}</span>
+          <span class="sb-chip">{{ wordCount }} 字 · {{ readMinutes }} 分钟</span>
           <i class="sb-sep" />
 
           <div class="mode-switcher" ref="switcherRef" @keydown.esc.stop="menuOpen = false">
@@ -101,6 +101,7 @@ import { onBeforeUnmount, onMounted, ref } from 'vue'
 
 const props = defineProps<{
   wordCount: number
+  readMinutes: number
   currentModeLabel: string
   viewMode: string
   saveLabel: string

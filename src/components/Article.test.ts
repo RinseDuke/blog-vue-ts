@@ -5,6 +5,6 @@ describe('Article source contract', () => {
     expect(articleSource).not.toContain('feature-note')
     expect(articleSource).not.toContain('当前详情页已按后端博客模型收口')
     expect(articleSource).toContain('article-footer')
-    expect(articleSource).toContain('back-line')
+    expect(articleSource).toContain('back-link')
   })
 })
