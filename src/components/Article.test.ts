@@ -7,4 +7,10 @@ describe('Article source contract', () => {
     expect(articleSource).toContain('article-footer')
     expect(articleSource).toContain('back-link')
   })
+
+  it('does not keep the top cover image hero branch in article detail', () => {
+    expect(articleSource).not.toContain('v-if="post.coverImage"')
+    expect(articleSource).not.toContain('class="article-hero__image"')
+    expect(articleSource).toContain('class="article-hero__fallback"')
+  })
 })
