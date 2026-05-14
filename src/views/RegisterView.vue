@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
+import { usePasswordVisibility } from '@/features/auth/composables/usePasswordVisibility'
 import { useAuthStore } from '@/features/auth/stores/useAuthStore'
 import { resolveAuthRedirect } from '@/features/auth/utils/redirect'
+import { validateRegisterForm } from '@/features/auth/utils/registerValidation'
 
 const route = useRoute()
 const router = useRouter()
@@ -13,60 +15,46 @@ const nickname = ref('')
 const email = ref('')
 const password = ref('')
 const confirmPassword = ref('')
-const rememberMe = ref(true)
+const acceptedTerms = ref(true)
 const isSubmitting = ref(false)
 const errorMessage = ref('')
+const showValidationErrors = ref(false)
+const passwordVisibility = usePasswordVisibility()
 
 const normalizedUsername = computed(() => username.value.trim())
 const normalizedNickname = computed(() => nickname.value.trim())
 const normalizedEmail = computed(() => email.value.trim().toLowerCase())
-const isUsernameValid = computed(() => /^[A-Za-z0-9_-]{3,32}$/.test(normalizedUsername.value))
-const isNicknameValid = computed(() => normalizedNickname.value.length >= 2 && normalizedNickname.value.length <= 64)
-const isEmailValid = computed(() => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail.value))
-const isPasswordValid = computed(() => password.value.length >= 8)
-const isConfirmValid = computed(() => confirmPassword.value === password.value && confirmPassword.value.length > 0)
-const canSubmit = computed(
-  () =>
-    isUsernameValid.value &&
-    isNicknameValid.value &&
-    isEmailValid.value &&
-    isPasswordValid.value &&
-    isConfirmValid.value &&
-    !isSubmitting.value,
+const validationErrors = computed(() =>
+  validateRegisterForm({
+    username: username.value,
+    nickname: nickname.value,
+    email: email.value,
+    password: password.value,
+    confirmPassword: confirmPassword.value,
+    acceptedTerms: acceptedTerms.value,
+  }),
 )
+const hasValidationErrors = computed(() => Object.keys(validationErrors.value).length > 0)
+const usernameError = computed(() => (showValidationErrors.value ? validationErrors.value.username : ''))
+const nicknameError = computed(() => (showValidationErrors.value ? validationErrors.value.nickname : ''))
+const emailError = computed(() => (showValidationErrors.value ? validationErrors.value.email : ''))
+const passwordError = computed(() => (showValidationErrors.value ? validationErrors.value.password : ''))
+const confirmPasswordError = computed(() => (showValidationErrors.value ? validationErrors.value.confirmPassword : ''))
+const acceptedTermsError = computed(() => (showValidationErrors.value ? validationErrors.value.acceptedTerms : ''))
 const loginLocation = computed(() => {
   const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : ''
   return redirect ? { name: 'login', query: { redirect } } : { name: 'login' }
 })
 
 async function handleSubmit() {
-  if (!isUsernameValid.value) {
-    errorMessage.value = '用户名需为 3-32 位字母、数字、下划线或连字符。'
-    return
-  }
+  showValidationErrors.value = true
+  errorMessage.value = ''
 
-  if (!isNicknameValid.value) {
-    errorMessage.value = '昵称需为 2-64 个字符。'
-    return
-  }
-
-  if (!isEmailValid.value) {
-    errorMessage.value = '请输入有效邮箱。'
-    return
-  }
-
-  if (!isPasswordValid.value) {
-    errorMessage.value = '密码至少需要 8 位。'
-    return
-  }
-
-  if (!isConfirmValid.value) {
-    errorMessage.value = '两次输入的密码不一致。'
+  if (hasValidationErrors.value) {
     return
   }
 
   isSubmitting.value = true
-  errorMessage.value = ''
 
   try {
     await authStore.register({
@@ -74,7 +62,7 @@ async function handleSubmit() {
       nickname: normalizedNickname.value,
       email: normalizedEmail.value,
       password: password.value,
-      rememberMe: rememberMe.value,
+      rememberMe: true,
       visibility: 'public',
     })
 
@@ -107,8 +95,8 @@ async function handleSubmit() {
         <p class="register-card__eyebrow">账号</p>
         <h1>注册</h1>
 
-        <form class="register-form" @submit.prevent="handleSubmit">
-          <label class="field">
+        <form class="register-form" novalidate @submit.prevent="handleSubmit">
+          <label class="field" :class="{ 'field--invalid': usernameError }">
             <span>用户名</span>
             <input
               v-model="username"
@@ -116,37 +104,78 @@ async function handleSubmit() {
               autocomplete="username"
               maxlength="32"
               placeholder="3-32 位，仅限字母、数字、_、-"
+              :aria-invalid="Boolean(usernameError)"
             />
+            <p v-if="usernameError" class="field__error">{{ usernameError }}</p>
           </label>
 
-          <label class="field">
+          <label class="field" :class="{ 'field--invalid': nicknameError }">
             <span>昵称</span>
-            <input v-model="nickname" type="text" maxlength="64" placeholder="请输入昵称" />
+            <input
+              v-model="nickname"
+              type="text"
+              maxlength="64"
+              placeholder="请输入昵称"
+              :aria-invalid="Boolean(nicknameError)"
+            />
+            <p v-if="nicknameError" class="field__error">{{ nicknameError }}</p>
           </label>
 
-          <label class="field">
+          <label class="field" :class="{ 'field--invalid': emailError }">
             <span>邮箱</span>
-            <input v-model="email" type="email" autocomplete="email" placeholder="name@example.com" />
+            <input
+              v-model="email"
+              type="email"
+              autocomplete="email"
+              placeholder="name@example.com"
+              :aria-invalid="Boolean(emailError)"
+            />
+            <p v-if="emailError" class="field__error">{{ emailError }}</p>
           </label>
 
-          <label class="field">
+          <label class="field" :class="{ 'field--invalid': passwordError }">
             <span>密码</span>
-            <input v-model="password" type="password" autocomplete="new-password" placeholder="至少 8 位" />
+            <div class="field__control">
+              <input
+                v-model="password"
+                :type="passwordVisibility.inputType.value"
+                autocomplete="new-password"
+                placeholder="至少 8 位"
+                :aria-invalid="Boolean(passwordError)"
+              />
+              <button
+                type="button"
+                class="field__toggle"
+                :aria-label="passwordVisibility.toggleLabel.value"
+                @click="passwordVisibility.toggle"
+              >
+                {{ passwordVisibility.buttonText.value }}
+              </button>
+            </div>
+            <p v-if="passwordError" class="field__error">{{ passwordError }}</p>
           </label>
 
-          <label class="field">
+          <label class="field" :class="{ 'field--invalid': confirmPasswordError }">
             <span>确认密码</span>
-            <input v-model="confirmPassword" type="password" autocomplete="new-password" placeholder="再次输入密码" />
+            <input
+              v-model="confirmPassword"
+              type="password"
+              autocomplete="new-password"
+              placeholder="再次输入密码"
+              :aria-invalid="Boolean(confirmPasswordError)"
+            />
+            <p v-if="confirmPasswordError" class="field__error">{{ confirmPasswordError }}</p>
           </label>
 
-          <label class="check-row">
-            <input v-model="rememberMe" type="checkbox" />
-            <span>记住登录状态</span>
+          <label class="check-row" :class="{ 'check-row--invalid': acceptedTermsError }">
+            <input v-model="acceptedTerms" type="checkbox" />
+            <span>同意用户协议</span>
           </label>
+          <p v-if="acceptedTermsError" class="field__error">{{ acceptedTermsError }}</p>
 
           <p v-if="errorMessage" class="feedback feedback--error">{{ errorMessage }}</p>
 
-          <button type="submit" class="submit-btn" :disabled="!canSubmit">
+          <button type="submit" class="submit-btn" :disabled="isSubmitting">
             <span v-if="isSubmitting" class="submit-btn__spinner"></span>
             {{ isSubmitting ? '注册中...' : '注册并登录' }}
           </button>
@@ -266,6 +295,12 @@ async function handleSubmit() {
     font-weight: 600;
   }
 
+  &__control {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
   input {
     width: 100%;
     border: 1px solid var(--line-soft);
@@ -281,6 +316,54 @@ async function handleSubmit() {
       box-shadow: var(--focus-ring);
     }
   }
+
+  &__control input {
+    padding-right: 4.9rem;
+  }
+
+  &__toggle {
+    position: absolute;
+    right: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    border: 1px solid color-mix(in srgb, var(--line-soft) 92%, transparent);
+    border-radius: 999px;
+    background:
+      linear-gradient(180deg, color-mix(in srgb, var(--surface-overlay) 98%, transparent), color-mix(in srgb, var(--surface) 96%, transparent));
+    color: var(--ink-main);
+    padding: 0.26rem 0.62rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: border-color var(--motion-base) var(--ease-out), color var(--motion-base) var(--ease-out);
+
+    &:hover {
+      border-color: rgba(0, 113, 227, 0.24);
+      color: var(--brand-500);
+    }
+  }
+
+  &--invalid span {
+    color: var(--danger-500);
+  }
+
+  &--invalid input {
+    border-color: var(--danger-500);
+    box-shadow: 0 0 0 2px rgba(198, 40, 40, 0.08);
+
+    &:focus {
+      border-color: var(--danger-500);
+      box-shadow: 0 0 0 3px rgba(198, 40, 40, 0.12);
+    }
+  }
+
+  &__error {
+    margin: 0;
+    color: var(--danger-500);
+    font-size: 0.8rem;
+    font-weight: 600;
+    line-height: 1.45;
+  }
 }
 
 .check-row {
@@ -289,6 +372,10 @@ async function handleSubmit() {
   gap: 0.55rem;
   color: var(--ink-main);
   font-size: 0.88rem;
+}
+
+.check-row--invalid {
+  color: var(--danger-500);
 }
 
 .feedback {
