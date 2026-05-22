@@ -1,5 +1,5 @@
 import { apiFetch, isMockMode } from '@/services/apiClient'
-import { readStoredAuthSession } from '@/features/auth/stores/useAuthStore'
+import { readStoredAuthSession, type AuthSession } from '@/features/auth/stores/useAuthStore'
 
 export interface UserProfile {
     id: string
@@ -28,10 +28,6 @@ interface BackendUserProfile {
 
 const PROFILE_STORAGE_KEY = 'blog_user_profile_v1'
 
-function normalizeEmailName(email: string) {
-    return email.split('@')[0]?.trim() || 'Sign'
-}
-
 function requireAuthSession(errorMessage: string) {
     const session = readStoredAuthSession()
     if (!session) {
@@ -56,7 +52,7 @@ function formatProfileDate(value?: string | null) {
 }
 
 function mapBackendProfile(profile: BackendUserProfile): UserProfile {
-    const displayName = profile.nickname?.trim() || profile.username
+    const displayName = profile.username
 
     return {
         id: profile.id,
@@ -72,13 +68,13 @@ function mapBackendProfile(profile: BackendUserProfile): UserProfile {
     }
 }
 
-function buildDefaultProfile(email: string): UserProfile {
-    const displayName = normalizeEmailName(email)
+function buildDefaultProfile(session: AuthSession): UserProfile {
+    const displayName = session.user.username || 'Sign'
 
     return {
-        id: `user-${email}`,
+        id: session.user.id,
         username: displayName,
-        email,
+        email: session.email,
         displayName,
         bio: '专注前端工程、界面设计与写作流程，把复杂工作拆成可执行的步骤。',
         joinedAt: '2024/05/12',
@@ -132,7 +128,7 @@ class ProfileService {
             return legacyProfile
         }
 
-        return buildDefaultProfile(session.email)
+        return buildDefaultProfile(session)
     }
 
     async updateBio(newBio: string): Promise<UserProfile> {

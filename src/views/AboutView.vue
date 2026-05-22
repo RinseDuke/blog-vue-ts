@@ -15,7 +15,7 @@ const router = useRouter()
 const { isLoggedIn, userEmail, session } = storeToRefs(authStore)
 const { ensurePosts } = postsStore
 
-const activeTab = ref<'articles' | 'likes' | 'comments' | 'about'>('articles')
+const activeTab = ref<'articles' | 'likes' | 'comments'>('articles')
 
 function handleLogout() {
   authStore.logout()
@@ -206,8 +206,7 @@ function enterEditMode() {
           v-for="tab in [
             { key: 'articles', label: '文章' },
             { key: 'likes', label: '喜欢' },
-            { key: 'comments', label: '评论' },
-            { key: 'about', label: '关于' }
+            { key: 'comments', label: '评论' }
           ]"
           :key="tab.key"
           :class="['profile-tab', { 'profile-tab--active': activeTab === tab.key }]"
@@ -293,26 +292,6 @@ function enterEditMode() {
             <div class="draft-empty">
               <p>暂无评论记录</p>
             </div>
-          </article>
-        </section>
-
-        <section v-else-if="activeTab === 'about'" class="profile-main">
-          <article class="panel section-card">
-            <header class="section-card__head">
-              <div>
-                <p class="section-card__eyebrow">关于</p>
-                <h2>个人信息</h2>
-              </div>
-            </header>
-            <div class="bio-block">
-              <p>{{ profile.bio }}</p>
-            </div>
-            <dl class="fact-list">
-              <div v-for="fact in accountFacts" :key="fact.label" class="fact-list__row">
-                <dt>{{ fact.label }}</dt>
-                <dd>{{ fact.value }}</dd>
-              </div>
-            </dl>
           </article>
         </section>
 

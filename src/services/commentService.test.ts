@@ -70,6 +70,33 @@ describe('commentService auth guard', () => {
     expect(mockComments[mockComments.length - 1]?.id).toBe(comment.id)
   })
 
+  it('uses the registered username instead of the email prefix for new comments', async () => {
+    localStorage.setItem(
+      AUTH_KEY,
+      JSON.stringify({
+        email: 'mailbox@example.com',
+        rememberMe: true,
+        loggedAt: '2026-03-07T10:00:00.000Z',
+        token: 'mock-token-creator',
+        user: {
+          id: 'user-creator',
+          username: 'creator_user',
+          nickname: 'creator_user',
+          email: 'mailbox@example.com',
+          visibility: 'public',
+        },
+      })
+    )
+
+    const comment = await createComment({
+      postId: '1',
+      content: '用户名应该直接用于评论展示',
+    })
+
+    expect(comment.author.id).toBe('user-creator')
+    expect(comment.author.name).toBe('creator_user')
+  })
+
   it('rejects anonymous comment likes', async () => {
     await expect(setCommentLike('c1', true)).rejects.toThrow('请先登录后再点赞评论')
   })

@@ -39,6 +39,7 @@ export const useThemeStore = defineStore('theme', () => {
     try {
       localStorage.setItem(THEME_STORAGE_KEY, nextTheme)
     } catch {
+      // Ignore storage failures; the in-memory theme still applies.
     }
   }
 
@@ -52,6 +53,7 @@ export const useThemeStore = defineStore('theme', () => {
         initialTheme = storedTheme
       }
     } catch {
+      // Ignore storage failures and fall back to system preference.
     }
 
     setTheme(initialTheme, { persist: false })

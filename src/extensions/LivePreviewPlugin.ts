@@ -72,14 +72,6 @@ function buildBlockDecorations(state: EditorState): Decoration[] {
 
     const orderedParent = ancestorOfType($head, 'orderedList')
     if (orderedParent && !listParent) {
-      let index = 1
-      const listItemNode = bulletListItem.node
-      const parentList = orderedParent.node
-      parentList.forEach((child, _offset, i) => {
-        if (child === listItemNode) {
-          index = i + 1
-        }
-      })
       const listItemPos = bulletListItem.pos
       let idx = 1
       orderedParent.node.forEach((child, offset) => {

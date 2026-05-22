@@ -36,14 +36,12 @@ export async function createComment(payload: CreateCommentPayload): Promise<Comm
         await networkDelay(200)
         const session = requireAuthSession('请先登录后再发表评论')
 
-        const authorName = session.email.split('@')[0] || '已登录用户'
-
         const newComment: Comment = {
             id: `mock-c-${nextMockId++}`,
             postId: payload.postId,
             author: {
-                id: `user-${session.email}`,
-                name: authorName,
+                id: session.user.id,
+                name: session.user.username || '已登录用户',
                 avatarUrl: 'https://i.pravatar.cc/150?img=68',
             },
             content: payload.content,

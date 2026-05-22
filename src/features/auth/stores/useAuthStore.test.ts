@@ -44,7 +44,6 @@ describe('useAuthStore backend-aligned auth flow', () => {
 
     await store.register({
       username: 'tester_user',
-      nickname: 'Tester',
       email: 'tester@example.com',
       password: 'SecurePass123',
       rememberMe: true,
@@ -54,9 +53,16 @@ describe('useAuthStore backend-aligned auth flow', () => {
     expect(store.isLoggedIn).toBe(true)
     expect(store.userEmail).toBe('tester@example.com')
     expect(store.userId).toContain('user-')
+    expect(store.displayName).toBe('tester_user')
     expect(localStorage.getItem(AUTH_KEY)).toContain('tester@example.com')
     expect(JSON.parse(localStorage.getItem(USERS_KEY) ?? '[]')).toEqual(
-      expect.arrayContaining([expect.objectContaining({ username: 'tester_user', email: 'tester@example.com' })])
+      expect.arrayContaining([
+        expect.objectContaining({
+          username: 'tester_user',
+          nickname: 'tester_user',
+          email: 'tester@example.com',
+        }),
+      ])
     )
   })
 
@@ -80,7 +86,6 @@ describe('useAuthStore backend-aligned auth flow', () => {
 
     await store.register({
       username: 'tester_user',
-      nickname: 'Tester',
       email: 'tester@example.com',
       password: 'SecurePass123',
       rememberMe: true,
@@ -90,7 +95,6 @@ describe('useAuthStore backend-aligned auth flow', () => {
     await expect(
       store.register({
         username: 'tester_user',
-        nickname: 'Tester 2',
         email: 'tester2@example.com',
         password: 'SecurePass456',
         rememberMe: true,

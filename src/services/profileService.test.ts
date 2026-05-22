@@ -47,6 +47,25 @@ function setSession(email: string) {
   )
 }
 
+function setSessionWithUser(email: string, username: string) {
+  localStorage.setItem(
+    AUTH_KEY,
+    JSON.stringify({
+      email,
+      rememberMe: true,
+      loggedAt: '2026-03-07T10:00:00.000Z',
+      token: `mock-token-${email}`,
+      user: {
+        id: `user-${username}`,
+        username,
+        nickname: username,
+        email,
+        visibility: 'public',
+      },
+    })
+  )
+}
+
 describe('profileService auth scope', () => {
   beforeEach(() => {
     vi.stubGlobal('localStorage', createStorageMock())
@@ -87,6 +106,18 @@ describe('profileService auth scope', () => {
       expect.objectContaining({
         username: 'alice',
         bio: 'alice bio',
+      })
+    )
+  })
+
+  it('uses the registered username instead of the email prefix for default mock profiles', async () => {
+    setSessionWithUser('mailbox@example.com', 'creator_user')
+
+    await expect(profileService.getProfile()).resolves.toEqual(
+      expect.objectContaining({
+        id: 'user-creator_user',
+        username: 'creator_user',
+        displayName: 'creator_user',
       })
     )
   })

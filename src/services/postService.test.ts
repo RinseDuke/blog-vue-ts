@@ -57,6 +57,25 @@ function setSession(email: string, nickname = 'writer', userId = `user-${email}`
   )
 }
 
+function setSessionWithUser(email: string, username: string, nickname = username, userId = `user-${username}`) {
+  localStorage.setItem(
+    AUTH_KEY,
+    JSON.stringify({
+      email,
+      rememberMe: true,
+      loggedAt: '2026-03-07T10:00:00.000Z',
+      token: `mock-token-${email}`,
+      user: {
+        id: userId,
+        username,
+        nickname,
+        email,
+        visibility: 'public',
+      },
+    })
+  )
+}
+
 function getVisibleSeededPost() {
   const candidate = mockPosts.find((post) => post.status !== 'draft' && post.visibility !== 'private')
   if (!candidate) {
@@ -127,6 +146,22 @@ describe('postService auth guard', () => {
 
     const managedPosts = await fetchUserPosts(createdPost.author.id)
     expect(managedPosts.some((post) => post.id === createdPost.id)).toBe(true)
+  })
+
+  it('uses the registered username for locally published post authors', async () => {
+    setSessionWithUser('mailbox@example.com', 'creator_user', 'Display Name')
+
+    const createdPost = await createPost({
+      title: '用户名作者展示',
+      markdown: '# 用户名作者展示\n\n作者名应该来自用户名。',
+      html: '<h1>用户名作者展示</h1><p>作者名应该来自用户名。</p>',
+      status: 'published',
+      visibility: 'public',
+    })
+
+    expect(createdPost.author.id).toBe('user-creator_user')
+    expect(createdPost.author.name).toBe('creator_user')
+    expect(createdPost.author.username).toBe('creator_user')
   })
 
   it('deletes a published post owned by the logged in user', async () => {

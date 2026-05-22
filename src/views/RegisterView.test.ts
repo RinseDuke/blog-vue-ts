@@ -10,13 +10,21 @@ describe('RegisterView source contract', () => {
   it('renders validation errors under their own fields', () => {
     expect(source).toContain('showValidationErrors')
     expect(source).toContain('usernameError')
-    expect(source).toContain('nicknameError')
     expect(source).toContain('emailError')
     expect(source).toContain('passwordError')
     expect(source).toContain('confirmPasswordError')
     expect(source).toContain('class="field__error"')
     expect(source).toContain("'field--invalid': usernameError")
     expect(source).toMatch(/&--invalid span \{[\s\S]*color: var\(--danger-500\);/)
+  })
+
+  it('keeps username as the only profile name field during registration', () => {
+    expect(source).toContain('v-model="username"')
+    expect(source).not.toContain('const nickname')
+    expect(source).not.toContain('normalizedNickname')
+    expect(source).not.toContain('nicknameError')
+    expect(source).not.toContain('v-model="nickname"')
+    expect(source).not.toContain('<span>昵称</span>')
   })
 
   it('uses the password visibility toggle from the password field', () => {

@@ -52,7 +52,6 @@ interface AuthCredentials {
 }
 
 interface RegisterPayload extends AuthCredentials {
-  nickname: string
   email: string
   avatar?: string
   bio?: string
@@ -71,7 +70,7 @@ const DEFAULT_MOCK_USERS: RegisteredUser[] = [
   {
     id: 'mock-demo-user',
     username: DEFAULT_MOCK_LOGIN.username,
-    nickname: 'Demo User',
+    nickname: DEFAULT_MOCK_LOGIN.username,
     email: DEFAULT_MOCK_LOGIN.email,
     password: DEFAULT_MOCK_LOGIN.password,
     visibility: 'public',
@@ -105,11 +104,12 @@ function buildLegacyUser(email: string): AuthUser {
 
 function mapBackendUser(user: BackendUser): AuthUser {
   const normalizedEmail = normalizeEmail(user.email)
+  const normalizedUsername = normalizeUsername(user.username)
 
   return {
     id: user.id,
-    username: normalizeUsername(user.username),
-    nickname: user.nickname?.trim() || normalizeUsername(user.username),
+    username: normalizedUsername,
+    nickname: normalizedUsername,
     email: normalizedEmail,
     avatar: user.avatar ?? undefined,
     bio: user.bio ?? undefined,
@@ -139,13 +139,14 @@ function readRegisteredUsers(): RegisteredUser[] {
     const normalizedUsers = parsed.filter(isRegisteredUser).map((user) => {
       const email = normalizeEmail(user.email)
       const legacy = buildLegacyUser(email)
+      const username = normalizeUsername(typeof user.username === 'string' ? user.username : legacy.username)
 
       const normalizedUser: RegisteredUser = {
         ...legacy,
         ...user,
         id: typeof user.id === 'string' ? user.id : legacy.id,
-        username: normalizeUsername(typeof user.username === 'string' ? user.username : legacy.username),
-        nickname: typeof user.nickname === 'string' ? user.nickname.trim() || legacy.nickname : legacy.nickname,
+        username,
+        nickname: username,
         email,
         avatar: typeof user.avatar === 'string' ? user.avatar : undefined,
         bio: typeof user.bio === 'string' ? user.bio : undefined,
@@ -206,14 +207,13 @@ export function readStoredAuthSession(): AuthSession | null {
     if (!normalizedEmail) return null
 
     const fallbackUser = buildLegacyUser(normalizedEmail)
+    const normalizedUsername = normalizeUsername(parsed.user?.username ?? fallbackUser.username)
     const user: AuthUser = {
       ...fallbackUser,
       ...(parsed.user ?? {}),
       id: typeof parsed.user?.id === 'string' ? parsed.user.id : fallbackUser.id,
-      username: normalizeUsername(parsed.user?.username ?? fallbackUser.username),
-      nickname: typeof parsed.user?.nickname === 'string'
-        ? parsed.user.nickname.trim() || fallbackUser.nickname
-        : fallbackUser.nickname,
+      username: normalizedUsername,
+      nickname: normalizedUsername,
       email: normalizedEmail,
       avatar: typeof parsed.user?.avatar === 'string' ? parsed.user.avatar : undefined,
       bio: typeof parsed.user?.bio === 'string' ? parsed.user.bio : undefined,
@@ -247,7 +247,7 @@ export const useAuthStore = defineStore('auth', () => {
   const userEmail = computed(() => session.value?.email ?? '')
   const userId = computed(() => session.value?.user.id ?? '')
   const username = computed(() => session.value?.user.username ?? '')
-  const displayName = computed(() => session.value?.user.nickname ?? '')
+  const displayName = computed(() => session.value?.user.username ?? '')
 
   function persistSession(nextSession: AuthSession) {
     localStorage.removeItem(AUTH_KEY)
@@ -335,7 +335,7 @@ export const useAuthStore = defineStore('auth', () => {
       const nextUser: RegisteredUser = {
         id: `user-${Date.now()}`,
         username: normalizedUsername,
-        nickname: payload.nickname.trim(),
+        nickname: normalizedUsername,
         email: normalizedEmail,
         password: payload.password,
         avatar: payload.avatar,
@@ -353,7 +353,7 @@ export const useAuthStore = defineStore('auth', () => {
       method: 'POST',
       body: JSON.stringify({
         username: normalizedUsername,
-        nickname: payload.nickname.trim(),
+        nickname: normalizedUsername,
         password: payload.password,
         email: normalizedEmail,
         avatar: payload.avatar,

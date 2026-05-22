@@ -34,6 +34,7 @@ export class ApiError extends Error {
                 msg = parsed.message
             }
         } catch {
+            // Non-JSON error bodies are already represented by `body`.
         }
         super(msg)
         this.name = 'ApiError'
@@ -50,6 +51,7 @@ function getAuthHeaders(): Record<string, string> {
             return { Authorization: `Bearer ${session.token}` }
         }
     } catch {
+        // Broken stored sessions should not block anonymous requests.
     }
     return {}
 }

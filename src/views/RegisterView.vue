@@ -11,7 +11,6 @@ const router = useRouter()
 const authStore = useAuthStore()
 
 const username = ref('')
-const nickname = ref('')
 const email = ref('')
 const password = ref('')
 const confirmPassword = ref('')
@@ -22,12 +21,10 @@ const showValidationErrors = ref(false)
 const passwordVisibility = usePasswordVisibility()
 
 const normalizedUsername = computed(() => username.value.trim())
-const normalizedNickname = computed(() => nickname.value.trim())
 const normalizedEmail = computed(() => email.value.trim().toLowerCase())
 const validationErrors = computed(() =>
   validateRegisterForm({
     username: username.value,
-    nickname: nickname.value,
     email: email.value,
     password: password.value,
     confirmPassword: confirmPassword.value,
@@ -36,7 +33,6 @@ const validationErrors = computed(() =>
 )
 const hasValidationErrors = computed(() => Object.keys(validationErrors.value).length > 0)
 const usernameError = computed(() => (showValidationErrors.value ? validationErrors.value.username : ''))
-const nicknameError = computed(() => (showValidationErrors.value ? validationErrors.value.nickname : ''))
 const emailError = computed(() => (showValidationErrors.value ? validationErrors.value.email : ''))
 const passwordError = computed(() => (showValidationErrors.value ? validationErrors.value.password : ''))
 const confirmPasswordError = computed(() => (showValidationErrors.value ? validationErrors.value.confirmPassword : ''))
@@ -59,7 +55,6 @@ async function handleSubmit() {
   try {
     await authStore.register({
       username: normalizedUsername.value,
-      nickname: normalizedNickname.value,
       email: normalizedEmail.value,
       password: password.value,
       rememberMe: true,
@@ -107,18 +102,6 @@ async function handleSubmit() {
               :aria-invalid="Boolean(usernameError)"
             />
             <p v-if="usernameError" class="field__error">{{ usernameError }}</p>
-          </label>
-
-          <label class="field" :class="{ 'field--invalid': nicknameError }">
-            <span>昵称</span>
-            <input
-              v-model="nickname"
-              type="text"
-              maxlength="64"
-              placeholder="请输入昵称"
-              :aria-invalid="Boolean(nicknameError)"
-            />
-            <p v-if="nicknameError" class="field__error">{{ nicknameError }}</p>
           </label>
 
           <label class="field" :class="{ 'field--invalid': emailError }">

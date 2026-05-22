@@ -1,6 +1,5 @@
 export interface RegisterFormInput {
   username: string
-  nickname: string
   email: string
   password: string
   confirmPassword: string
@@ -11,16 +10,11 @@ export type RegisterFormErrors = Partial<Record<keyof RegisterFormInput, string>
 
 export function validateRegisterForm(input: RegisterFormInput): RegisterFormErrors {
   const username = input.username.trim()
-  const nickname = input.nickname.trim()
   const email = input.email.trim().toLowerCase()
   const errors: RegisterFormErrors = {}
 
   if (!/^[A-Za-z0-9_-]{3,32}$/.test(username)) {
     errors.username = '用户名需为 3-32 位字母、数字、下划线或连字符。'
-  }
-
-  if (nickname.length < 2 || nickname.length > 64) {
-    errors.nickname = '昵称需为 2-64 个字符。'
   }
 
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {

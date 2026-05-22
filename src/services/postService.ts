@@ -106,8 +106,8 @@ function normalizeAuthorName(email: string) {
 }
 
 function buildAuthor(userId: string, email: string, nickname?: string, username?: string): Post['author'] {
-  const name = nickname?.trim() || normalizeAuthorName(email)
-  const normalizedUsername = username?.trim() || name
+  const normalizedUsername = username?.trim() || nickname?.trim() || normalizeAuthorName(email)
+  const name = normalizedUsername
 
   return {
     id: userId,
