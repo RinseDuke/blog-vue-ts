@@ -1,59 +1,64 @@
 <template>
-  <Transition name="mobile-search-sheet">
-    <section
-      v-if="open"
-      ref="sheetEl"
-      class="mobile-search-sheet"
-      data-testid="mobile-search-sheet"
-      role="dialog"
-      aria-modal="true"
-      aria-label="移动端文章搜索"
-      tabindex="-1"
-      @keydown="handleKeydown"
-    >
-      <div class="mobile-search-sheet__toolbar">
-        <div class="mobile-search-sheet__input-wrap">
-          <input
-            ref="inputEl"
-            v-model="searchValue"
-            type="text"
-            placeholder="搜索文章..."
-            autocomplete="off"
-            @keyup.enter="triggerSearch"
-          />
-          <button type="button" class="mobile-search-sheet__submit" aria-label="搜索文章" @click="triggerSearch">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="11" cy="11" r="8"></circle>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
-          </button>
-        </div>
-        <button type="button" class="mobile-search-sheet__close" @click="emit('close')">取消</button>
-      </div>
+  <Teleport to="body">
+    <Transition name="mobile-search-sheet">
+      <div v-if="open" class="mobile-search-sheet__backdrop" @click.self="emit('close')">
+        <section
+          ref="sheetEl"
+          class="mobile-search-sheet"
+          data-testid="mobile-search-sheet"
+          role="dialog"
+          aria-modal="true"
+          aria-label="移动端文章搜索"
+          tabindex="-1"
+          @keydown="handleKeydown"
+        >
+          <div class="mobile-search-sheet__toolbar">
+            <div class="mobile-search-sheet__input-wrap">
+              <input
+                ref="inputEl"
+                v-model="searchValue"
+                type="text"
+                placeholder="搜索文章..."
+                autocomplete="off"
+                @keyup.enter="triggerSearch"
+              />
+              <button type="button" class="mobile-search-sheet__submit" aria-label="搜索文章" @click="triggerSearch">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+              </button>
+            </div>
+            <button type="button" class="mobile-search-sheet__close" @click="emit('close')">取消</button>
+          </div>
 
-      <div class="mobile-search-sheet__content">
-        <SearchDropdownContent
-          density="compact"
-          clear-history-label="清空"
-          :show-recommended-read-minutes="true"
-          :recommended-posts="recommendedPosts"
-          :search-history="searchHistory"
-          :suggestion-posts="suggestionPosts"
-          :normalized-query="normalizedQuery"
-          :suggestion-meta-formatter="formatSuggestionMeta"
-          @select="selectSuggestion"
-          @clear-history="emit('clearHistory')"
-        />
+          <div class="mobile-search-sheet__content">
+            <SearchDropdownContent
+              density="compact"
+              clear-history-label="清空"
+              :show-recommended-read-minutes="true"
+              :recommended-posts="recommendedPosts"
+              :search-history="searchHistory"
+              :suggestion-posts="suggestionPosts"
+              :normalized-query="normalizedQuery"
+              :suggestion-meta-formatter="formatSuggestionMeta"
+              @select="selectSuggestion"
+              @clear-history="emit('clearHistory')"
+            />
+          </div>
+        </section>
       </div>
-    </section>
-  </Transition>
+    </Transition>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type { Post } from '@/types/post'
 import SearchDropdownContent from '@/components/search/SearchDropdownContent.vue'
 import {
+  createMobileSearchBackgroundIsolation,
+  createMobileSearchDesktopCloseLifecycle,
   createMobileSearchFocusLifecycle,
   getMobileSearchKeyAction,
 } from '@/components/search/mobileSearchKeyboard'
@@ -85,17 +90,36 @@ const focusLifecycle = createMobileSearchFocusLifecycle(
   () => (typeof document !== 'undefined' ? document.activeElement : null),
   (value): value is HTMLElement => typeof HTMLElement !== 'undefined' && value instanceof HTMLElement
 )
+const backgroundIsolation = createMobileSearchBackgroundIsolation(
+  () => (typeof document !== 'undefined' ? document.getElementById('app') : null),
+  () => (typeof document !== 'undefined' ? document.body : null)
+)
+const desktopCloseLifecycle = createMobileSearchDesktopCloseLifecycle(
+  () => (typeof window !== 'undefined' ? window.matchMedia('(min-width: 769px)') : null),
+  () => {
+    if (props.open) emit('close')
+  }
+)
+
+onMounted(() => desktopCloseLifecycle.mount())
+onBeforeUnmount(() => {
+  desktopCloseLifecycle.unmount()
+  backgroundIsolation.dispose()
+  focusLifecycle.close()
+})
 
 watch(
   () => props.open,
   async (open) => {
     if (open) {
       focusLifecycle.open()
+      backgroundIsolation.open()
       await nextTick()
       inputEl.value?.focus()
       return
     }
 
+    backgroundIsolation.close()
     focusLifecycle.close()
   },
   { immediate: true }
@@ -143,6 +167,17 @@ function formatSuggestionMeta(post: Post) {
 </script>
 
 <style scoped lang="less">
+.mobile-search-sheet__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: flex-start;
+  padding: calc(env(safe-area-inset-top) + 0.75rem) 0.75rem 0.75rem;
+  overflow-y: auto;
+  background: rgba(15, 23, 42, 0.42);
+}
+
 .mobile-search-sheet {
   display: flex;
   flex-direction: column;
@@ -248,9 +283,4 @@ function formatSuggestionMeta(post: Post) {
   transform: translateY(-8px);
 }
 
-@media (min-width: 769px) {
-  .mobile-search-sheet {
-    display: none;
-  }
-}
 </style>
