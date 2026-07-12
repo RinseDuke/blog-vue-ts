@@ -28,6 +28,7 @@ interface BackendUserProfile {
 
 const PROFILE_STORAGE_KEY = 'blog_user_profile_v1'
 const KNOWN_JOINED_AT_PLACEHOLDER = '2024/05/12'
+const PROFILE_TIME_ZONE = 'Asia/Shanghai'
 
 function requireAuthSession(errorMessage: string) {
     const session = readStoredAuthSession()
@@ -52,6 +53,7 @@ function formatProfileDate(value?: string | null) {
         year: 'numeric',
         month: '2-digit',
         day: '2-digit',
+        timeZone: PROFILE_TIME_ZONE,
     }).format(date)
 }
 

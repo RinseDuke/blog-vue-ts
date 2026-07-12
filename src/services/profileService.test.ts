@@ -1,3 +1,13 @@
+const apiMocks = vi.hoisted(() => ({
+  apiFetch: vi.fn(),
+  mockMode: true,
+}))
+
+vi.mock('@/services/apiClient', () => ({
+  apiFetch: apiMocks.apiFetch,
+  isMockMode: () => apiMocks.mockMode,
+}))
+
 import { profileService } from '@/services/profileService'
 
 const AUTH_KEY = 'blog_auth_session_v1'
@@ -69,6 +79,8 @@ function setSessionWithUser(email: string, username: string) {
 
 describe('profileService auth scope', () => {
   beforeEach(() => {
+    apiMocks.mockMode = true
+    apiMocks.apiFetch.mockReset()
     vi.stubGlobal('localStorage', createStorageMock())
     vi.stubGlobal('sessionStorage', createStorageMock())
   })
@@ -112,7 +124,7 @@ describe('profileService auth scope', () => {
   })
 
   it('formats the account creation time for a default mock profile', async () => {
-    setSession('created@example.com', { createdAt: '2026-07-13T09:30:00.000Z' })
+    setSession('created@example.com', { createdAt: '2026-07-12T17:30:00.000Z' })
 
     await expect(profileService.getProfile()).resolves.toEqual(
       expect.objectContaining({ joinedAt: '2026/07/13' }),
@@ -120,7 +132,7 @@ describe('profileService auth scope', () => {
   })
 
   it('falls back to the session login time when creation time is unavailable', async () => {
-    setSession('legacy@example.com', { loggedAt: '2025-12-08T10:00:00.000Z' })
+    setSession('legacy@example.com', { loggedAt: '2025-12-07T17:00:00.000Z' })
 
     await expect(profileService.getProfile()).resolves.toEqual(
       expect.objectContaining({ joinedAt: '2025/12/08' }),
@@ -128,7 +140,7 @@ describe('profileService auth scope', () => {
   })
 
   it('migrates the known placeholder date in an existing stored profile', async () => {
-    setSession('qa@example.com', { createdAt: '2026-06-09T03:00:00.000Z' })
+    setSession('qa@example.com', { createdAt: '2026-06-08T17:00:00.000Z' })
     const storageKey = 'blog_user_profile_v1:qa@example.com'
     localStorage.setItem(
       storageKey,
@@ -149,6 +161,24 @@ describe('profileService auth scope', () => {
       expect.objectContaining({ joinedAt: '2026/06/09', bio: 'existing bio' }),
     )
     expect(JSON.parse(localStorage.getItem(storageKey) ?? '{}').joinedAt).toBe('2026/06/09')
+  })
+
+  it('formats backend profile dates in the China time zone', async () => {
+    setSession('backend@example.com')
+    apiMocks.mockMode = false
+    apiMocks.apiFetch.mockResolvedValue({
+      id: 'backend-user',
+      username: 'backend_user',
+      nickname: 'backend_user',
+      email: 'backend@example.com',
+      created_at: '2026-07-12T17:30:00.000Z',
+      last_login_at: '2026-07-13T16:30:00.000Z',
+      visibility: 'public',
+    })
+
+    await expect(profileService.getProfile()).resolves.toEqual(
+      expect.objectContaining({ joinedAt: '2026/07/13', lastActive: '2026/07/14' }),
+    )
   })
 
   it('uses the registered username instead of the email prefix for default mock profiles', async () => {
