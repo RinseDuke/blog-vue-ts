@@ -159,8 +159,8 @@ function enterEditMode() {
       <header class="profile-hero panel">
         <div class="profile-hero__banner">
           <div class="profile-hero__banner-identity">
-            <h1>{{ profile.displayName }}</h1>
-            <p class="profile-hero__account">@{{ profile.username }}</p>
+            <h1 :title="profile.displayName">{{ profile.displayName }}</h1>
+            <p class="profile-hero__account" :title="'@' + profile.username">@{{ profile.username }}</p>
             <p class="profile-hero__caption">创作者档案</p>
           </div>
 
@@ -479,9 +479,11 @@ function enterEditMode() {
 .profile-hero__banner-identity {
   position: absolute;
   left: calc(1.75rem + 120px + 1.35rem);
+  right: 9.5rem;
   bottom: 4.5rem;
   z-index: 1;
-  max-width: calc(100% - 14rem);
+  min-width: 0;
+  max-width: calc(100% - 20rem);
   text-shadow: 0 1px 2px rgba(18, 44, 47, 0.55);
 }
 
@@ -491,12 +493,20 @@ function enterEditMode() {
   line-height: 1.05;
   letter-spacing: -0.03em;
   color: var(--profile-hero-text);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .profile-hero__account {
   margin: 0.55rem 0 0;
   color: var(--profile-hero-muted);
   font-size: 1rem;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .profile-hero__facts {
@@ -974,10 +984,7 @@ function enterEditMode() {
   }
 
   .profile-hero__location {
-    top: 0.8rem;
-    right: 0.9rem;
-    padding: 0.36rem 0.68rem;
-    font-size: 0.74rem;
+    display: none;
   }
 
   .profile-hero__body {
@@ -1002,6 +1009,7 @@ function enterEditMode() {
 
   .profile-hero__banner-identity {
     left: 6.8rem;
+    right: 0.9rem;
     bottom: 2.4rem;
     max-width: calc(100% - 7.7rem);
   }
