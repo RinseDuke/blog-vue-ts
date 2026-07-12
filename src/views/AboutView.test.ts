@@ -22,4 +22,11 @@ describe('About view source contract', () => {
     expect(source).toContain('<h3>个人简介</h3>')
     expect(source).toContain('updateBio')
   })
+
+  it('starts without invented account history or relationships', () => {
+    expect(source).not.toContain("joinedAt: '2024/05/12'")
+    expect(source).toContain("joinedAt: '未记录'")
+    expect(source).toContain("{ label: '关注', value: 0 }")
+    expect(source).toContain("{ label: '粉丝', value: 0 }")
+  })
 })

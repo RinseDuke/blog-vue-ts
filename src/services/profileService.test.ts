@@ -26,7 +26,7 @@ function createStorageMock(): StorageLike {
   }
 }
 
-function setSession(email: string) {
+function setSession(email: string, options: { createdAt?: string; loggedAt?: string } = {}) {
   const username = email.split('@')[0]
 
   localStorage.setItem(
@@ -34,7 +34,7 @@ function setSession(email: string) {
     JSON.stringify({
       email,
       rememberMe: true,
-      loggedAt: '2026-03-07T10:00:00.000Z',
+      loggedAt: options.loggedAt ?? '2026-03-07T10:00:00.000Z',
       token: `mock-token-${email}`,
       user: {
         id: `user-${email}`,
@@ -42,6 +42,7 @@ function setSession(email: string) {
         nickname: username,
         email,
         visibility: 'public',
+        createdAt: options.createdAt,
       },
     })
   )
@@ -108,6 +109,46 @@ describe('profileService auth scope', () => {
         bio: 'alice bio',
       })
     )
+  })
+
+  it('formats the account creation time for a default mock profile', async () => {
+    setSession('created@example.com', { createdAt: '2026-07-13T09:30:00.000Z' })
+
+    await expect(profileService.getProfile()).resolves.toEqual(
+      expect.objectContaining({ joinedAt: '2026/07/13' }),
+    )
+  })
+
+  it('falls back to the session login time when creation time is unavailable', async () => {
+    setSession('legacy@example.com', { loggedAt: '2025-12-08T10:00:00.000Z' })
+
+    await expect(profileService.getProfile()).resolves.toEqual(
+      expect.objectContaining({ joinedAt: '2025/12/08' }),
+    )
+  })
+
+  it('migrates the known placeholder date in an existing stored profile', async () => {
+    setSession('qa@example.com', { createdAt: '2026-06-09T03:00:00.000Z' })
+    const storageKey = 'blog_user_profile_v1:qa@example.com'
+    localStorage.setItem(
+      storageKey,
+      JSON.stringify({
+        id: 'qa-user',
+        username: 'qa',
+        email: 'qa@example.com',
+        displayName: 'qa',
+        bio: 'existing bio',
+        joinedAt: '2024/05/12',
+        lastActive: '今天',
+        avatarInitial: 'Q',
+        visibility: 'public',
+      }),
+    )
+
+    await expect(profileService.getProfile()).resolves.toEqual(
+      expect.objectContaining({ joinedAt: '2026/06/09', bio: 'existing bio' }),
+    )
+    expect(JSON.parse(localStorage.getItem(storageKey) ?? '{}').joinedAt).toBe('2026/06/09')
   })
 
   it('uses the registered username instead of the email prefix for default mock profiles', async () => {

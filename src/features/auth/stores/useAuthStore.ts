@@ -12,6 +12,7 @@ export interface AuthUser {
   email: string
   avatar?: string
   bio?: string
+  createdAt?: string
   visibility: 'public' | 'private'
 }
 
@@ -90,6 +91,11 @@ function normalizeUsername(username: string) {
   return username.trim()
 }
 
+function normalizeTimestamp(value: unknown) {
+  if (typeof value !== 'string' || Number.isNaN(Date.parse(value))) return undefined
+  return value
+}
+
 function buildLegacyUser(email: string): AuthUser {
   const fallbackName = email.split('@')[0]?.trim() || 'sign'
 
@@ -113,6 +119,7 @@ function mapBackendUser(user: BackendUser): AuthUser {
     email: normalizedEmail,
     avatar: user.avatar ?? undefined,
     bio: user.bio ?? undefined,
+    createdAt: normalizeTimestamp(user.created_at),
     visibility: user.visibility ?? 'public',
   }
 }
@@ -217,6 +224,7 @@ export function readStoredAuthSession(): AuthSession | null {
       email: normalizedEmail,
       avatar: typeof parsed.user?.avatar === 'string' ? parsed.user.avatar : undefined,
       bio: typeof parsed.user?.bio === 'string' ? parsed.user.bio : undefined,
+      createdAt: normalizeTimestamp(parsed.user?.createdAt),
       visibility: parsed.user?.visibility === 'private' ? 'private' : 'public',
     }
 

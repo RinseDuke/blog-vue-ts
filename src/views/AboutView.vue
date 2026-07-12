@@ -28,7 +28,7 @@ const profile = ref<UserProfile>({
   email: 'sign@profile.local',
   displayName: 'Sign',
   bio: '专注前端工程、界面设计与写作流程，把复杂工作拆成可执行的步骤。',
-  joinedAt: '2024/05/12',
+  joinedAt: '未记录',
   lastActive: '今天',
   avatarInitial: 'S',
   visibility: 'public',
@@ -96,7 +96,7 @@ const currentDraftStatusLabel = computed(() => {
 })
 
 const relationshipMetrics = [
-  { label: '关注', value: 1 },
+  { label: '关注', value: 0 },
   { label: '粉丝', value: 0 },
 ]
 

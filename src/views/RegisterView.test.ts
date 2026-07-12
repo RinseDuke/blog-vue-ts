@@ -1,6 +1,31 @@
+// @vitest-environment happy-dom
+
 import source from './RegisterView.vue?raw'
+import { mount } from '@vue/test-utils'
+import { createPinia } from 'pinia'
+import { createMemoryHistory, createRouter } from 'vue-router'
+import RegisterView from './RegisterView.vue'
 
 describe('RegisterView source contract', () => {
+  it('requires users to opt in to the agreement when the form mounts', async () => {
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        { path: '/register', component: RegisterView },
+        { path: '/login', name: 'login', component: { template: '<div />' } },
+      ],
+    })
+    await router.push('/register')
+    await router.isReady()
+
+    const wrapper = mount(RegisterView, {
+      global: { plugins: [createPinia(), router] },
+    })
+
+    expect(source).toContain("const acceptedTerms = ref(false)")
+    expect((wrapper.get('input[type="checkbox"]').element as HTMLInputElement).checked).toBe(false)
+  })
+
   it('keeps register submit clickable until the form is submitting', () => {
     expect(source).toContain('<form class="register-form" novalidate @submit.prevent="handleSubmit">')
     expect(source).toContain(':disabled="isSubmitting"')

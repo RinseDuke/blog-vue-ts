@@ -27,6 +27,7 @@ interface BackendUserProfile {
 }
 
 const PROFILE_STORAGE_KEY = 'blog_user_profile_v1'
+const KNOWN_JOINED_AT_PLACEHOLDER = '2024/05/12'
 
 function requireAuthSession(errorMessage: string) {
     const session = readStoredAuthSession()
@@ -44,11 +45,14 @@ function getProfileStorageKey(email: string) {
 function formatProfileDate(value?: string | null) {
     if (!value) return '未记录'
 
+    const date = new Date(value)
+    if (Number.isNaN(date.getTime())) return '未记录'
+
     return new Intl.DateTimeFormat('zh-CN', {
         year: 'numeric',
         month: '2-digit',
         day: '2-digit',
-    }).format(new Date(value))
+    }).format(date)
 }
 
 function mapBackendProfile(profile: BackendUserProfile): UserProfile {
@@ -77,7 +81,7 @@ function buildDefaultProfile(session: AuthSession): UserProfile {
         email: session.email,
         displayName,
         bio: '专注前端工程、界面设计与写作流程，把复杂工作拆成可执行的步骤。',
-        joinedAt: '2024/05/12',
+        joinedAt: formatProfileDate(session.user.createdAt ?? session.loggedAt),
         lastActive: '今天',
         avatarInitial: displayName[0]?.toUpperCase() ?? 'S',
         visibility: 'public',
@@ -96,6 +100,15 @@ class ProfileService {
         } catch (e) {
             console.error('Failed to parse user profile from local storage', e)
             return null
+        }
+    }
+
+    private migrateKnownJoinedAtPlaceholder(profile: UserProfile, session: AuthSession) {
+        if (profile.joinedAt !== KNOWN_JOINED_AT_PLACEHOLDER) return profile
+
+        return {
+            ...profile,
+            joinedAt: formatProfileDate(session.user.createdAt ?? session.loggedAt),
         }
     }
 
@@ -118,14 +131,19 @@ class ProfileService {
 
         const scopedProfile = this.readProfileFromStorage(scopedKey)
         if (scopedProfile) {
-            return scopedProfile
+            const migratedProfile = this.migrateKnownJoinedAtPlaceholder(scopedProfile, session)
+            if (migratedProfile !== scopedProfile) {
+                localStorage.setItem(scopedKey, JSON.stringify(migratedProfile))
+            }
+            return migratedProfile
         }
 
         const legacyProfile = this.readProfileFromStorage(PROFILE_STORAGE_KEY)
         if (legacyProfile) {
-            localStorage.setItem(scopedKey, JSON.stringify(legacyProfile))
+            const migratedProfile = this.migrateKnownJoinedAtPlaceholder(legacyProfile, session)
+            localStorage.setItem(scopedKey, JSON.stringify(migratedProfile))
             localStorage.removeItem(PROFILE_STORAGE_KEY)
-            return legacyProfile
+            return migratedProfile
         }
 
         return buildDefaultProfile(session)
