@@ -17,8 +17,21 @@ export interface ParseQueryOptions {
   defaultSortMode?: SortMode
 }
 
+export type ArticleListFilterState = Omit<ArticleListQueryState, 'currentPage'>
+
 const DATE_PRESETS: DatePreset[] = ['all', '7d', '30d', '90d', '365d', 'custom']
 const SORT_MODES: SortMode[] = ['newest', 'oldest', 'readDesc', 'readAsc', 'titleAsc']
+
+export function hasNonDefaultArticleListState(state: ArticleListFilterState): boolean {
+  return (
+    state.datePreset !== 'all' ||
+    state.customStartDate !== '' ||
+    state.customEndDate !== '' ||
+    state.keyword.trim() !== '' ||
+    state.sortMode !== 'newest' ||
+    state.pageSize !== 6
+  )
+}
 
 export function parseArticleListQueryState(query: Record<string, unknown>, options: ParseQueryOptions): ArticleListQueryState {
   const { pageSizeOptions, defaultPageSize = 6, defaultSortMode = 'newest' } = options

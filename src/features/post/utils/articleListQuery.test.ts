@@ -1,5 +1,6 @@
 import {
   buildArticleListQuery,
+  hasNonDefaultArticleListState,
   isSameQuery,
   parseArticleListQueryState,
   toQueryString,
@@ -8,6 +9,44 @@ import {
 
 describe('article list query state utils', () => {
   const pageSizeOptions = [6, 9, 12, 18]
+
+  const defaultListState = {
+    datePreset: 'all' as const,
+    customStartDate: '',
+    customEndDate: '',
+    keyword: '',
+    sortMode: 'newest' as const,
+    pageSize: 6,
+  }
+
+  it('hasNonDefaultArticleListState returns false for defaults', () => {
+    expect(hasNonDefaultArticleListState(defaultListState)).toBe(false)
+  })
+
+  it('hasNonDefaultArticleListState returns true for a non-default date preset', () => {
+    expect(hasNonDefaultArticleListState({ ...defaultListState, datePreset: '7d' })).toBe(true)
+  })
+
+  it.each(['oldest', 'readDesc', 'readAsc', 'titleAsc'] as const)(
+    'hasNonDefaultArticleListState returns true for %s sort mode',
+    (sortMode) => {
+      expect(hasNonDefaultArticleListState({ ...defaultListState, sortMode })).toBe(true)
+    }
+  )
+
+  it('hasNonDefaultArticleListState returns true for a non-default page size', () => {
+    expect(hasNonDefaultArticleListState({ ...defaultListState, pageSize: 12 })).toBe(true)
+  })
+
+  it('hasNonDefaultArticleListState ignores whitespace-only keywords', () => {
+    expect(hasNonDefaultArticleListState({ ...defaultListState, keyword: '   ' })).toBe(false)
+    expect(hasNonDefaultArticleListState({ ...defaultListState, keyword: '  Vue  ' })).toBe(true)
+  })
+
+  it('hasNonDefaultArticleListState detects custom date values', () => {
+    expect(hasNonDefaultArticleListState({ ...defaultListState, customStartDate: '2025-01-01' })).toBe(true)
+    expect(hasNonDefaultArticleListState({ ...defaultListState, customEndDate: '2025-01-31' })).toBe(true)
+  })
 
   it('parseArticleListQueryState returns defaults for empty query', () => {
     const state = parseArticleListQueryState({}, { pageSizeOptions })

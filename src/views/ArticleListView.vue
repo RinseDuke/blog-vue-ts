@@ -9,6 +9,7 @@ import {
   type SortMode,
   parseArticleListQueryState,
   buildArticleListQuery,
+  hasNonDefaultArticleListState,
   isSameQuery,
 } from '@/features/post/utils/articleListQuery'
 import { sortPostsByDateDesc } from '@/features/post/utils/post'
@@ -96,14 +97,23 @@ const selectedDateLabel = computed(() => {
   return `${start} 至 ${end}`
 })
 
-const hasActiveFilters = computed(
-  () => datePreset.value !== 'all' || normalizedKeyword.value.length > 0
+const hasActiveFilters = computed(() =>
+  hasNonDefaultArticleListState({
+    datePreset: datePreset.value,
+    customStartDate: customStartDate.value,
+    customEndDate: customEndDate.value,
+    keyword: keyword.value,
+    sortMode: sortMode.value,
+    pageSize: pageSize.value,
+  })
 )
 
 const activeFiltersSummary = computed(() => {
   const parts: string[] = []
   if (datePreset.value !== 'all') parts.push(`日期: ${selectedDateLabel.value}`)
   if (normalizedKeyword.value) parts.push(`搜索: "${normalizedKeyword.value}"`)
+  if (sortMode.value !== 'newest') parts.push(`排序: ${sortOptions.find((item) => item.value === sortMode.value)?.label}`)
+  if (pageSize.value !== 6) parts.push(`每页: ${pageSize.value}`)
   return parts.join(', ')
 })
 
@@ -174,6 +184,7 @@ function clearFilters() {
   customEndDate.value = ''
   keyword.value = ''
   sortMode.value = 'newest'
+  pageSize.value = 6
   currentPage.value = 1
 }
 
