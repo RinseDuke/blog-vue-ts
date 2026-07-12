@@ -3,9 +3,9 @@
     <div class="footer__content">
       <div class="footer__columns">
         <div class="footer__column">
-          <h3 class="footer__title">关于</h3>
+          <h3 class="footer__title">账户</h3>
           <ul class="footer__links">
-            <li><RouterLink to="/about">个人中心</RouterLink></li>
+            <li><RouterLink to="/about">{{ isLoggedIn ? '个人中心' : '登录' }}</RouterLink></li>
           </ul>
         </div>
         <div class="footer__column">
@@ -25,7 +25,12 @@
 </template>
 
 <script setup lang="ts">
+import { storeToRefs } from 'pinia'
 import { RouterLink } from 'vue-router'
+
+import { useAuthStore } from '@/features/auth/stores/useAuthStore'
+
+const { isLoggedIn } = storeToRefs(useAuthStore())
 </script>
 
 <style scoped lang="less">

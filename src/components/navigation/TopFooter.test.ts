@@ -1,43 +1,102 @@
 // @vitest-environment happy-dom
 
 import { mount } from '@vue/test-utils'
+import { createPinia, setActivePinia } from 'pinia'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
+import { useAuthStore, type AuthSession } from '@/features/auth/stores/useAuthStore'
 import TopFooter from './TopFooter.vue'
 import source from './TopFooter.vue?raw'
 
+function extractBlock(blockSource: string, selector: string) {
+  const selectorIndex = blockSource.indexOf(selector)
+  const openBraceIndex = blockSource.indexOf('{', selectorIndex)
+
+  if (selectorIndex === -1 || openBraceIndex === -1) {
+    throw new Error(`Missing block for ${selector}`)
+  }
+
+  let depth = 0
+
+  for (let index = openBraceIndex; index < blockSource.length; index += 1) {
+    if (blockSource[index] === '{') depth += 1
+    if (blockSource[index] === '}') depth -= 1
+
+    if (depth === 0) {
+      return blockSource.slice(openBraceIndex + 1, index)
+    }
+  }
+
+  throw new Error(`Unclosed block for ${selector}`)
+}
+
+function createSession(): AuthSession {
+  return {
+    email: 'footer@example.com',
+    rememberMe: false,
+    loggedAt: '2026-07-13T00:00:00.000Z',
+    token: 'footer-token',
+    user: {
+      id: 'footer-user',
+      username: 'footer_user',
+      nickname: 'footer_user',
+      email: 'footer@example.com',
+      visibility: 'public',
+    },
+  }
+}
+
+async function mountFooter(session: AuthSession | null = null) {
+  const pinia = createPinia()
+  setActivePinia(pinia)
+  const authStore = useAuthStore()
+  authStore.session = session
+
+  const router = createRouter({
+    history: createMemoryHistory(),
+    routes: [
+      { path: '/', component: { template: '<div />' } },
+      { path: '/about', component: { template: '<div />' } },
+      { path: '/article', component: { template: '<div />' } },
+      { path: '/write', component: { template: '<div />' } },
+    ],
+  })
+
+  await router.push('/')
+  await router.isReady()
+
+  return mount(TopFooter, {
+    global: {
+      plugins: [pinia, router],
+    },
+  })
+}
+
 describe('TopFooter', () => {
-  it('renders only truthful internal navigation links', async () => {
-    const router = createRouter({
-      history: createMemoryHistory(),
-      routes: [
-        { path: '/', component: { template: '<div />' } },
-        { path: '/about', component: { template: '<div />' } },
-        { path: '/article', component: { template: '<div />' } },
-        { path: '/write', component: { template: '<div />' } },
-      ],
-    })
+  beforeEach(() => {
+    localStorage.clear()
+    sessionStorage.clear()
+  })
 
-    await router.push('/')
-    await router.isReady()
+  afterEach(() => {
+    localStorage.clear()
+    sessionStorage.clear()
+  })
 
-    const wrapper = mount(TopFooter, {
-      global: {
-        plugins: [router],
-      },
-    })
-
+  it('labels the account route as login when logged out', async () => {
+    const wrapper = await mountFooter()
     const links = wrapper.findAll('a').map((link) => ({
       label: link.text(),
       href: link.attributes('href'),
     }))
 
     expect(links).toEqual([
-      { label: '个人中心', href: '/about' },
+      { label: '登录', href: '/about' },
       { label: '首页', href: '/' },
       { label: '文章', href: '/article' },
       { label: '写作', href: '/write' },
     ])
+    expect(wrapper.find('.footer__title').text()).toBe('账户')
     expect(links.every(({ href }) => href !== '#')).toBe(true)
 
     const footerText = wrapper.text()
@@ -45,8 +104,21 @@ describe('TopFooter', () => {
     expect(wrapper.find('.footer__social').exists()).toBe(false)
   })
 
+  it('labels the same account route as personal center when logged in', async () => {
+    const wrapper = await mountFooter(createSession())
+    const accountLink = wrapper.findAll('a')[0]
+
+    expect(accountLink?.text()).toBe('个人中心')
+    expect(accountLink?.attributes('href')).toBe('/about')
+  })
+
   it('uses a two-column desktop layout for the remaining link groups', () => {
-    expect(source).toMatch(/\.footer__columns\s*{[\s\S]*?grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\);/)
+    const desktopColumns = extractBlock(source, '.footer__columns')
+    const mobileMedia = extractBlock(source, '@media (max-width: 768px)')
+    const mobileColumns = extractBlock(mobileMedia, '.footer__columns')
+
+    expect(desktopColumns).toContain('grid-template-columns: repeat(2, minmax(0, 1fr));')
+    expect(mobileColumns).toContain('grid-template-columns: repeat(2, minmax(0, 1fr));')
     expect(source).not.toContain('.footer__social')
     expect(source).not.toContain('.footer__social-link')
   })
