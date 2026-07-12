@@ -311,6 +311,7 @@ onMounted(() => {
 
 .latest-lead__excerpt {
   margin: 0;
+  max-width: 62ch;
   color: var(--ink-muted);
   font-size: 0.98rem;
   line-height: 1.7;

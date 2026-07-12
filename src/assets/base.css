@@ -30,6 +30,8 @@
   --ink-strong: #1d1d1f;
   --ink-main: #2d2d32;
   --ink-muted: #6e6e73;
+  --profile-hero-text: #fff8eb;
+  --profile-hero-muted: rgba(255, 248, 235, 0.78);
   --line-soft: rgba(0, 0, 0, 0.08);
   --line-strong: rgba(0, 0, 0, 0.14);
   --brand-500: #0071e3;
@@ -116,12 +118,12 @@
     0 18px 34px rgba(1, 4, 9, 0.26),
     0 8px 16px rgba(1, 4, 9, 0.16);
   --post-card-title: #e6edf3;
-  --post-card-text: #c9d1d9;
-  --post-card-meta: #8b949e;
+  --post-card-text: var(--ink-main);
+  --post-card-meta: var(--ink-muted);
   --post-card-avatar-border: rgba(139, 148, 158, 0.28);
   --ink-strong: #f3f6fb;
-  --ink-main: #d9e0ea;
-  --ink-muted: #95a3b8;
+  --ink-main: #e2d8c8;
+  --ink-muted: #b8ac98;
   --line-soft: rgba(255, 255, 255, 0.08);
   --line-strong: rgba(255, 255, 255, 0.16);
   --brand-500: #69b4ff;

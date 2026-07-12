@@ -475,6 +475,7 @@ function enterEditMode() {
 
 .profile-hero__meta {
   padding-bottom: 0.25rem;
+  text-shadow: 0 1px 2px rgba(18, 44, 47, 0.55);
 }
 
 .profile-hero__meta h1 {
@@ -482,11 +483,12 @@ function enterEditMode() {
   font-size: clamp(2rem, 4vw, 2.7rem);
   line-height: 1.05;
   letter-spacing: -0.03em;
+  color: var(--profile-hero-text);
 }
 
 .profile-hero__account {
   margin: 0.55rem 0 0;
-  color: var(--ink-muted);
+  color: var(--profile-hero-muted);
   font-size: 1rem;
 }
 
@@ -496,7 +498,7 @@ function enterEditMode() {
   flex-wrap: wrap;
   align-items: center;
   gap: 0.45rem;
-  color: var(--ink-muted);
+  color: var(--profile-hero-muted);
   font-size: 0.92rem;
 }
 
@@ -520,15 +522,15 @@ function enterEditMode() {
   gap: 0.42rem;
   padding: 0.42rem 0.72rem;
   border-radius: 999px;
-  border: 1px solid var(--line-soft);
-  background: var(--surface-strong);
-  color: var(--ink-muted);
+  border: 1px solid rgba(255, 248, 235, 0.28);
+  background: rgba(18, 44, 47, 0.78);
+  color: var(--profile-hero-muted);
   font-size: 0.8rem;
   line-height: 1;
 }
 
 .profile-hero__relationship-item strong {
-  color: var(--ink-strong);
+  color: var(--profile-hero-text);
   font-size: 0.94rem;
   font-weight: 800;
 }
