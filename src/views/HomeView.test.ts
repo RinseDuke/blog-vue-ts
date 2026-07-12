@@ -40,7 +40,8 @@ describe('HomeView source contract', () => {
   it('keeps the lead excerpt in one natural reading column', () => {
     const excerptBlock = extractBlock(source, '.latest-lead__excerpt')
 
-    expect(source).not.toContain('column-count')
+    expect(excerptBlock).not.toContain('column-count')
+    expect(excerptBlock).not.toContain('column-gap')
     expect(excerptBlock).toContain('max-width: 62ch;')
     expect(excerptBlock).toContain('line-height: 1.7;')
   })

@@ -32,6 +32,8 @@
   --ink-muted: #6e6e73;
   --profile-hero-text: #fff8eb;
   --profile-hero-muted: rgba(255, 248, 235, 0.78);
+  --profile-hero-bg-start: #153739;
+  --profile-hero-bg-end: #172738;
   --line-soft: rgba(0, 0, 0, 0.08);
   --line-strong: rgba(0, 0, 0, 0.14);
   --brand-500: #0071e3;

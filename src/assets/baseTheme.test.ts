@@ -21,24 +21,88 @@ function extractBlock(blockSource: string, selector: string) {
   throw new Error(`Unclosed block for ${selector}`)
 }
 
+type Rgba = { red: number; green: number; blue: number; alpha: number }
+
+function extractToken(block: string, token: string) {
+  const match = new RegExp(`${token}:\\s*(#[0-9a-f]{6}|rgba\\([^)]+\\));`, 'i').exec(block)
+  if (!match) throw new Error(`Missing explicit color token ${token}`)
+  return match[1]
+}
+
+function parseColor(value: string): Rgba {
+  if (value.startsWith('#')) {
+    return {
+      red: Number.parseInt(value.slice(1, 3), 16),
+      green: Number.parseInt(value.slice(3, 5), 16),
+      blue: Number.parseInt(value.slice(5, 7), 16),
+      alpha: 1,
+    }
+  }
+
+  const channels = value.match(/[\d.]+/g)?.map(Number)
+  if (!channels || channels.length !== 4) throw new Error(`Invalid rgba color ${value}`)
+  return { red: channels[0], green: channels[1], blue: channels[2], alpha: channels[3] }
+}
+
+function composite(foreground: Rgba, background: Rgba): Rgba {
+  return {
+    red: foreground.red * foreground.alpha + background.red * (1 - foreground.alpha),
+    green: foreground.green * foreground.alpha + background.green * (1 - foreground.alpha),
+    blue: foreground.blue * foreground.alpha + background.blue * (1 - foreground.alpha),
+    alpha: 1,
+  }
+}
+
+function relativeLuminance(color: Rgba) {
+  const linear = [color.red, color.green, color.blue].map((channel) => {
+    const normalized = channel / 255
+    return normalized <= 0.04045 ? normalized / 12.92 : ((normalized + 0.055) / 1.055) ** 2.4
+  })
+  return linear[0] * 0.2126 + linear[1] * 0.7152 + linear[2] * 0.0722
+}
+
+function contrastRatio(foreground: Rgba, background: Rgba) {
+  const foregroundLuminance = relativeLuminance(foreground)
+  const backgroundLuminance = relativeLuminance(background)
+  const lighter = Math.max(foregroundLuminance, backgroundLuminance)
+  const darker = Math.min(foregroundLuminance, backgroundLuminance)
+  return (lighter + 0.05) / (darker + 0.05)
+}
+
 describe('base theme source contract', () => {
-  it('provides readable warm ink and dependent post colors in dark mode', () => {
+  it('keeps dark theme main and muted ink readable across canvas and surfaces', () => {
     const darkThemeBlock = extractBlock(source, ":root[data-theme='dark']")
     const footerBlock = extractBlock(footerSource, '.footer')
     const footerLinksBlock = extractBlock(footerSource, '.footer__links a')
 
-    expect(darkThemeBlock).toContain('--ink-main: #e2d8c8;')
-    expect(darkThemeBlock).toContain('--ink-muted: #b8ac98;')
+    const mainInk = parseColor(extractToken(darkThemeBlock, '--ink-main'))
+    const mutedInk = parseColor(extractToken(darkThemeBlock, '--ink-muted'))
+    const backgrounds = ['--bg-canvas', '--surface', '--surface-strong'].map((token) =>
+      parseColor(extractToken(darkThemeBlock, token)),
+    )
+
+    for (const background of backgrounds) {
+      expect(contrastRatio(mainInk, background)).toBeGreaterThanOrEqual(4.5)
+      expect(contrastRatio(mutedInk, background)).toBeGreaterThanOrEqual(4.5)
+    }
     expect(darkThemeBlock).toContain('--post-card-text: var(--ink-main);')
     expect(darkThemeBlock).toContain('--post-card-meta: var(--ink-muted);')
     expect(footerBlock).toContain('color: var(--ink-muted);')
     expect(footerLinksBlock).toContain('color: var(--ink-muted);')
   })
 
-  it('defines dedicated high-contrast profile hero ink tokens', () => {
+  it('keeps profile hero text readable against every dark banner stop', () => {
     const rootBlock = extractBlock(source, ':root')
 
-    expect(rootBlock).toContain('--profile-hero-text: #fff8eb;')
-    expect(rootBlock).toContain('--profile-hero-muted: rgba(255, 248, 235, 0.78);')
+    const heroText = parseColor(extractToken(rootBlock, '--profile-hero-text'))
+    const heroMuted = parseColor(extractToken(rootBlock, '--profile-hero-muted'))
+    const bannerStops = ['--profile-hero-bg-start', '--profile-hero-bg-end'].map((token) =>
+      parseColor(extractToken(rootBlock, token)),
+    )
+
+    for (const background of bannerStops) {
+      expect(contrastRatio(heroText, background)).toBeGreaterThanOrEqual(3)
+      expect(contrastRatio(composite(heroMuted, background), background)).toBeGreaterThanOrEqual(4.5)
+    }
   })
 })

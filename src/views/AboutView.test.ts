@@ -47,19 +47,36 @@ describe('About view source contract', () => {
     expect(source).toContain("{ label: '粉丝', value: 0 }")
   })
 
-  it('uses dedicated light ink for identity text over the profile gradient', () => {
-    const metaBlock = extractBlock(source, '.profile-hero__meta')
-    const headingBlock = extractBlock(source, '.profile-hero__meta h1')
+  it('separates banner identity ink from profile panel metadata ink', () => {
+    const bannerBlock = extractBlock(source, '.profile-hero__banner')
+    const bannerIdentityBlock = extractBlock(source, '.profile-hero__banner-identity')
+    const headingBlock = extractBlock(source, '.profile-hero__banner-identity h1')
     const accountBlock = extractBlock(source, '.profile-hero__account')
+    const captionBlock = extractBlock(source, '.profile-hero__caption')
+    const panelMetaBlock = extractBlock(source, '.profile-hero__panel-meta')
     const factsBlock = extractBlock(source, '.profile-hero__facts')
     const relationshipBlock = extractBlock(source, '.profile-hero__relationship-item')
     const relationshipValueBlock = extractBlock(source, '.profile-hero__relationship-item strong')
+    const secondaryButtonBlock = extractBlock(source, '.hero-btn--secondary')
 
-    expect(metaBlock).toContain('text-shadow: 0 1px 2px rgba(18, 44, 47, 0.55);')
+    expect(bannerBlock).toContain('var(--profile-hero-bg-start)')
+    expect(bannerBlock).toContain('var(--profile-hero-bg-end)')
+    expect(bannerIdentityBlock).toContain('text-shadow: 0 1px 2px rgba(18, 44, 47, 0.55);')
     expect(headingBlock).toContain('color: var(--profile-hero-text);')
     expect(accountBlock).toContain('color: var(--profile-hero-muted);')
-    expect(factsBlock).toContain('color: var(--profile-hero-muted);')
-    expect(relationshipBlock).toContain('color: var(--profile-hero-muted);')
-    expect(relationshipValueBlock).toContain('color: var(--profile-hero-text);')
+    expect(captionBlock).toContain('color: var(--profile-hero-muted);')
+    expect(panelMetaBlock).toContain('padding-top: 70px;')
+    expect(factsBlock).toContain('color: var(--ink-muted);')
+    expect(relationshipBlock).toContain('background: var(--surface-strong);')
+    expect(relationshipBlock).toContain('color: var(--ink-muted);')
+    expect(relationshipValueBlock).toContain('color: var(--ink-strong);')
+    expect(secondaryButtonBlock).toContain('color: var(--ink-main);')
+  })
+
+  it('keeps panel metadata below the banner overlap on mobile', () => {
+    const mobileBlock = extractBlock(source, '@media (max-width: 640px)')
+    const panelMetaBlock = extractBlock(mobileBlock, '.profile-hero__panel-meta')
+
+    expect(panelMetaBlock).toContain('padding-top: 34px;')
   })
 })

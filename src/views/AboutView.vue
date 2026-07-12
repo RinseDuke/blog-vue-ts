@@ -158,6 +158,12 @@ function enterEditMode() {
     <div class="profile-page__inner">
       <header class="profile-hero panel">
         <div class="profile-hero__banner">
+          <div class="profile-hero__banner-identity">
+            <h1>{{ profile.displayName }}</h1>
+            <p class="profile-hero__account">@{{ profile.username }}</p>
+            <p class="profile-hero__caption">创作者档案</p>
+          </div>
+
           <span class="profile-hero__location">
             {{ profile.visibility === 'private' ? '仅自己可见' : '公开资料' }}
           </span>
@@ -167,9 +173,7 @@ function enterEditMode() {
           <div class="profile-hero__identity">
             <div class="profile-avatar" aria-hidden="true">{{ profile.avatarInitial }}</div>
 
-            <div class="profile-hero__meta">
-              <h1>{{ profile.displayName }}</h1>
-              <p class="profile-hero__account">@{{ profile.username }}</p>
+            <div class="profile-hero__panel-meta">
               <div class="profile-hero__facts">
                 <span>加入于 {{ profile.joinedAt }}</span>
                 <span class="profile-hero__dot">•</span>
@@ -187,7 +191,6 @@ function enterEditMode() {
                 </span>
               </div>
 
-              <p class="profile-hero__caption">创作者档案</p>
             </div>
           </div>
 
@@ -390,13 +393,11 @@ function enterEditMode() {
 .profile-hero__banner {
   min-height: 200px;
   padding: 1.25rem 1.5rem;
-  display: flex;
-  justify-content: flex-end;
-  align-items: flex-start;
-  background:
-    radial-gradient(circle at 16% 22%, rgba(47, 143, 255, 0.28), transparent 35%),
-    radial-gradient(circle at 84% 18%, rgba(255, 255, 255, 0.2), transparent 28%),
-    linear-gradient(135deg, var(--brand-400), var(--brand-500));
+  background: linear-gradient(
+    135deg,
+    var(--profile-hero-bg-start),
+    var(--profile-hero-bg-end)
+  );
   position: relative;
   border-bottom: 1px solid var(--line-soft);
 }
@@ -425,7 +426,9 @@ function enterEditMode() {
 }
 
 .profile-hero__location {
-  position: relative;
+  position: absolute;
+  top: 1.25rem;
+  right: 1.5rem;
   z-index: 1;
   padding: 0.48rem 0.82rem;
   border-radius: 999px;
@@ -473,12 +476,16 @@ function enterEditMode() {
   flex-shrink: 0;
 }
 
-.profile-hero__meta {
-  padding-bottom: 0.25rem;
+.profile-hero__banner-identity {
+  position: absolute;
+  left: calc(1.75rem + 120px + 1.35rem);
+  bottom: 4.5rem;
+  z-index: 1;
+  max-width: calc(100% - 14rem);
   text-shadow: 0 1px 2px rgba(18, 44, 47, 0.55);
 }
 
-.profile-hero__meta h1 {
+.profile-hero__banner-identity h1 {
   margin: 0;
   font-size: clamp(2rem, 4vw, 2.7rem);
   line-height: 1.05;
@@ -498,15 +505,20 @@ function enterEditMode() {
   flex-wrap: wrap;
   align-items: center;
   gap: 0.45rem;
-  color: var(--profile-hero-muted);
+  color: var(--ink-muted);
   font-size: 0.92rem;
 }
 
 .profile-hero__caption {
   margin: 0.7rem 0 0;
-  color: var(--ink-muted);
+  color: var(--profile-hero-muted);
   font-size: 0.88rem;
   font-weight: 700;
+}
+
+.profile-hero__panel-meta {
+  padding-top: 70px;
+  padding-bottom: 0.25rem;
 }
 
 .profile-hero__relationship {
@@ -522,15 +534,15 @@ function enterEditMode() {
   gap: 0.42rem;
   padding: 0.42rem 0.72rem;
   border-radius: 999px;
-  border: 1px solid rgba(255, 248, 235, 0.28);
-  background: rgba(18, 44, 47, 0.78);
-  color: var(--profile-hero-muted);
+  border: 1px solid var(--line-soft);
+  background: var(--surface-strong);
+  color: var(--ink-muted);
   font-size: 0.8rem;
   line-height: 1;
 }
 
 .profile-hero__relationship-item strong {
-  color: var(--profile-hero-text);
+  color: var(--ink-strong);
   font-size: 0.94rem;
   font-weight: 800;
 }
@@ -962,6 +974,8 @@ function enterEditMode() {
   }
 
   .profile-hero__location {
+    top: 0.8rem;
+    right: 0.9rem;
     padding: 0.36rem 0.68rem;
     font-size: 0.74rem;
   }
@@ -986,12 +1000,19 @@ function enterEditMode() {
     font-size: 1.85rem;
   }
 
-  .profile-hero__meta {
-    padding-bottom: 0;
+  .profile-hero__banner-identity {
+    left: 6.8rem;
+    bottom: 2.4rem;
+    max-width: calc(100% - 7.7rem);
   }
 
-  .profile-hero__meta h1 {
+  .profile-hero__banner-identity h1 {
     font-size: clamp(1.68rem, 8vw, 2rem);
+  }
+
+  .profile-hero__panel-meta {
+    padding-top: 34px;
+    padding-bottom: 0;
   }
 
   .profile-hero__account {
