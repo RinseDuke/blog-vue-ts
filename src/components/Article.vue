@@ -3,7 +3,7 @@
     <div v-if="loading" class="article-content" style="padding: 2rem">
       <SkeletonLoader variant="article-detail" />
     </div>
-    <div v-else-if="error" class="article-error">
+    <div v-else-if="error" class="article-error" role="alert">
       <p class="article-error__message">{{ error }}</p>
       <router-link to="/article" class="article-error__recovery">返回文章列表</router-link>
     </div>

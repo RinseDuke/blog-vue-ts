@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '@/features/auth/stores/useAuthStore'
@@ -17,9 +17,11 @@ const router = useRouter()
 const authStore = useAuthStore()
 const commentStore = useCommentStore()
 const { isLoggedIn } = storeToRefs(authStore)
-const { loading, error, submitting } = storeToRefs(commentStore)
+const { submitting } = storeToRefs(commentStore)
 
 const comments = computed(() => commentStore.getComments(props.postId))
+const loading = computed(() => commentStore.isLoading(props.postId))
+const error = computed(() => commentStore.getError(props.postId))
 const loginLocation = computed(() => ({
   name: 'about',
   query: { redirect: route.fullPath },
@@ -60,9 +62,13 @@ async function handleLike(commentId: string) {
   }
 }
 
-onMounted(() => {
-  void commentStore.loadComments(props.postId)
-})
+watch(
+  () => props.postId,
+  (postId) => {
+    void commentStore.loadComments(postId)
+  },
+  { immediate: true }
+)
 </script>
 
 <template>

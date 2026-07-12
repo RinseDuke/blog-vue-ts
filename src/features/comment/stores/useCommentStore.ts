@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import type { Comment } from '@/types/post'
 import { useAuthStore } from '@/features/auth/stores/useAuthStore'
 import {
@@ -12,22 +12,33 @@ import {
 export const useCommentStore = defineStore('comments', () => {
     const authStore = useAuthStore()
     const commentsByPost = ref<Record<string, Comment[]>>({})
-    const loading = ref(false)
+    const loadingByPost = ref<Record<string, boolean>>({})
+    const errorByPost = ref<Record<string, string | null>>({})
+    const requestVersionByPost: Record<string, number> = {}
+    const loading = computed(() => Object.values(loadingByPost.value).some(Boolean))
     const error = ref<string | null>(null)
     const submitting = ref(false)
     const likedCommentIds = ref<Set<string>>(new Set())
 
     async function loadComments(postId: string) {
-        loading.value = true
-        error.value = null
+        const requestVersion = (requestVersionByPost[postId] ?? 0) + 1
+        requestVersionByPost[postId] = requestVersion
+        loadingByPost.value[postId] = true
+        errorByPost.value[postId] = null
 
         try {
             const comments = await fetchCommentsByPostId(postId)
-            commentsByPost.value[postId] = comments
+            if (requestVersionByPost[postId] === requestVersion) {
+                commentsByPost.value[postId] = comments
+            }
         } catch (err: unknown) {
-            error.value = err instanceof Error ? err.message : 'Failed to load comments'
+            if (requestVersionByPost[postId] === requestVersion) {
+                errorByPost.value[postId] = err instanceof Error ? err.message : 'Failed to load comments'
+            }
         } finally {
-            loading.value = false
+            if (requestVersionByPost[postId] === requestVersion) {
+                loadingByPost.value[postId] = false
+            }
         }
     }
 
@@ -103,8 +114,18 @@ export const useCommentStore = defineStore('comments', () => {
         return commentsByPost.value[postId] ?? []
     }
 
+    function isLoading(postId: string): boolean {
+        return loadingByPost.value[postId] ?? false
+    }
+
+    function getError(postId: string): string | null {
+        return errorByPost.value[postId] ?? null
+    }
+
     return {
         commentsByPost,
+        loadingByPost,
+        errorByPost,
         loading,
         error,
         submitting,
@@ -114,5 +135,7 @@ export const useCommentStore = defineStore('comments', () => {
         likeComment,
         isCommentLiked,
         getComments,
+        isLoading,
+        getError,
     }
 })

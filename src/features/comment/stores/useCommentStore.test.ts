@@ -1,6 +1,7 @@
 import { createPinia, setActivePinia } from 'pinia'
 import { mockComments } from '@/mocks/comments'
 import { useCommentStore } from '@/features/comment/stores/useCommentStore'
+import * as commentService from '@/services/commentService'
 
 const AUTH_KEY = 'blog_auth_session_v1'
 
@@ -28,6 +29,17 @@ function createStorageMock(): StorageLike {
   }
 }
 
+function deferred<T>() {
+  let resolve!: (value: T) => void
+  let reject!: (reason?: unknown) => void
+  const promise = new Promise<T>((resolvePromise, rejectPromise) => {
+    resolve = resolvePromise
+    reject = rejectPromise
+  })
+
+  return { promise, resolve, reject }
+}
+
 describe('useCommentStore like guard', () => {
   const originalComments = structuredClone(mockComments)
 
@@ -39,7 +51,53 @@ describe('useCommentStore like guard', () => {
   })
 
   afterEach(() => {
+    vi.restoreAllMocks()
     vi.unstubAllGlobals()
+  })
+
+  it('keeps loading scoped to each post during overlapping requests', async () => {
+    const firstRequest = deferred<typeof mockComments>()
+    const secondRequest = deferred<typeof mockComments>()
+    vi.spyOn(commentService, 'fetchCommentsByPostId').mockImplementation((postId) => {
+      return postId === 'first' ? firstRequest.promise : secondRequest.promise
+    })
+
+    const store = useCommentStore()
+    const firstLoad = store.loadComments('first')
+    const secondLoad = store.loadComments('second')
+
+    expect(store.isLoading('first')).toBe(true)
+    expect(store.isLoading('second')).toBe(true)
+
+    firstRequest.resolve([])
+    await firstLoad
+
+    expect(store.isLoading('first')).toBe(false)
+    expect(store.isLoading('second')).toBe(true)
+
+    secondRequest.resolve([])
+    await secondLoad
+    expect(store.isLoading('second')).toBe(false)
+  })
+
+  it('keeps a late error scoped to the post that failed', async () => {
+    const firstRequest = deferred<typeof mockComments>()
+    const secondRequest = deferred<typeof mockComments>()
+    vi.spyOn(commentService, 'fetchCommentsByPostId').mockImplementation((postId) => {
+      return postId === 'first' ? firstRequest.promise : secondRequest.promise
+    })
+
+    const store = useCommentStore()
+    const firstLoad = store.loadComments('first')
+    const secondLoad = store.loadComments('second')
+
+    secondRequest.resolve([])
+    await secondLoad
+    firstRequest.reject(new Error('first failed'))
+    await firstLoad
+
+    expect(store.getError('first')).toBe('first failed')
+    expect(store.getError('second')).toBeNull()
   })
 
   it('blocks anonymous likes before optimistic state changes', async () => {
