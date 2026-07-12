@@ -1,5 +1,13 @@
 import mobileSearchSheetSource from './MobileSearchSheet.vue?raw'
-import { getMobileSearchKeyAction } from './mobileSearchKeyboard'
+import {
+  createMobileSearchFocusLifecycle,
+  getMobileSearchKeyAction,
+  type MobileSearchFocusTarget,
+} from './mobileSearchKeyboard'
+
+function isFocusTarget(value: unknown): value is MobileSearchFocusTarget {
+  return typeof value === 'object' && value !== null && 'focus' in value && typeof value.focus === 'function'
+}
 
 describe('MobileSearchSheet accessibility', () => {
   it('exposes the open sheet as a labelled modal dialog', () => {
@@ -41,13 +49,59 @@ describe('MobileSearchSheet accessibility', () => {
     expect(getMobileSearchKeyAction('Escape', false, [], null)).toEqual({ type: 'close' })
   })
 
+  it('captures the trigger on open, restores it once on close, and clears it', () => {
+    const trigger = { focus: vi.fn() }
+    let activeElement: unknown = trigger
+    const lifecycle = createMobileSearchFocusLifecycle(() => activeElement, isFocusTarget)
+
+    lifecycle.open()
+    activeElement = { focus: vi.fn() }
+    lifecycle.close()
+    lifecycle.close()
+
+    expect(trigger.focus).toHaveBeenCalledTimes(1)
+  })
+
+  it('does nothing when initially notified that the sheet is closed', () => {
+    const trigger = { focus: vi.fn() }
+    const lifecycle = createMobileSearchFocusLifecycle(() => trigger, isFocusTarget)
+
+    lifecycle.close()
+
+    expect(trigger.focus).not.toHaveBeenCalled()
+  })
+
+  it('does not replace the original trigger on repeated open notifications', () => {
+    const trigger = { focus: vi.fn() }
+    const laterActiveElement = { focus: vi.fn() }
+    let activeElement: unknown = trigger
+    const lifecycle = createMobileSearchFocusLifecycle(() => activeElement, isFocusTarget)
+
+    lifecycle.open()
+    activeElement = laterActiveElement
+    lifecycle.open()
+    lifecycle.close()
+
+    expect(trigger.focus).toHaveBeenCalledTimes(1)
+    expect(laterActiveElement.focus).not.toHaveBeenCalled()
+  })
+
+  it('safely ignores invalid or unavailable active elements', () => {
+    let activeElement: unknown = { focus: 'not-a-function' }
+    const lifecycle = createMobileSearchFocusLifecycle(() => activeElement, isFocusTarget)
+
+    lifecycle.open()
+    lifecycle.close()
+    activeElement = undefined
+    lifecycle.open()
+
+    expect(() => lifecycle.close()).not.toThrow()
+  })
+
   it('saves, restores, and clears the previously focused element only across an open cycle', () => {
-    expect(mobileSearchSheetSource).toContain('const previousFocusedElement = ref<HTMLElement | null>(null)')
-    expect(mobileSearchSheetSource).toContain('previousFocusedElement.value =')
-    expect(mobileSearchSheetSource).toContain('document.activeElement instanceof HTMLElement')
-    expect(mobileSearchSheetSource).toContain('previousFocusedElement.value?.focus()')
-    expect(mobileSearchSheetSource).toContain('previousFocusedElement.value = null')
-    expect(mobileSearchSheetSource).toContain('if (wasOpen)')
+    expect(mobileSearchSheetSource).toContain('createMobileSearchFocusLifecycle')
+    expect(mobileSearchSheetSource).toContain('focusLifecycle.open()')
+    expect(mobileSearchSheetSource).toContain('focusLifecycle.close()')
     expect(mobileSearchSheetSource).toContain('await nextTick()')
     expect(mobileSearchSheetSource).toContain('inputEl.value?.focus()')
   })

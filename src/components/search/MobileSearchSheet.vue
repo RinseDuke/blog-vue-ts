@@ -53,7 +53,10 @@
 import { computed, nextTick, ref, watch } from 'vue'
 import type { Post } from '@/types/post'
 import SearchDropdownContent from '@/components/search/SearchDropdownContent.vue'
-import { getMobileSearchKeyAction } from '@/components/search/mobileSearchKeyboard'
+import {
+  createMobileSearchFocusLifecycle,
+  getMobileSearchKeyAction,
+} from '@/components/search/mobileSearchKeyboard'
 
 const props = defineProps<{
   open: boolean
@@ -73,31 +76,27 @@ const emit = defineEmits<{
 
 const sheetEl = ref<HTMLElement | null>(null)
 const inputEl = ref<HTMLInputElement | null>(null)
-const previousFocusedElement = ref<HTMLElement | null>(null)
 const searchValue = computed({
   get: () => props.modelValue,
   set: (value: string) => emit('update:modelValue', value),
 })
 
+const focusLifecycle = createMobileSearchFocusLifecycle(
+  () => (typeof document !== 'undefined' ? document.activeElement : null),
+  (value): value is HTMLElement => typeof HTMLElement !== 'undefined' && value instanceof HTMLElement
+)
+
 watch(
   () => props.open,
-  async (open, wasOpen) => {
+  async (open) => {
     if (open) {
-      previousFocusedElement.value =
-        typeof document !== 'undefined' &&
-        typeof HTMLElement !== 'undefined' &&
-        document.activeElement instanceof HTMLElement
-          ? document.activeElement
-          : null
+      focusLifecycle.open()
       await nextTick()
       inputEl.value?.focus()
       return
     }
 
-    if (wasOpen) {
-      previousFocusedElement.value?.focus()
-      previousFocusedElement.value = null
-    }
+    focusLifecycle.close()
   },
   { immediate: true }
 )
