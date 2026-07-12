@@ -1,58 +1,27 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { watch } from 'vue'
 import { useRoute } from 'vue-router'
-import type { Author, Post } from '@/types/post'
-import { fetchPosts } from '@/services/postService'
+import { useAuthorProfile } from '@/features/author/composables/useAuthorProfile'
 import PostList from '@/components/post/PostList.vue'
 
 const route = useRoute()
-const author = ref<Author | null>(null)
-const posts = ref<Post[]>([])
-const loading = ref(true)
-const error = ref<string | null>(null)
-let activeRequestId = 0
-
-async function loadAuthor(authorId: string) {
-  const requestId = ++activeRequestId
-  loading.value = true
-  error.value = null
-  author.value = null
-  posts.value = []
-  document.title = '作者主页 - Sign 博客'
-
-  if (!authorId) {
-    loading.value = false
-    return
-  }
-
-  try {
-    const fetchedPosts = await fetchPosts({ authorId })
-    if (requestId !== activeRequestId) return
-
-    posts.value = fetchedPosts
-    author.value = fetchedPosts[0]?.author ?? null
-
-    if (author.value) {
-      document.title = `${author.value.name} - Sign 博客`
-    }
-  } catch (err) {
-    if (requestId !== activeRequestId) return
-    error.value = err instanceof Error ? err.message : '加载作者信息失败'
-  } finally {
-    if (requestId === activeRequestId) {
-      loading.value = false
-    }
-  }
-}
+const { author, posts, loading, error, load, retry } = useAuthorProfile()
 
 watch(
   () => route.params.id,
   (value) => {
     const authorId = typeof value === 'string' ? value : ''
-    void loadAuthor(authorId)
+    document.title = '作者主页 - Sign 博客'
+    void load(authorId)
   },
   { immediate: true },
 )
+
+watch(author, (value) => {
+  if (value) {
+    document.title = `${value.name} - Sign 博客`
+  }
+})
 </script>
 
 <template>
@@ -66,7 +35,10 @@ watch(
       <p class="author-state__eyebrow">LOAD ERROR</p>
       <h1>作者主页加载失败</h1>
       <p>{{ error }}</p>
-      <router-link to="/article" class="author-link">返回文章列表</router-link>
+      <div class="author-state__actions">
+        <button type="button" class="author-retry" @click="retry">重试</button>
+        <router-link to="/article" class="author-link">返回文章列表</router-link>
+      </div>
     </section>
 
     <section v-else-if="!author" class="author-state">
@@ -82,7 +54,7 @@ watch(
           <img
             v-if="author.avatarUrl"
             :src="author.avatarUrl"
-            :alt="author.name"
+            alt=""
             class="author-avatar"
           />
           <div v-else class="author-avatar author-avatar--fallback" aria-hidden="true">
@@ -229,12 +201,46 @@ watch(
   color: var(--danger-500);
 }
 
+.author-state__actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.4rem;
+}
+
+.author-retry {
+  min-height: 42px;
+  padding: 0.65rem 1rem;
+  border: 1px solid var(--brand-500);
+  border-radius: var(--radius-sm);
+  background: var(--brand-500);
+  color: var(--on-accent);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.author-retry:hover {
+  background: var(--brand-400);
+  border-color: var(--brand-400);
+}
+
+.author-retry:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
 .author-link {
   display: inline-flex;
-  margin-top: 1.4rem;
   color: var(--brand-500);
   font-weight: 700;
   text-decoration: none;
+}
+
+.author-state > .author-link {
+  margin-top: 1.4rem;
 }
 
 .author-link:hover {

@@ -2,7 +2,8 @@ import authorViewSource from './AuthorView.vue?raw'
 
 describe('AuthorView source contract', () => {
   it('loads and renders the selected author public posts', () => {
-    expect(authorViewSource).toContain('fetchPosts({ authorId })')
+    expect(authorViewSource).toContain('useAuthorProfile()')
+    expect(authorViewSource).toContain('load(authorId)')
     expect(authorViewSource).toContain('PostList')
   })
 
@@ -11,7 +12,14 @@ describe('AuthorView source contract', () => {
     expect(authorViewSource).toContain('返回文章列表')
   })
 
-  it('ignores stale responses after the route changes to another author', () => {
-    expect(authorViewSource).toContain('requestId !== activeRequestId')
+  it('wires an accessible retry action for loading errors', () => {
+    expect(authorViewSource).toContain('type="button"')
+    expect(authorViewSource).toContain('@click="retry"')
+    expect(authorViewSource).toContain('重试')
+  })
+
+  it('treats the avatar next to the author heading as decorative', () => {
+    expect(authorViewSource).toContain(':src="author.avatarUrl"')
+    expect(authorViewSource).toContain('alt=""')
   })
 })
