@@ -1,6 +1,16 @@
 <template>
   <Transition name="mobile-search-sheet">
-    <section v-if="open" class="mobile-search-sheet" data-testid="mobile-search-sheet">
+    <section
+      v-if="open"
+      ref="sheetEl"
+      class="mobile-search-sheet"
+      data-testid="mobile-search-sheet"
+      role="dialog"
+      aria-modal="true"
+      aria-label="移动端文章搜索"
+      tabindex="-1"
+      @keydown="handleKeydown"
+    >
       <div class="mobile-search-sheet__toolbar">
         <div class="mobile-search-sheet__input-wrap">
           <input
@@ -43,6 +53,7 @@
 import { computed, nextTick, ref, watch } from 'vue'
 import type { Post } from '@/types/post'
 import SearchDropdownContent from '@/components/search/SearchDropdownContent.vue'
+import { getMobileSearchKeyAction } from '@/components/search/mobileSearchKeyboard'
 
 const props = defineProps<{
   open: boolean
@@ -60,7 +71,9 @@ const emit = defineEmits<{
   (e: 'close'): void
 }>()
 
+const sheetEl = ref<HTMLElement | null>(null)
 const inputEl = ref<HTMLInputElement | null>(null)
+const previousFocusedElement = ref<HTMLElement | null>(null)
 const searchValue = computed({
   get: () => props.modelValue,
   set: (value: string) => emit('update:modelValue', value),
@@ -68,12 +81,51 @@ const searchValue = computed({
 
 watch(
   () => props.open,
-  async (open) => {
-    if (!open) return
-    await nextTick()
-    inputEl.value?.focus()
-  }
+  async (open, wasOpen) => {
+    if (open) {
+      previousFocusedElement.value =
+        typeof document !== 'undefined' &&
+        typeof HTMLElement !== 'undefined' &&
+        document.activeElement instanceof HTMLElement
+          ? document.activeElement
+          : null
+      await nextTick()
+      inputEl.value?.focus()
+      return
+    }
+
+    if (wasOpen) {
+      previousFocusedElement.value?.focus()
+      previousFocusedElement.value = null
+    }
+  },
+  { immediate: true }
 )
+
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [contenteditable="true"], [tabindex]:not([tabindex="-1"])'
+
+function handleKeydown(event: KeyboardEvent) {
+  const focusableElements = Array.from(sheetEl.value?.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR) ?? [])
+  const activeElement =
+    typeof document !== 'undefined' &&
+    typeof HTMLElement !== 'undefined' &&
+    document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null
+  const action = getMobileSearchKeyAction(event.key, event.shiftKey, focusableElements, activeElement)
+
+  if (action.type === 'none') return
+
+  event.preventDefault()
+  if (action.type === 'close') {
+    emit('close')
+  } else if (action.type === 'focus-sheet') {
+    sheetEl.value?.focus()
+  } else {
+    action.target.focus()
+  }
+}
 
 function triggerSearch() {
   const term = props.modelValue.trim()
