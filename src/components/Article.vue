@@ -17,7 +17,11 @@
           </nav>
           <h1 class="article-hero__title">{{ post.title }}</h1>
           <p v-if="post.excerpt" class="article-hero__excerpt">{{ post.excerpt }}</p>
-          <router-link to="/about" class="article-hero__meta" aria-label="查看作者主页">
+          <router-link
+            :to="{ name: 'author', params: { id: post.author.id } }"
+            class="article-hero__meta"
+            aria-label="查看作者主页"
+          >
             <img
               v-if="post.author.avatarUrl"
               :src="post.author.avatarUrl"

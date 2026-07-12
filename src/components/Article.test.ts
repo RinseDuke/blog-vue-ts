@@ -13,4 +13,11 @@ describe('Article source contract', () => {
     expect(articleSource).not.toContain('class="article-hero__image"')
     expect(articleSource).toContain('class="article-hero__fallback"')
   })
+
+  it('links the byline to the public author profile route', () => {
+    expect(articleSource).toContain(
+      `:to="{ name: 'author', params: { id: post.author.id } }"`,
+    )
+    expect(articleSource).not.toContain('<router-link to="/about" class="article-hero__meta"')
+  })
 })
