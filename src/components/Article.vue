@@ -3,7 +3,10 @@
     <div v-if="loading" class="article-content" style="padding: 2rem">
       <SkeletonLoader variant="article-detail" />
     </div>
-    <div v-else-if="error" class="status-message error">{{ error }}</div>
+    <div v-else-if="error" class="article-error">
+      <p class="article-error__message">{{ error }}</p>
+      <router-link to="/article" class="article-error__recovery">返回文章列表</router-link>
+    </div>
 
     <article v-else-if="post" class="article-wrapper">
       <header class="article-hero">
@@ -42,6 +45,7 @@
 
       <div class="article-prose">
         <div class="article-body" v-html="safeHtml"></div>
+        <CommentSection :post-id="post.id" />
       </div>
 
       <footer class="article-footer">
@@ -58,6 +62,7 @@ import DOMPurify from 'dompurify'
 import type { Post } from '@/types/post'
 import { fetchPostById } from '@/services/postService'
 import { formatPostDate } from '@/features/post/utils/post'
+import CommentSection from '@/components/comment/CommentSection.vue'
 import SkeletonLoader from '@/components/ui/SkeletonLoader.vue'
 
 const route = useRoute()
@@ -125,12 +130,10 @@ function formatDate(dateString: string) {
   padding: 0;
 }
 
-.status-message {
+.article-error {
   max-width: 720px;
   margin: 2rem auto;
   text-align: center;
-  color: var(--ink-muted);
-  font-size: 1.05rem;
   padding: 2rem 1.2rem;
   border: 1px solid var(--line-soft);
   border-radius: var(--radius-lg);
@@ -138,8 +141,20 @@ function formatDate(dateString: string) {
   box-shadow: var(--shadow-sm);
 }
 
-.status-message.error {
+.article-error__message {
+  margin: 0 0 1rem;
   color: var(--danger-500);
+  font-size: 1.05rem;
+}
+
+.article-error__recovery {
+  color: var(--brand-500);
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover {
+    color: var(--brand-400);
+  }
 }
 
 .article-wrapper {

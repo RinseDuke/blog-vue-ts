@@ -20,4 +20,29 @@ describe('Article source contract', () => {
     )
     expect(articleSource).not.toContain('<router-link to="/about" class="article-hero__meta"')
   })
+
+  it('mounts the comment section for a loaded post inside the readable article width', () => {
+    expect(articleSource).toContain(
+      "import CommentSection from '@/components/comment/CommentSection.vue'",
+    )
+    expect(articleSource).toContain('<CommentSection :post-id="post.id" />')
+
+    const articleBodyIndex = articleSource.indexOf('class="article-body"')
+    const commentSectionIndex = articleSource.indexOf('<CommentSection :post-id="post.id" />')
+    const articleProseEndIndex = articleSource.indexOf('</div>', commentSectionIndex)
+    const articleFooterIndex = articleSource.indexOf('<footer class="article-footer">')
+
+    expect(articleBodyIndex).toBeGreaterThan(-1)
+    expect(commentSectionIndex).toBeGreaterThan(articleBodyIndex)
+    expect(articleProseEndIndex).toBeGreaterThan(commentSectionIndex)
+    expect(articleFooterIndex).toBeGreaterThan(articleProseEndIndex)
+  })
+
+  it('offers a router-link recovery action when article loading fails', () => {
+    expect(articleSource).toContain('v-else-if="error" class="article-error"')
+    expect(articleSource).toContain('<p class="article-error__message">{{ error }}</p>')
+    expect(articleSource).toContain(
+      '<router-link to="/article" class="article-error__recovery">返回文章列表</router-link>',
+    )
+  })
 })
