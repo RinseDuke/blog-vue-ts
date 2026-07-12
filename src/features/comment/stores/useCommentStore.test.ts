@@ -100,6 +100,38 @@ describe('useCommentStore like guard', () => {
     expect(store.getError('second')).toBeNull()
   })
 
+  it('exposes a failed comment submission to the matching post only', async () => {
+    vi.spyOn(commentService, 'createComment').mockRejectedValue(new Error('submit failed'))
+    const store = useCommentStore()
+
+    await expect(
+      store.addComment({ postId: 'visible', content: 'hello' })
+    ).rejects.toThrow('submit failed')
+
+    expect(store.getError('visible')).toBe('submit failed')
+    expect(store.getError('other')).toBeNull()
+  })
+
+  it('exposes a failed like action to the matching post only', async () => {
+    localStorage.setItem(
+      AUTH_KEY,
+      JSON.stringify({
+        email: 'tester@example.com',
+        rememberMe: true,
+        loggedAt: '2026-03-07T10:00:00.000Z',
+        token: 'mock-token-123',
+      })
+    )
+    vi.spyOn(commentService, 'setCommentLike').mockRejectedValue(new Error('like failed'))
+
+    const store = useCommentStore()
+    await store.loadComments('1')
+    await expect(store.likeComment('1', 'c1')).rejects.toThrow('like failed')
+
+    expect(store.getError('1')).toBe('like failed')
+    expect(store.getError('other')).toBeNull()
+  })
+
   it('blocks anonymous likes before optimistic state changes', async () => {
     const store = useCommentStore()
     await store.loadComments('1')

@@ -45,6 +45,7 @@ export const useCommentStore = defineStore('comments', () => {
     async function addComment(payload: CreateCommentPayload) {
         submitting.value = true
         error.value = null
+        errorByPost.value[payload.postId] = null
 
         try {
             const newComment = await createComment(payload)
@@ -53,6 +54,7 @@ export const useCommentStore = defineStore('comments', () => {
             return newComment
         } catch (err: unknown) {
             error.value = err instanceof Error ? err.message : 'Failed to submit comment'
+            errorByPost.value[payload.postId] = error.value
             throw err
         } finally {
             submitting.value = false
@@ -64,10 +66,12 @@ export const useCommentStore = defineStore('comments', () => {
         if (!authStore.isLoggedIn) {
             const authError = new Error('请先登录后再点赞评论')
             error.value = authError.message
+            errorByPost.value[postId] = authError.message
             throw authError
         }
 
         error.value = null
+        errorByPost.value[postId] = null
         const wasLiked = likedCommentIds.value.has(commentId)
         const delta = wasLiked ? -1 : 1
 
@@ -102,6 +106,7 @@ export const useCommentStore = defineStore('comments', () => {
                 target.likes = Math.max(0, (target.likes ?? 0) - delta)
             }
             error.value = err instanceof Error ? err.message : 'Failed to update comment like'
+            errorByPost.value[postId] = error.value
             throw err
         }
     }
