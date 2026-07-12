@@ -19,17 +19,25 @@ export interface ParseQueryOptions {
 
 export type ArticleListFilterState = Omit<ArticleListQueryState, 'currentPage'>
 
+export interface ArticleListStateDefaults {
+  defaultPageSize?: number
+  defaultSortMode?: SortMode
+}
+
 const DATE_PRESETS: DatePreset[] = ['all', '7d', '30d', '90d', '365d', 'custom']
 const SORT_MODES: SortMode[] = ['newest', 'oldest', 'readDesc', 'readAsc', 'titleAsc']
 
-export function hasNonDefaultArticleListState(state: ArticleListFilterState): boolean {
+export function hasNonDefaultArticleListState(
+  state: ArticleListFilterState,
+  defaults: ArticleListStateDefaults = {}
+): boolean {
+  const { defaultPageSize = 6, defaultSortMode = 'newest' } = defaults
+
   return (
     state.datePreset !== 'all' ||
-    state.customStartDate !== '' ||
-    state.customEndDate !== '' ||
     state.keyword.trim() !== '' ||
-    state.sortMode !== 'newest' ||
-    state.pageSize !== 6
+    state.sortMode !== defaultSortMode ||
+    state.pageSize !== defaultPageSize
   )
 }
 

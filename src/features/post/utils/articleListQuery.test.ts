@@ -43,9 +43,43 @@ describe('article list query state utils', () => {
     expect(hasNonDefaultArticleListState({ ...defaultListState, keyword: '  Vue  ' })).toBe(true)
   })
 
-  it('hasNonDefaultArticleListState detects custom date values', () => {
-    expect(hasNonDefaultArticleListState({ ...defaultListState, customStartDate: '2025-01-01' })).toBe(true)
-    expect(hasNonDefaultArticleListState({ ...defaultListState, customEndDate: '2025-01-31' })).toBe(true)
+  it('hasNonDefaultArticleListState ignores stale custom dates for the all preset', () => {
+    expect(
+      hasNonDefaultArticleListState({
+        ...defaultListState,
+        customStartDate: '2025-01-01',
+        customEndDate: '2025-01-31',
+      })
+    ).toBe(false)
+  })
+
+  it('hasNonDefaultArticleListState detects a non-default preset even with stale custom dates', () => {
+    expect(
+      hasNonDefaultArticleListState({
+        ...defaultListState,
+        datePreset: '7d',
+        customStartDate: '2025-01-01',
+        customEndDate: '2025-01-31',
+      })
+    ).toBe(true)
+  })
+
+  it('hasNonDefaultArticleListState detects either date for the custom preset', () => {
+    expect(
+      hasNonDefaultArticleListState({ ...defaultListState, datePreset: 'custom', customStartDate: '2025-01-01' })
+    ).toBe(true)
+    expect(
+      hasNonDefaultArticleListState({ ...defaultListState, datePreset: 'custom', customEndDate: '2025-01-31' })
+    ).toBe(true)
+  })
+
+  it('hasNonDefaultArticleListState accepts custom sort and page-size defaults', () => {
+    expect(
+      hasNonDefaultArticleListState(
+        { ...defaultListState, sortMode: 'readDesc', pageSize: 12 },
+        { defaultSortMode: 'readDesc', defaultPageSize: 12 }
+      )
+    ).toBe(false)
   })
 
   it('parseArticleListQueryState returns defaults for empty query', () => {
