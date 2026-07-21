@@ -33,14 +33,18 @@ describe('mobile topbar source contract', () => {
     expect(mobileSearchSheetSource).toContain('SearchDropdownContent')
   })
 
-  it('keeps the mobile navigation dropdown on a more solid unified surface', () => {
+  it('keeps mobile controls touchable and the dropdown on a high-opacity glass surface', () => {
+    expect(appSource).toContain('min-width: 44px;')
+    expect(appSource).toContain('min-height: 44px;')
+    expect(mobileTabsSource).toContain('min-height: 44px;')
     expect(mobileTabsSource).toContain(
-      'linear-gradient(180deg, color-mix(in srgb, var(--surface-overlay) 99%, transparent), color-mix(in srgb, var(--surface-frost) 100%, transparent))'
+      'background: color-mix(in srgb, var(--glass-surface) 32%, var(--surface-strong) 68%);'
     )
-    expect(mobileTabsSource).toContain(
-      'radial-gradient(circle at top left, color-mix(in srgb, var(--brand-100) 32%, transparent), transparent 58%)'
-    )
-    expect(mobileTabsSource).toContain('background: color-mix(in srgb, var(--surface-strong) 90%, transparent);')
+    expect(mobileTabsSource).toContain('border: 1px solid var(--glass-border);')
+    expect(mobileTabsSource).toContain('box-shadow: var(--glass-shadow);')
+    expect(mobileTabsSource).toContain('backdrop-filter: blur(var(--glass-blur)) saturate(135%);')
+    expect(mobileTabsSource).toContain('@supports not ((backdrop-filter: blur(1px))')
+    expect(mobileTabsSource).toContain('background: var(--surface-strong);')
     expect(mobileTabsSource).toContain('overflow: hidden;')
   })
 })

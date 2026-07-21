@@ -185,15 +185,11 @@ function formatSuggestionMeta(post: Post) {
   width: 100%;
   padding: 0.45rem;
   border-radius: 18px;
-  border: 1px solid color-mix(in srgb, var(--line-strong) 86%, transparent);
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--surface-overlay) 94%, transparent), color-mix(in srgb, var(--surface) 96%, transparent)),
-    radial-gradient(circle at top left, var(--brand-100), transparent 46%);
-  box-shadow:
-    0 18px 44px rgba(15, 23, 42, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.34);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid var(--glass-border);
+  background: color-mix(in srgb, var(--glass-surface) 28%, var(--surface-strong) 72%);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(var(--glass-blur)) saturate(135%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(135%);
 }
 
 .mobile-search-sheet__toolbar {
@@ -210,11 +206,11 @@ function formatSuggestionMeta(post: Post) {
 
 .mobile-search-sheet__input-wrap input {
   width: 100%;
-  height: 42px;
-  padding: 0 2.95rem 0 0.95rem;
+  height: 44px;
+  padding: 0 3.3rem 0 0.95rem;
   border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--line-strong) 88%, transparent);
-  background: linear-gradient(180deg, var(--surface-strong), var(--surface));
+  border: 1px solid var(--glass-border);
+  background: color-mix(in srgb, var(--glass-surface) 34%, var(--surface-strong) 66%);
   color: var(--ink-strong);
   outline: none;
   box-shadow:
@@ -237,13 +233,14 @@ function formatSuggestionMeta(post: Post) {
 .mobile-search-sheet__submit {
   position: absolute;
   top: 50%;
-  right: 0.38rem;
+  right: 0;
   transform: translateY(-50%);
-  width: 32px;
-  height: 32px;
-  border: 1px solid var(--line-soft);
+  min-width: 44px;
+  width: 44px;
+  height: 44px;
+  border: 1px solid transparent;
   border-radius: 50%;
-  background: color-mix(in srgb, var(--surface-strong) 92%, transparent);
+  background: transparent;
   color: var(--ink-main);
   display: inline-flex;
   align-items: center;
@@ -255,11 +252,11 @@ function formatSuggestionMeta(post: Post) {
 .mobile-search-sheet__close {
   flex-shrink: 0;
   min-width: 48px;
-  height: 42px;
+  height: 44px;
   padding: 0 0.8rem;
-  border: 1px solid var(--line-soft);
-  border-radius: 999px;
-  background: linear-gradient(180deg, var(--surface-strong), var(--surface));
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--glass-surface) 32%, var(--surface-strong) 68%);
   color: var(--ink-main);
   font-size: 0.82rem;
   font-weight: 700;
@@ -281,6 +278,14 @@ function formatSuggestionMeta(post: Post) {
 .mobile-search-sheet-leave-to {
   opacity: 0;
   transform: translateY(-8px);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .mobile-search-sheet {
+    background: var(--surface-strong);
+    border-color: var(--line-strong);
+    box-shadow: var(--shadow-sm);
+  }
 }
 
 </style>

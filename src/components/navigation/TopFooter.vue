@@ -37,9 +37,19 @@ const { isLoggedIn } = storeToRefs(useAuthStore())
 .footer {
   padding: 3rem 1rem 2rem;
   color: var(--ink-muted);
-  background: transparent;
-  border-top: 1px solid var(--line-soft);
+  background: color-mix(in srgb, var(--glass-surface) 72%, transparent);
+  border-top: 1px solid var(--glass-border);
+  box-shadow: inset 0 1px 0 var(--glass-highlight);
+  backdrop-filter: blur(var(--glass-blur)) saturate(120%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(120%);
   margin-top: 4rem;
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .footer {
+    background: var(--surface-strong);
+    border-top-color: var(--line-strong);
+  }
 }
 
 .footer__content {

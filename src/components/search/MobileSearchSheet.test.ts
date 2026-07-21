@@ -3,6 +3,7 @@
 import { mount, type VueWrapper } from '@vue/test-utils'
 import { nextTick } from 'vue'
 import MobileSearchSheet from './MobileSearchSheet.vue'
+import source from './MobileSearchSheet.vue?raw'
 import {
   createMobileSearchBackgroundIsolation,
   createMobileSearchDesktopCloseLifecycle,
@@ -99,6 +100,19 @@ afterEach(() => {
 })
 
 describe('MobileSearchSheet integration', () => {
+  it('uses a high-opacity glass panel with solid fallback and 44px controls', () => {
+    expect(source).toContain(
+      'background: color-mix(in srgb, var(--glass-surface) 28%, var(--surface-strong) 72%);'
+    )
+    expect(source).toContain('border: 1px solid var(--glass-border);')
+    expect(source).toContain('box-shadow: var(--glass-shadow);')
+    expect(source).toContain('backdrop-filter: blur(var(--glass-blur)) saturate(135%);')
+    expect(source).toContain('@supports not ((backdrop-filter: blur(1px))')
+    expect(source).toContain('background: var(--surface-strong);')
+    expect(source).toContain('height: 44px;')
+    expect(source).toContain('min-width: 44px;')
+  })
+
   it('teleports a labelled modal, isolates the app, focuses the input, and restores the trigger on close', async () => {
     const app = document.querySelector('#app') as HTMLElement
     const trigger = document.querySelector('#search-trigger') as HTMLButtonElement

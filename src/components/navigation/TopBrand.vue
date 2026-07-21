@@ -23,11 +23,27 @@ import { RouterLink } from 'vue-router'
   font-size: 1rem;
   flex-shrink: 0;
   min-width: fit-content;
+  min-height: 44px;
+  padding: 0.15rem 0.25rem 0.15rem 0.15rem;
+  border-radius: 14px;
+  transition:
+    color var(--motion-base) var(--ease-out),
+    background-color var(--motion-base) var(--ease-out);
+
+  &:hover {
+    background: color-mix(in srgb, var(--glass-surface) 66%, transparent);
+  }
 
   img {
     width: 34px;
     height: 34px;
-    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.12));
+    padding: 0.2rem;
+    border: 1px solid var(--glass-border);
+    border-radius: 11px;
+    background: var(--glass-surface);
+    box-shadow:
+      inset 0 1px 0 var(--glass-highlight),
+      0 7px 16px color-mix(in srgb, var(--glass-border) 36%, transparent);
   }
 }
 
@@ -51,7 +67,23 @@ import { RouterLink } from 'vue-router'
 }
 
 @media (max-width: 768px) {
+  .brand {
+    gap: 0.42rem;
+    padding-right: 0.15rem;
+  }
+
+  .brand img {
+    width: 32px;
+    height: 32px;
+  }
+
   .brand__text em {
+    display: none;
+  }
+}
+
+@media (max-width: 360px) {
+  .brand__text {
     display: none;
   }
 }

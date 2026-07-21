@@ -18,14 +18,14 @@ const { isLoggedIn } = storeToRefs(useAuthStore())
 <style scoped lang="less">
 .navigation {
   display: flex;
-  gap: 0.35rem;
+  gap: 0.2rem;
   flex-shrink: 0;
   min-width: fit-content;
-  padding: 0.28rem;
-  border-radius: 18px;
-  border: 1px solid var(--line-soft);
-  background: linear-gradient(180deg, var(--surface-frost), var(--surface));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.32);
+  padding: 0.22rem;
+  border-radius: 16px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-surface);
+  box-shadow: inset 0 1px 0 var(--glass-highlight);
 
   a {
     color: var(--ink-muted);
@@ -33,9 +33,17 @@ const { isLoggedIn } = storeToRefs(useAuthStore())
     font-weight: 600;
     font-size: 0.88rem;
     position: relative;
-    padding: 0.42rem 0.8rem;
-    border-radius: 999px;
-    transition: color var(--motion-base) var(--ease-out-quint);
+    min-height: 38px;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.38rem 0.72rem;
+    border: 1px solid transparent;
+    border-radius: 11px;
+    transition:
+      color var(--motion-base) var(--ease-out-quint),
+      background-color var(--motion-base) var(--ease-out),
+      border-color var(--motion-base) var(--ease-out),
+      box-shadow var(--motion-base) var(--ease-out);
 
     &::after {
       content: '';
@@ -52,6 +60,9 @@ const { isLoggedIn } = storeToRefs(useAuthStore())
 
     &.router-link-active {
       color: var(--ink-strong);
+      border-color: color-mix(in srgb, var(--glass-border) 72%, var(--brand-500) 28%);
+      background: color-mix(in srgb, var(--glass-surface) 72%, var(--surface-strong) 28%);
+      box-shadow: inset 0 1px 0 var(--glass-highlight);
 
       &::after {
         transform: translateX(-50%) scaleX(1);
@@ -60,8 +71,13 @@ const { isLoggedIn } = storeToRefs(useAuthStore())
 
     &:hover {
       color: var(--ink-strong);
+      background: color-mix(in srgb, var(--glass-surface) 84%, var(--surface-hover) 16%);
     }
   }
+}
+
+:global(html[data-theme='dark']) .navigation {
+  background: var(--glass-surface) !important;
 }
 
 @media (max-width: 768px) {

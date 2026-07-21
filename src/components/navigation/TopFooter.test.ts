@@ -122,4 +122,13 @@ describe('TopFooter', () => {
     expect(source).not.toContain('.footer__social')
     expect(source).not.toContain('.footer__social-link')
   })
+
+  it('uses the shared glass material as a restrained page separator', () => {
+    const footerBlock = extractBlock(source, '.footer')
+
+    expect(footerBlock).toContain('background: color-mix(in srgb, var(--glass-surface) 72%, transparent);')
+    expect(footerBlock).toContain('border-top: 1px solid var(--glass-border);')
+    expect(footerBlock).toContain('box-shadow: inset 0 1px 0 var(--glass-highlight);')
+    expect(footerBlock).toContain('backdrop-filter: blur(var(--glass-blur)) saturate(120%);')
+  })
 })
