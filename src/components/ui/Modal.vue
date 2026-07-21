@@ -73,6 +73,12 @@ function getFocusableElements() {
   return Array.from(modalRef.value.querySelectorAll<HTMLElement>(focusableSelector))
 }
 
+function focusModal() {
+  const firstFocusable = getFocusableElements()[0]
+  const focusTarget = firstFocusable ?? modalRef.value
+  focusTarget?.focus()
+}
+
 const close = () => {
   emit('update:modelValue', false)
 }
@@ -127,21 +133,24 @@ function activateModal() {
   if (isRegistered) return
 
   previouslyFocusedElement = document.activeElement as HTMLElement | null
-  registerModal(instanceId)
+  registerModal(instanceId, focusModal)
   isRegistered = true
   void nextTick(() => {
     if (!isTopModal(instanceId)) return
-    const firstFocusable = getFocusableElements()[0]
-    ;(firstFocusable ?? modalRef.value)?.focus()
+    focusModal()
   })
 }
 
 function deactivateModal() {
   if (!isRegistered) return
 
-  const { wasTop } = unregisterModal(instanceId)
+  const { wasTop, remaining, focusNewTop } = unregisterModal(instanceId)
   isRegistered = false
-  if (wasTop) previouslyFocusedElement?.focus()
+  if (wasTop && remaining > 0) {
+    focusNewTop?.()
+  } else if (wasTop) {
+    previouslyFocusedElement?.focus()
+  }
   previouslyFocusedElement = null
 }
 

@@ -126,6 +126,46 @@ describe('Modal focus and stacking behavior', () => {
     expect(document.body.style.overflow).toBe('clip')
   })
 
+  it('hands focus to the lower modal before restoring the background trigger', async () => {
+    const trigger = document.querySelector('#modal-trigger') as HTMLButtonElement
+    trigger.focus()
+    const Harness = defineComponent({
+      components: { Modal },
+      setup() {
+        return { lowerOpen: ref(true), topOpen: ref(true) }
+      },
+      template: `
+        <Modal v-model="lowerOpen" title="Lower"><button type="button">Lower action</button></Modal>
+        <Modal v-model="topOpen" title="Top"><button type="button">Top action</button></Modal>
+      `,
+    })
+    const harness = mount(Harness, {
+      attachTo: document.querySelector('#mount') as HTMLElement,
+    })
+    wrappers.push(harness)
+    await nextTick()
+
+    const initialDialogs = getDialogs()
+    const lowerDialog = initialDialogs[0]
+    const topDialog = initialDialogs[1]
+    expect(topDialog.contains(document.activeElement)).toBe(true)
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }))
+    await nextTick()
+
+    expect(getDialogs()).toHaveLength(1)
+    expect(getDialogs()[0]).toBe(lowerDialog)
+    expect(lowerDialog.contains(document.activeElement)).toBe(true)
+    expect(document.body.style.overflow).toBe('hidden')
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }))
+    await nextTick()
+
+    expect(getDialogs()).toHaveLength(0)
+    expect(document.activeElement).toBe(trigger)
+    expect(document.body.style.overflow).toBe('clip')
+  })
+
   it('keeps scroll locked when a non-top modal closes first', async () => {
     const lower = mountModal(true, 'Lower')
     const top = mountModal(true, 'Top')
