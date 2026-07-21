@@ -32,7 +32,7 @@
             <button type="button" class="mobile-search-sheet__close" @click="emit('close')">取消</button>
           </div>
 
-          <div class="mobile-search-sheet__content">
+          <div class="mobile-search-sheet__content mobile-search-sheet__content--glass">
             <SearchDropdownContent
               density="compact"
               clear-history-label="清空"
@@ -267,7 +267,14 @@ function formatSuggestionMeta(post: Post) {
 .mobile-search-sheet__content {
   max-height: min(58vh, 420px);
   overflow-y: auto;
-  padding: 0.2rem 0.1rem 0.1rem;
+  padding: 0.35rem;
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+}
+
+.mobile-search-sheet__content--glass {
+  background: color-mix(in srgb, var(--glass-surface) 18%, var(--surface-strong) 82%);
+  box-shadow: inset 0 1px 0 var(--glass-highlight);
 }
 
 .mobile-search-sheet-enter-active,

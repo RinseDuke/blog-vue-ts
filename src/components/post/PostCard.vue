@@ -1,5 +1,5 @@
 <template>
-  <article class="post-card post-card--list">
+  <article class="post-card glass-surface">
     <RouterLink :to="{ name: 'article-detail', params: { id: post.id } }" class="card-link-wrapper">
       <div class="post-card__body">
         <div class="post-card__meta">
@@ -51,11 +51,12 @@ defineProps<{
   display: flex;
   flex-direction: column;
   position: relative;
-  background: var(--post-card-bg);
+  min-width: 0;
+  height: 100%;
   border-radius: var(--radius-lg);
-  border: 1px solid var(--post-card-border);
+  border-color: var(--glass-border);
   overflow: hidden;
-  box-shadow: var(--post-card-shadow);
+  box-shadow: var(--glass-shadow);
   transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
 
   &::before {
@@ -63,14 +64,8 @@ defineProps<{
     position: absolute;
     inset: 0 0 auto;
     height: 1px;
-    background: var(--post-card-edge);
+    background: linear-gradient(90deg, transparent, var(--glass-highlight), transparent);
     pointer-events: none;
-  }
-
-  &:hover {
-    transform: translateY(-4px);
-    border-color: var(--post-card-hover-border);
-    box-shadow: var(--post-card-hover-shadow);
   }
 
   &__body {
@@ -104,6 +99,7 @@ defineProps<{
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    overflow-wrap: anywhere;
   }
 
   &__excerpt {
@@ -119,6 +115,16 @@ defineProps<{
 
 }
 
+@media (hover: hover) {
+  .post-card:hover {
+    transform: translateY(-3px);
+    border-color: color-mix(in srgb, var(--glass-border) 55%, var(--brand-500) 45%);
+    box-shadow:
+      inset 0 1px 0 var(--glass-highlight),
+      0 24px 54px color-mix(in srgb, var(--ink-strong) 15%, transparent);
+  }
+}
+
 .post-card__footer {
   display: flex;
   justify-content: space-between;
@@ -126,7 +132,7 @@ defineProps<{
   gap: 1rem;
   padding: 0.82rem 1.45rem 1rem;
   border-top: 1px solid var(--post-card-divider);
-  background: var(--post-card-footer-bg);
+  background: color-mix(in srgb, var(--surface-strong) 74%, transparent);
 }
 
 .post-card__footer-actions {
@@ -167,6 +173,20 @@ defineProps<{
   .post-card__footer-actions {
     width: 100%;
     justify-content: flex-start;
+  }
+}
+
+@media (max-width: 768px) {
+  .post-card {
+    border-radius: var(--radius-md);
+  }
+
+  .post-card__body {
+    padding: 1.15rem 1.1rem 0.95rem;
+  }
+
+  .post-card__footer {
+    padding: 0.8rem 1.1rem 0.95rem;
   }
 }
 </style>

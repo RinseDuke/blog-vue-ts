@@ -1,16 +1,16 @@
 <template>
   <div class="article-container">
-    <div v-if="loading" class="article-content" style="padding: 2rem">
+    <div v-if="loading" class="article-content glass-surface" style="padding: 2rem">
       <SkeletonLoader variant="article-detail" />
     </div>
-    <div v-else-if="error" class="article-error" role="alert">
+    <div v-else-if="error" class="article-error glass-surface" role="alert">
       <p class="article-error__message">{{ error }}</p>
       <router-link to="/article" class="article-error__recovery">返回文章列表</router-link>
     </div>
 
     <article v-else-if="post" class="article-wrapper">
       <header class="article-hero">
-        <div class="article-hero__fallback">
+        <div class="article-hero__fallback glass-surface">
           <nav class="article-hero__breadcrumb" aria-label="文章分类">
             <router-link to="/article" class="article-hero__crumb article-hero__crumb--link">Blog</router-link>
             <template v-for="tag in post.tags" :key="tag">
@@ -44,11 +44,13 @@
       </header>
 
       <div class="article-prose">
-        <div class="article-body" v-html="safeHtml"></div>
+        <div class="article-reading-panel">
+          <div class="article-body" v-html="safeHtml"></div>
+        </div>
         <CommentSection :post-id="post.id" />
       </div>
 
-      <footer class="article-footer">
+      <footer class="article-footer glass-surface">
         <router-link to="/article" class="back-link">← 返回文章列表</router-link>
       </footer>
     </article>
@@ -126,6 +128,7 @@ function formatDate(dateString: string) {
 <style scoped lang="less">
 .article-container {
   max-width: 100%;
+  min-width: 0;
   margin: 0;
   padding: 0;
 }
@@ -135,10 +138,7 @@ function formatDate(dateString: string) {
   margin: 2rem auto;
   text-align: center;
   padding: 2rem 1.2rem;
-  border: 1px solid var(--line-soft);
   border-radius: var(--radius-lg);
-  background: var(--surface-overlay);
-  box-shadow: var(--shadow-sm);
 }
 
 .article-error__message {
@@ -159,19 +159,20 @@ function formatDate(dateString: string) {
 
 .article-wrapper {
   min-height: 100vh;
+  min-width: 0;
 }
 
 .article-hero {
   position: relative;
   margin-bottom: 2.5rem;
-  background: var(--surface-strong);
+  background: transparent;
 }
 
 .article-hero__fallback {
-  max-width: min(760px, 92vw);
+  width: min(760px, calc(100vw - 2rem));
   margin: 0 auto;
-  padding: 4rem 1.5rem 2rem;
-  background: transparent;
+  padding: clamp(1.5rem, 5vw, 3rem);
+  border-radius: var(--radius-lg);
   color: var(--ink-strong);
   text-align: left;
 }
@@ -210,6 +211,7 @@ function formatDate(dateString: string) {
   letter-spacing: -0.02em;
   margin: 0 0 1.25rem;
   color: var(--ink-strong);
+  overflow-wrap: anywhere;
 }
 
 .article-hero__excerpt {
@@ -266,15 +268,26 @@ function formatDate(dateString: string) {
 }
 
 .article-prose {
-  max-width: min(720px, 92vw);
+  width: min(760px, calc(100vw - 2rem));
   margin: 0 auto;
-  padding: 0 1.5rem;
+  padding: 0;
+  min-width: 0;
+}
+
+.article-reading-panel {
+  padding: clamp(1.35rem, 4vw, 3rem);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-lg);
+  background: var(--surface-strong);
+  box-shadow: 0 20px 52px color-mix(in srgb, var(--ink-strong) 10%, transparent);
 }
 
 .article-body {
-  line-height: 1.8;
+  min-width: 0;
+  line-height: 1.85;
   color: var(--article-prose-text);
   font-size: 17px;
+  overflow-wrap: anywhere;
 
   :deep(p) {
     margin-bottom: 1.5em;
@@ -330,6 +343,7 @@ function formatDate(dateString: string) {
     border-radius: var(--radius-md);
     overflow-x: auto;
     margin: 1.5rem 0;
+    max-width: 100%;
 
     code {
       background: none;
@@ -345,12 +359,34 @@ function formatDate(dateString: string) {
     box-shadow: var(--shadow-sm);
     margin: 1.5rem 0;
   }
+
+  :deep(a) {
+    color: var(--brand-500);
+    text-decoration: underline;
+    text-decoration-thickness: 0.08em;
+    text-underline-offset: 0.18em;
+  }
+
+  :deep(table) {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    border-collapse: collapse;
+  }
+
+  :deep(th),
+  :deep(td) {
+    padding: 0.65rem 0.75rem;
+    border: 1px solid var(--line-soft);
+    text-align: left;
+  }
 }
 
 .article-footer {
-  max-width: min(720px, 92vw);
+  width: min(760px, calc(100vw - 2rem));
   margin: 3rem auto 2rem;
-  padding: 0 1.5rem;
+  padding: 0.65rem;
+  border-radius: var(--radius-md);
 }
 
 .back-link {
@@ -360,6 +396,8 @@ function formatDate(dateString: string) {
   text-decoration: none;
   font-weight: 600;
   font-size: 0.94rem;
+  min-height: 44px;
+  padding: 0.45rem 0.65rem;
   transition: color var(--motion-base) var(--ease-out);
 
   &:hover {
@@ -369,7 +407,8 @@ function formatDate(dateString: string) {
 
 @media (max-width: 768px) {
   .article-hero__fallback {
-    padding: 2.25rem 1rem 1.5rem;
+    padding: 1.35rem;
+    border-radius: var(--radius-md);
   }
 
   .article-hero__breadcrumb {
@@ -392,16 +431,35 @@ function formatDate(dateString: string) {
     height: 40px;
   }
 
-  .article-prose {
-    padding: 0 1rem;
+  .article-reading-panel {
+    padding: 1.25rem;
+    border-radius: var(--radius-md);
   }
 
   .article-body {
     font-size: 16px;
   }
 
+}
+
+@media (max-width: 390px) {
+  .article-hero__fallback,
+  .article-prose,
   .article-footer {
-    padding: 0 1rem;
+    width: min(760px, calc(100vw - 1.4rem));
+  }
+
+  .article-hero__fallback,
+  .article-reading-panel {
+    padding: 1.05rem;
+  }
+
+  .article-hero__title {
+    font-size: clamp(1.45rem, 8vw, 1.9rem);
+  }
+
+  .article-body {
+    font-size: 15.5px;
   }
 }
 </style>

@@ -1,16 +1,16 @@
 <template>
   <section class="search">
-    <header v-if="!loading && !error" class="search__summary">
+    <header v-if="!loading && !error" class="search__summary glass-surface">
       <p class="search__meta">{{ summaryLabel }}</p>
       <p class="search__count">{{ filteredPosts.length }} 篇匹配文章</p>
     </header>
 
     <section class="feed" aria-live="polite">
-      <div v-if="loading" class="feed__state">搜索中...</div>
-      <div v-else-if="error" class="feed__state feed__state--error">{{ error }}</div>
+      <div v-if="loading" class="feed__state glass-surface">搜索中...</div>
+      <div v-else-if="error" class="feed__state feed__state--error glass-surface">{{ error }}</div>
 
       <div v-else>
-        <div v-if="!filteredPosts.length" class="feed__state feed__state--empty">
+        <div v-if="!filteredPosts.length" class="feed__state feed__state--empty glass-surface">
           <p>未找到匹配内容，请尝试其他关键词。</p>
         </div>
 
@@ -63,19 +63,6 @@ onMounted(async () => {
   position: relative;
 }
 
-.search::before {
-  content: '';
-  position: absolute;
-  inset: 8px auto auto 50%;
-  width: min(920px, 90vw);
-  height: 150px;
-  transform: translateX(-50%);
-  border-radius: 999px;
-  background: radial-gradient(circle, rgba(0, 113, 227, 0.08), transparent 72%);
-  pointer-events: none;
-  filter: blur(10px);
-}
-
 .search__summary {
   max-width: 1040px;
   width: 100%;
@@ -85,12 +72,7 @@ onMounted(async () => {
   justify-content: space-between;
   gap: 1rem;
   padding: 1rem 1.15rem;
-  border: 1px solid var(--line-soft);
   border-radius: var(--radius-lg);
-  background:
-    radial-gradient(circle at top left, rgba(0, 113, 227, 0.06), transparent 34%),
-    linear-gradient(180deg, var(--surface-overlay), var(--surface));
-  box-shadow: var(--shadow-sm);
 }
 
 .search__meta {
@@ -120,10 +102,7 @@ onMounted(async () => {
     padding: 2rem;
     text-align: center;
     border-radius: var(--radius-lg);
-    border: 1px solid var(--line-soft);
-    background: var(--surface);
     color: var(--ink-muted);
-    box-shadow: var(--shadow-sm);
 
     &--error {
       background: var(--danger-bg);
@@ -136,11 +115,6 @@ onMounted(async () => {
     }
   }
 
-  &__grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1.25rem;
-  }
 }
 
 @media (max-width: 900px) {
@@ -148,6 +122,32 @@ onMounted(async () => {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.35rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .search {
+    padding: 3rem 0.95rem;
+    gap: 1rem;
+  }
+
+  .search__summary {
+    padding: 0.95rem;
+    border-radius: var(--radius-md);
+  }
+
+  .feed__state {
+    border-radius: var(--radius-md);
+  }
+}
+
+@media (max-width: 390px) {
+  .search {
+    padding-inline: 0.85rem;
+  }
+
+  .search__meta {
+    overflow-wrap: anywhere;
   }
 }
 </style>

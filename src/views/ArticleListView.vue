@@ -243,7 +243,7 @@ function isPostInDateRange(publishedAt: string) {
   <section class="article-page">
     <section class="article-layout">
       <section class="feed" aria-live="polite">
-        <header class="feed__head">
+        <header class="feed__head glass-surface">
           <div class="feed__title">
             <h2>文章列表</h2>
             <p class="feed__meta">
@@ -252,35 +252,13 @@ function isPostInDateRange(publishedAt: string) {
             </p>
           </div>
 
-          <div class="feed__toolbar">
-            <label class="control-field control-field--search">
-              <span>搜索</span>
-              <input v-model="keyword" type="search" placeholder="标题、摘要、作者..." />
-            </label>
-
-            <label class="control-field">
-              <span>排序</span>
-              <select v-model="sortMode">
-                <option v-for="option in sortOptions" :key="option.value" :value="option.value">
-                  {{ option.label }}
-                </option>
-              </select>
-            </label>
-
-            <label class="control-field">
-              <span>每页</span>
-              <select v-model.number="pageSize">
-                <option v-for="size in pageSizeOptions" :key="size" :value="size">{{ size }}</option>
-              </select>
-            </label>
-          </div>
         </header>
 
-        <div v-if="loading" class="feed__state">加载中...</div>
-        <div v-else-if="error" class="feed__state feed__state--error">{{ error }}</div>
+        <div v-if="loading" class="feed__state glass-surface">加载中...</div>
+        <div v-else-if="error" class="feed__state feed__state--error glass-surface">{{ error }}</div>
 
         <div v-else>
-          <div v-if="!filteredPosts.length" class="feed__state feed__state--empty">
+          <div v-if="!filteredPosts.length" class="feed__state feed__state--empty glass-surface">
             <p>没有符合当前条件的文章。</p>
             <button v-if="hasActiveFilters" type="button" class="empty-reset" @click="clearFilters">清空筛选</button>
           </div>
@@ -309,6 +287,7 @@ function isPostInDateRange(publishedAt: string) {
         v-model:date-preset="datePreset"
         v-model:sort-mode="sortMode"
         v-model:page-size="pageSize"
+        v-model:keyword="keyword"
         v-model:custom-start-date="customStartDate"
         v-model:custom-end-date="customEndDate"
         :date-options="dateOptions"
@@ -332,19 +311,6 @@ function isPostInDateRange(publishedAt: string) {
   position: relative;
 }
 
-.article-page::before {
-  content: '';
-  position: absolute;
-  inset: 8px auto auto 50%;
-  width: min(1040px, 92vw);
-  height: 180px;
-  transform: translateX(-50%);
-  border-radius: 999px;
-  background: radial-gradient(circle, rgba(0, 113, 227, 0.08), transparent 72%);
-  pointer-events: none;
-  filter: blur(12px);
-}
-
 .article-layout {
   width: 100%;
   max-width: 1200px;
@@ -366,13 +332,7 @@ function isPostInDateRange(publishedAt: string) {
     flex-direction: column;
     gap: 0.9rem;
     padding: 1.1rem 1.2rem;
-    border: 1px solid var(--line-soft);
     border-radius: var(--radius-lg);
-    background:
-      radial-gradient(circle at top left, color-mix(in srgb, var(--brand-100) 55%, transparent), transparent 36%),
-      linear-gradient(180deg, color-mix(in srgb, var(--surface-overlay) 98%, transparent), color-mix(in srgb, var(--surface) 96%, transparent));
-    box-shadow: var(--shadow-sm);
-    backdrop-filter: blur(14px);
   }
 
   &__title {
@@ -395,19 +355,11 @@ function isPostInDateRange(publishedAt: string) {
     font-size: 0.9rem;
   }
 
-  &__toolbar {
-    display: none;
-  }
-
   &__state {
     padding: 2rem;
     text-align: center;
     border-radius: var(--radius-lg);
-    background:
-      linear-gradient(180deg, color-mix(in srgb, var(--surface-overlay) 98%, transparent), color-mix(in srgb, var(--surface) 96%, transparent));
-    border: 1px solid var(--line-soft);
     color: var(--ink-muted);
-    box-shadow: var(--shadow-sm);
 
     p {
       margin: 0;
@@ -428,40 +380,6 @@ function isPostInDateRange(publishedAt: string) {
     }
   }
 
-  &__grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1.25rem;
-  }
-}
-
-.control-field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-
-  span {
-    font-size: 0.82rem;
-    color: var(--ink-muted);
-    font-weight: 600;
-  }
-
-  input,
-  select {
-    width: 100%;
-    border: 1px solid var(--line-soft);
-    border-radius: var(--radius-sm);
-    background: var(--surface);
-    color: var(--ink-strong);
-    padding: 0.55rem 0.65rem;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
-
-    &:focus {
-      outline: none;
-      border-color: rgba(0, 113, 227, 0.35);
-      box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.1);
-    }
-  }
 }
 
 .empty-reset {
@@ -472,6 +390,7 @@ function isPostInDateRange(publishedAt: string) {
   padding: 0.45rem 0.8rem;
   font-weight: 700;
   cursor: pointer;
+  min-height: 44px;
 }
 
 .pagination {
@@ -491,6 +410,7 @@ function isPostInDateRange(publishedAt: string) {
     cursor: pointer;
     font-weight: 600;
     min-width: 40px;
+    min-height: 44px;
 
     &:disabled {
       cursor: not-allowed;
@@ -513,13 +433,43 @@ function isPostInDateRange(publishedAt: string) {
 }
 
 @media (max-width: 900px) {
-  .feed__toolbar {
-    grid-template-columns: 1fr;
-  }
-
   .feed__title {
     flex-direction: column;
     align-items: flex-start;
+  }
+}
+
+@media (max-width: 768px) {
+  .article-page {
+    padding: 3rem 1rem;
+  }
+
+  .article-layout {
+    gap: 1rem;
+  }
+
+  .feed__head,
+  .feed__state {
+    border-radius: var(--radius-md);
+  }
+
+  .pagination {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 390px) {
+  .article-page {
+    padding-inline: 0.85rem;
+  }
+
+  .pagination {
+    gap: 0.35rem;
+  }
+
+  .pagination button {
+    min-width: 44px;
+    padding-inline: 0.55rem;
   }
 }
 
