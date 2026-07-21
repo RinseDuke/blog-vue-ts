@@ -219,7 +219,10 @@ const showMeta = ref(false)
 
 const editor = useEditor({
   extensions: [
-    StarterKit,
+    StarterKit.configure({
+      link: false,
+      underline: false,
+    }),
     Placeholder.configure({
       placeholder: '请输入正文...',
     }),

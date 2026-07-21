@@ -848,6 +848,7 @@ function enterEditMode() {
 }
 
 .edit-btn {
+  min-height: 44px;
   border: 1px solid var(--line-soft);
   background: var(--surface-strong);
   color: var(--brand-500);
