@@ -41,6 +41,7 @@
 
 <script setup lang="ts">
 import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { isTopModal, registerModal, unregisterModal } from './modalManager'
 
 const props = withDefaults(
   defineProps<{
@@ -59,27 +60,33 @@ const emit = defineEmits<{
 }>()
 
 const titleId = `modal-title-${Math.random().toString(36).slice(2, 9)}`
+const instanceId = Symbol(titleId)
 const modalRef = ref<HTMLElement | null>(null)
 let previouslyFocusedElement: HTMLElement | null = null
+let isRegistered = false
+
+const focusableSelector =
+  'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+
+function getFocusableElements() {
+  if (!modalRef.value) return []
+  return Array.from(modalRef.value.querySelectorAll<HTMLElement>(focusableSelector))
+}
 
 const close = () => {
   emit('update:modelValue', false)
 }
 
 const handleOverlayClick = () => {
-  if (props.closeOnOverlay) {
+  if (props.closeOnOverlay && isTopModal(instanceId)) {
     close()
   }
 }
 
 const handleTabKey = (event: KeyboardEvent) => {
-  if (!props.modelValue || event.key !== 'Tab' || !modalRef.value) return
+  if (!props.modelValue || event.key !== 'Tab' || !modalRef.value || !isTopModal(instanceId)) return
 
-  const focusable = Array.from(
-    modalRef.value.querySelectorAll<HTMLElement>(
-      'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-    )
-  )
+  const focusable = getFocusableElements()
 
   if (!focusable.length) {
     event.preventDefault()
@@ -89,6 +96,13 @@ const handleTabKey = (event: KeyboardEvent) => {
 
   const first = focusable[0]
   const last = focusable[focusable.length - 1]
+  if (!document.activeElement || !modalRef.value.contains(document.activeElement)) {
+    event.preventDefault()
+    const recoveryTarget = event.shiftKey ? last : first
+    recoveryTarget.focus()
+    return
+  }
+
   if (event.shiftKey && document.activeElement === first) {
     event.preventDefault()
     last.focus()
@@ -99,27 +113,43 @@ const handleTabKey = (event: KeyboardEvent) => {
 }
 
 const handleKeydown = (e: KeyboardEvent) => {
+  if (!props.modelValue || !isTopModal(instanceId)) return
+
   if (e.key === 'Escape' && props.modelValue) {
+    e.preventDefault()
     close()
     return
   }
   handleTabKey(e)
 }
 
+function activateModal() {
+  if (isRegistered) return
+
+  previouslyFocusedElement = document.activeElement as HTMLElement | null
+  registerModal(instanceId)
+  isRegistered = true
+  void nextTick(() => {
+    if (!isTopModal(instanceId)) return
+    const firstFocusable = getFocusableElements()[0]
+    ;(firstFocusable ?? modalRef.value)?.focus()
+  })
+}
+
+function deactivateModal() {
+  if (!isRegistered) return
+
+  const { wasTop } = unregisterModal(instanceId)
+  isRegistered = false
+  if (wasTop) previouslyFocusedElement?.focus()
+  previouslyFocusedElement = null
+}
+
 watch(() => props.modelValue, (isOpen) => {
   if (isOpen) {
-    previouslyFocusedElement = document.activeElement as HTMLElement | null
-    document.body.style.overflow = 'hidden'
-    void nextTick(() => {
-      const firstFocusable = modalRef.value?.querySelector<HTMLElement>(
-        'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-      )
-      ;(firstFocusable ?? modalRef.value)?.focus()
-    })
+    activateModal()
   } else {
-    document.body.style.overflow = ''
-    previouslyFocusedElement?.focus()
-    previouslyFocusedElement = null
+    deactivateModal()
   }
 }, { immediate: true })
 
@@ -129,8 +159,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   document.removeEventListener('keydown', handleKeydown)
-  document.body.style.overflow = ''
-  previouslyFocusedElement?.focus()
+  deactivateModal()
 })
 </script>
 

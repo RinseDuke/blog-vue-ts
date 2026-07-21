@@ -4,6 +4,7 @@
       v-if="visible"
       type="button"
       class="back-to-top"
+      :class="{ 'back-to-top--write': isWritePage }"
       aria-label="返回顶部"
       title="返回顶部"
       @click="scrollToTop"
@@ -16,14 +17,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
 const visible = ref(false)
 
 const writePages = new Set(['write'])
-const isWritePage = () => writePages.has(route.name as string)
+const isWritePage = computed(() => writePages.has(route.name as string))
 
 let ticking = false
 
@@ -32,7 +33,7 @@ function onScroll() {
   ticking = true
 
   requestAnimationFrame(() => {
-    visible.value = !isWritePage() && window.scrollY > 600
+    visible.value = window.scrollY > 600
     ticking = false
   })
 }
@@ -92,6 +93,11 @@ onUnmounted(() => {
   transform: translateY(8px);
 }
 
+.back-to-top--write {
+  bottom: calc(var(--write-status-bar-height, 112px) + 16px + env(safe-area-inset-bottom, 0px));
+  z-index: 110;
+}
+
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .back-to-top {
     background: var(--surface-strong);
@@ -104,6 +110,11 @@ onUnmounted(() => {
   .back-to-top {
     right: 16px;
     bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .back-to-top--write {
+    bottom: calc(var(--write-status-bar-height-mobile, 150px) + 16px + env(safe-area-inset-bottom, 0px));
+    z-index: 110;
   }
 }
 </style>
