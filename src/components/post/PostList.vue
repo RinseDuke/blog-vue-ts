@@ -39,17 +39,21 @@ defineProps<{
 }
 
 @media (max-width: 1024px) {
-  .post-list > :deep(*) {
+  .post-list > :nth-child(3n + 1),
+  .post-list > :nth-child(3n + 2),
+  .post-list > :nth-child(3n) {
     grid-column: span 6;
   }
 }
 
 @media (max-width: 768px) {
   .post-list {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
-  .post-list > :deep(*) {
+  .post-list > :nth-child(3n + 1),
+  .post-list > :nth-child(3n + 2),
+  .post-list > :nth-child(3n) {
     grid-column: 1 / -1;
   }
 }

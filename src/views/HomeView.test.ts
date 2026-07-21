@@ -3,6 +3,22 @@ import postCardSource from '@/components/post/PostCard.vue?raw'
 import postListSource from '@/components/post/PostList.vue?raw'
 import source from './HomeView.vue?raw'
 
+function extractBlock(blockSource: string, selector: string) {
+  const selectorIndex = blockSource.indexOf(selector)
+  const openBraceIndex = blockSource.indexOf('{', selectorIndex)
+
+  if (selectorIndex === -1 || openBraceIndex === -1) throw new Error(`Missing block for ${selector}`)
+
+  let depth = 0
+  for (let index = openBraceIndex; index < blockSource.length; index += 1) {
+    if (blockSource[index] === '{') depth += 1
+    if (blockSource[index] === '}') depth -= 1
+    if (depth === 0) return blockSource.slice(openBraceIndex + 1, index)
+  }
+
+  throw new Error(`Unclosed block for ${selector}`)
+}
+
 describe('HomeView liquid glass content contract', () => {
   it('keeps post loading semantics while presenting a title, featured stage, and latest flow', () => {
     expect(source).toContain("import FeaturedHero from '@/components/post/FeaturedHero.vue'")
@@ -36,12 +52,31 @@ describe('HomeView liquid glass content contract', () => {
     expect(postListSource).toContain('grid-template-columns: repeat(12, minmax(0, 1fr));')
     expect(postListSource).toContain('.post-list > :nth-child(3n + 1)')
     expect(postListSource).toContain('@media (max-width: 768px)')
-    expect(postListSource).toContain('grid-template-columns: 1fr;')
+    expect(postListSource).toContain('grid-template-columns: minmax(0, 1fr);')
     expect(postCardSource).toContain('class="post-card glass-surface"')
     expect(postCardSource).toContain('var(--glass-highlight)')
     expect(postCardSource).toContain('transform: translateY(-3px);')
     expect(postCardSource).toContain('overflow-wrap: anywhere;')
     expect(postCardSource).toContain("<slot name=\"footer-actions\" :post=\"post\" />")
     expect(postCardSource).toContain("name: 'article-detail'")
+  })
+
+  it('resets every rhythmic nth-child span with equal specificity at responsive breakpoints', () => {
+    const tabletBlock = extractBlock(postListSource, '@media (max-width: 1024px)')
+    const mobileBlock = extractBlock(postListSource, '@media (max-width: 768px)')
+    const responsiveNthChildSelectors = [
+      '.post-list > :nth-child(3n + 1)',
+      '.post-list > :nth-child(3n + 2)',
+      '.post-list > :nth-child(3n)',
+    ]
+
+    responsiveNthChildSelectors.forEach((selector) => {
+      expect(tabletBlock).toContain(selector)
+      expect(mobileBlock).toContain(selector)
+    })
+
+    expect(tabletBlock).toContain('grid-column: span 6;')
+    expect(mobileBlock).toContain('grid-template-columns: minmax(0, 1fr);')
+    expect(mobileBlock).toContain('grid-column: 1 / -1;')
   })
 })
