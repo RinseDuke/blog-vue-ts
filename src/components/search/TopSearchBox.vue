@@ -156,8 +156,6 @@ onUnmounted(() => {
   color: var(--ink-strong);
   outline: none;
   box-shadow: var(--glass-shadow);
-  backdrop-filter: blur(var(--glass-blur)) saturate(125%);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(125%);
   transition: border-color var(--motion-base) var(--ease-out), box-shadow var(--motion-base) var(--ease-out), background-color var(--motion-base) var(--ease-out);
 }
 
@@ -243,6 +241,11 @@ onUnmounted(() => {
     background: var(--surface-strong);
     border-color: var(--line-strong);
     box-shadow: var(--shadow-sm);
+  }
+
+  :global(html[data-theme='dark']) .search-box input,
+  :global(html[data-theme='dark']) .top-search__dropdown {
+    background: var(--surface-strong) !important;
   }
 }
 

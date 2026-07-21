@@ -126,15 +126,15 @@ onBeforeUnmount(() => {
   position: relative;
   display: flex;
   flex: 1 1 auto;
-  min-width: 0;
-  max-width: 108px;
+  min-width: 84px;
+  max-width: 96px;
 }
 
 .mobile-top-tabs__trigger {
   width: 100%;
-  min-width: 0;
-  min-height: 44px;
-  padding: 0 0.68rem;
+  min-width: 52px;
+  min-height: 52px;
+  padding: 0 0.58rem;
   border: 1px solid var(--glass-border);
   border-radius: 14px;
   background: var(--glass-surface);
@@ -206,13 +206,11 @@ onBeforeUnmount(() => {
   border: 1px solid var(--glass-border);
   background: color-mix(in srgb, var(--glass-surface) 32%, var(--surface-strong) 68%);
   box-shadow: var(--glass-shadow);
-  backdrop-filter: blur(var(--glass-blur)) saturate(135%);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(135%);
   z-index: 50;
 
   a {
-    min-width: 0;
-    min-height: 44px;
+    min-width: 52px;
+    min-height: 52px;
     display: inline-flex;
     align-items: center;
     justify-content: flex-start;
@@ -248,6 +246,10 @@ onBeforeUnmount(() => {
   a:active {
     transform: scale(0.98);
   }
+}
+
+.mobile-top-tabs__panel a.router-link-active:focus-visible {
+  box-shadow: var(--focus-ring), inset 0 1px 0 var(--glass-highlight);
 }
 
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {

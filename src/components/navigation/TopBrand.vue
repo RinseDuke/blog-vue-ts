@@ -69,6 +69,7 @@ import { RouterLink } from 'vue-router'
 @media (max-width: 768px) {
   .brand {
     gap: 0.42rem;
+    min-height: 52px;
     padding-right: 0.15rem;
   }
 

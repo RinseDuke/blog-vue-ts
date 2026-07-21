@@ -76,6 +76,10 @@ const { isLoggedIn } = storeToRefs(useAuthStore())
   }
 }
 
+.navigation a.router-link-active:focus-visible {
+  box-shadow: var(--focus-ring), inset 0 1px 0 var(--glass-highlight);
+}
+
 :global(html[data-theme='dark']) .navigation {
   background: var(--glass-surface) !important;
 }

@@ -206,8 +206,9 @@ function formatSuggestionMeta(post: Post) {
 
 .mobile-search-sheet__input-wrap input {
   width: 100%;
-  height: 44px;
-  padding: 0 3.3rem 0 0.95rem;
+  min-width: 52px;
+  height: 52px;
+  padding: 0 3.65rem 0 0.95rem;
   border-radius: 999px;
   border: 1px solid var(--glass-border);
   background: color-mix(in srgb, var(--glass-surface) 34%, var(--surface-strong) 66%);
@@ -235,9 +236,9 @@ function formatSuggestionMeta(post: Post) {
   top: 50%;
   right: 0;
   transform: translateY(-50%);
-  min-width: 44px;
-  width: 44px;
-  height: 44px;
+  min-width: 52px;
+  width: 52px;
+  height: 52px;
   border: 1px solid transparent;
   border-radius: 50%;
   background: transparent;
@@ -251,8 +252,8 @@ function formatSuggestionMeta(post: Post) {
 
 .mobile-search-sheet__close {
   flex-shrink: 0;
-  min-width: 48px;
-  height: 44px;
+  min-width: 52px;
+  height: 52px;
   padding: 0 0.8rem;
   border: 1px solid var(--glass-border);
   border-radius: 14px;

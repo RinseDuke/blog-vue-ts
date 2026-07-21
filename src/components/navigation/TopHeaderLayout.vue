@@ -71,6 +71,8 @@ onUnmounted(() => {
   background: color-mix(in srgb, var(--glass-surface) 88%, var(--surface-strong) 12%);
   border-color: color-mix(in srgb, var(--glass-border) 78%, var(--line-strong) 22%);
   box-shadow: var(--glass-shadow), var(--nav-shadow-scrolled);
+  backdrop-filter: blur(calc(var(--glass-blur) + 6px)) saturate(165%);
+  -webkit-backdrop-filter: blur(calc(var(--glass-blur) + 6px)) saturate(165%);
 }
 
 .topbar__inner {
@@ -112,7 +114,7 @@ onUnmounted(() => {
 
   .topbar__inner {
     display: block;
-    min-height: 52px;
+    min-height: 60px;
     padding: 0.25rem 0;
   }
 
@@ -121,8 +123,8 @@ onUnmounted(() => {
   }
 
   .topbar.condensed .topbar__inner {
-    min-height: 48px;
-    padding: 0.15rem 0;
+    min-height: 56px;
+    padding: 0.125rem 0;
   }
 }
 

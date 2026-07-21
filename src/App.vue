@@ -232,10 +232,10 @@ onUnmounted(() => {
 }
 
 .mobile-search-trigger {
-  min-width: 44px;
-  min-height: 44px;
-  width: 44px;
-  height: 44px;
+  min-width: 52px;
+  min-height: 52px;
+  width: 52px;
+  height: 52px;
   border: 1px solid var(--glass-border);
   border-radius: 14px;
   background: var(--glass-surface);
@@ -265,7 +265,7 @@ onUnmounted(() => {
 
 @media (max-width: 768px) {
   .layout {
-    padding-top: 68px;
+    padding-top: 76px;
   }
 
   .desktop-topbar {

@@ -92,9 +92,9 @@ describe('top header layout source contract', () => {
     expect(searchInputWrapperBlock).toContain('max-width: 640px;')
     expect(mobileTopbarBlock).toContain('width: calc(100% - 1rem);')
     expect(mobileTopbarBlock).toContain('top: 0.5rem;')
-    expect(mobileTopbarInnerBlock).toContain('min-height: 52px;')
+    expect(mobileTopbarInnerBlock).toContain('min-height: 60px;')
     expect(mobileTopbarInnerBlock).toContain('padding: 0.25rem 0;')
-    expect(mobileLayoutBlock).toContain('padding-top: 68px;')
+    expect(mobileLayoutBlock).toContain('padding-top: 76px;')
   })
 
   it('shares the glass tokens across navigation, brand, theme and search controls', () => {
@@ -107,5 +107,40 @@ describe('top header layout source contract', () => {
     expect(topSearchBoxSource).toContain('background: var(--glass-surface);')
     expect(topSearchBoxSource).toContain('border: 1px solid var(--glass-border);')
     expect(topSearchBoxSource).toContain('box-shadow: var(--glass-shadow);')
+  })
+
+  it('increases standard and prefixed backdrop blur after scrolling', () => {
+    const scrolledTopbarBlock = extractBlock(topHeaderLayoutSource, '.topbar.scrolled')
+
+    expect(scrolledTopbarBlock).toContain(
+      'backdrop-filter: blur(calc(var(--glass-blur) + 6px)) saturate(165%);'
+    )
+    expect(scrolledTopbarBlock).toContain(
+      '-webkit-backdrop-filter: blur(calc(var(--glass-blur) + 6px)) saturate(165%);'
+    )
+  })
+
+  it('preserves a visible focus ring on the active desktop navigation link', () => {
+    expect(topNavigationSource).toContain('a.router-link-active:focus-visible')
+    expect(topNavigationSource).toContain('box-shadow: var(--focus-ring), inset 0 1px 0 var(--glass-highlight);')
+  })
+
+  it('lets dark search surfaces fall back to the solid surface when blur is unavailable', () => {
+    const fallbackBlock = extractBlock(
+      topSearchBoxSource,
+      '@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)))'
+    )
+
+    expect(fallbackBlock).toContain(":global(html[data-theme='dark']) .search-box input")
+    expect(fallbackBlock).toContain(":global(html[data-theme='dark']) .top-search__dropdown")
+    expect(fallbackBlock).toContain('background: var(--surface-strong) !important;')
+  })
+
+  it('avoids repeating backdrop blur inside the already blurred header shell', () => {
+    const searchInputBlock = extractBlock(topSearchBoxSource, '.search-box input')
+    const searchDropdownBlock = extractBlock(topSearchBoxSource, '.top-search__dropdown')
+
+    expect(searchInputBlock).not.toContain('backdrop-filter')
+    expect(searchDropdownBlock).toContain('backdrop-filter: blur(var(--glass-blur)) saturate(135%);')
   })
 })

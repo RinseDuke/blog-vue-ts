@@ -113,8 +113,10 @@ const themeToggleTitle = computed(() => themeToggleLabel.value)
 @media (max-width: 768px) {
   .theme-switch {
     order: 1;
-    width: 60px;
-    height: 44px;
+    min-width: 52px;
+    min-height: 52px;
+    width: 62px;
+    height: 52px;
     padding: 5px;
   }
 
@@ -124,7 +126,7 @@ const themeToggleTitle = computed(() => themeToggleLabel.value)
   }
 
   .theme-switch--dark .theme-switch__thumb {
-    transform: translateX(18px);
+    transform: translateX(20px);
   }
 }
 </style>

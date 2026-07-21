@@ -100,7 +100,7 @@ afterEach(() => {
 })
 
 describe('MobileSearchSheet integration', () => {
-  it('uses a high-opacity glass panel with solid fallback and 44px controls', () => {
+  it('uses a high-opacity glass panel with solid fallback and 52px controls', () => {
     expect(source).toContain(
       'background: color-mix(in srgb, var(--glass-surface) 28%, var(--surface-strong) 72%);'
     )
@@ -109,8 +109,11 @@ describe('MobileSearchSheet integration', () => {
     expect(source).toContain('backdrop-filter: blur(var(--glass-blur)) saturate(135%);')
     expect(source).toContain('@supports not ((backdrop-filter: blur(1px))')
     expect(source).toContain('background: var(--surface-strong);')
-    expect(source).toContain('height: 44px;')
-    expect(source).toContain('min-width: 44px;')
+    expect(source).toMatch(
+      /\.mobile-search-sheet__input-wrap input\s*\{[^}]*min-width: 52px;[^}]*height: 52px;/s
+    )
+    expect(source).toMatch(/\.mobile-search-sheet__submit\s*\{[^}]*min-width: 52px;[^}]*height: 52px;/s)
+    expect(source).toMatch(/\.mobile-search-sheet__close\s*\{[^}]*min-width: 52px;[^}]*height: 52px;/s)
   })
 
   it('teleports a labelled modal, isolates the app, focuses the input, and restores the trigger on close', async () => {
