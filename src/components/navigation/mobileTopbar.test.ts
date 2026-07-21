@@ -66,4 +66,14 @@ describe('mobile topbar source contract', () => {
     expect(mobileTabsSource).toContain('a.router-link-active:focus-visible')
     expect(mobileTabsSource).toContain('box-shadow: var(--focus-ring), inset 0 1px 0 var(--glass-highlight);')
   })
+
+  it('preserves the trigger focus ring after the menu opens', () => {
+    const openRuleIndex = mobileTabsSource.indexOf('.mobile-top-tabs--open .mobile-top-tabs__trigger {')
+    const openFocusRuleIndex = mobileTabsSource.indexOf(
+      '.mobile-top-tabs--open .mobile-top-tabs__trigger:focus-visible {'
+    )
+
+    expect(openFocusRuleIndex).toBeGreaterThan(openRuleIndex)
+    expect(mobileTabsSource).toContain('box-shadow: var(--focus-ring),')
+  })
 })

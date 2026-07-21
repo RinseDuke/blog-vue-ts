@@ -64,6 +64,8 @@ onUnmounted(() => {
     background-color 0.24s ease,
     border-color 0.24s ease,
     box-shadow 0.24s ease,
+    backdrop-filter 0.24s ease,
+    -webkit-backdrop-filter 0.24s ease,
     border-radius 0.22s var(--ease-standard);
 }
 

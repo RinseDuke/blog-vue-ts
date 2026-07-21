@@ -120,6 +120,13 @@ describe('top header layout source contract', () => {
     )
   })
 
+  it('transitions standard and prefixed backdrop blur smoothly', () => {
+    const topbarBlock = extractBlock(topHeaderLayoutSource, '.topbar')
+
+    expect(topbarBlock).toContain('backdrop-filter 0.24s ease,')
+    expect(topbarBlock).toContain('-webkit-backdrop-filter 0.24s ease,')
+  })
+
   it('preserves a visible focus ring on the active desktop navigation link', () => {
     expect(topNavigationSource).toContain('a.router-link-active:focus-visible')
     expect(topNavigationSource).toContain('box-shadow: var(--focus-ring), inset 0 1px 0 var(--glass-highlight);')

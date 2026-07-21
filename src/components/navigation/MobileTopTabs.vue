@@ -171,6 +171,13 @@ onBeforeUnmount(() => {
     inset 0 1px 0 rgba(255, 255, 255, 0.56);
 }
 
+.mobile-top-tabs--open .mobile-top-tabs__trigger:focus-visible {
+  box-shadow: var(--focus-ring),
+    0 12px 24px rgba(15, 23, 42, 0.08),
+    0 2px 8px rgba(15, 23, 42, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.56);
+}
+
 .mobile-top-tabs__current {
   min-width: 0;
   overflow: hidden;
