@@ -62,7 +62,6 @@ const emit = defineEmits<{
 const titleId = `modal-title-${Math.random().toString(36).slice(2, 9)}`
 const instanceId = Symbol(titleId)
 const modalRef = ref<HTMLElement | null>(null)
-let previouslyFocusedElement: HTMLElement | null = null
 let isRegistered = false
 
 const focusableSelector =
@@ -132,7 +131,6 @@ const handleKeydown = (e: KeyboardEvent) => {
 function activateModal() {
   if (isRegistered) return
 
-  previouslyFocusedElement = document.activeElement as HTMLElement | null
   registerModal(instanceId, focusModal)
   isRegistered = true
   void nextTick(() => {
@@ -148,10 +146,7 @@ function deactivateModal() {
   isRegistered = false
   if (wasTop && remaining > 0) {
     focusNewTop?.()
-  } else if (wasTop) {
-    previouslyFocusedElement?.focus()
   }
-  previouslyFocusedElement = null
 }
 
 watch(() => props.modelValue, (isOpen) => {

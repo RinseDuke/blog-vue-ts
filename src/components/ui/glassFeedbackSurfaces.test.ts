@@ -142,6 +142,7 @@ describe('forms, editor and feedback glass contracts', () => {
     expect(modalSource).toContain('<Teleport to="body">')
     expect(modalSource).toContain('modalRef')
     expect(modalSource).toContain('handleTabKey')
-    expect(modalSource).toContain('previouslyFocusedElement')
+    expect(modalSource).toContain('registerModal')
+    expect(modalSource).toContain('unregisterModal')
   })
 })

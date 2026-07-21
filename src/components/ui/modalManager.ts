@@ -5,12 +5,14 @@ interface ModalRegistration {
 
 const modalStack: ModalRegistration[] = []
 let bodyOverflowBeforeLock: string | null = null
+let focusBeforeStack: HTMLElement | null = null
 
 export function registerModal(instanceId: symbol, focus: () => void) {
   if (modalStack.some((modal) => modal.instanceId === instanceId)) return
 
   if (modalStack.length === 0) {
     bodyOverflowBeforeLock = document.body.style.overflow
+    focusBeforeStack = document.activeElement as HTMLElement | null
     document.body.style.overflow = 'hidden'
   }
 
@@ -29,6 +31,8 @@ export function unregisterModal(instanceId: symbol) {
   if (modalStack.length === 0) {
     document.body.style.overflow = bodyOverflowBeforeLock ?? ''
     bodyOverflowBeforeLock = null
+    focusBeforeStack?.focus()
+    focusBeforeStack = null
   }
 
   return {

@@ -178,4 +178,29 @@ describe('Modal focus and stacking behavior', () => {
     await top.setProps({ modelValue: false })
     expect(document.body.style.overflow).toBe('clip')
   })
+
+  it('restores the background trigger after the lower modal closes before the top modal', async () => {
+    const trigger = document.querySelector('#modal-trigger') as HTMLButtonElement
+    trigger.focus()
+
+    const lower = mountModal(true, 'Lower')
+    await nextTick()
+    const lowerDialog = getDialogs()[0]
+    expect(lowerDialog.contains(document.activeElement)).toBe(true)
+
+    const top = mountModal(true, 'Top')
+    await nextTick()
+    const topDialog = getDialogs()[1]
+    expect(topDialog.contains(document.activeElement)).toBe(true)
+
+    await lower.setProps({ modelValue: false })
+    expect(getDialogs()).toHaveLength(1)
+    expect(topDialog.contains(document.activeElement)).toBe(true)
+    expect(document.body.style.overflow).toBe('hidden')
+
+    await top.setProps({ modelValue: false })
+    expect(getDialogs()).toHaveLength(0)
+    expect(document.activeElement).toBe(trigger)
+    expect(document.body.style.overflow).toBe('clip')
+  })
 })
