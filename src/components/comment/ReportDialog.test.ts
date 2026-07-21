@@ -1,8 +1,13 @@
 // @vitest-environment happy-dom
 
-import { mount, type VueWrapper } from '@vue/test-utils'
+import { flushPromises, mount, type VueWrapper } from '@vue/test-utils'
 import { nextTick } from 'vue'
+import { submitReport } from '@/services/reportService'
 import ReportDialog from './ReportDialog.vue'
+
+vi.mock('@/services/reportService', () => ({
+  submitReport: vi.fn(),
+}))
 
 const focusableSelector =
   'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
@@ -24,7 +29,32 @@ function getDialog() {
   return document.body.querySelector('.report-dialog') as HTMLElement
 }
 
+async function submitSuccessfully() {
+  vi.mocked(submitReport).mockResolvedValue({
+    id: 'report-1',
+    targetType: 'comment',
+    targetId: 'comment-1',
+    reason: 'spam',
+    reportedBy: 'user-test',
+    createdAt: '2026-07-22T00:00:00.000Z',
+    status: 'pending',
+  })
+
+  const firstReason = getDialog().querySelector<HTMLInputElement>('input[type="radio"]')!
+  firstReason.click()
+  await nextTick()
+
+  getDialog()
+    .querySelector('form')!
+    .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
+  await flushPromises()
+  await nextTick()
+
+  return getDialog().querySelector<HTMLButtonElement>('.report-dialog__success button')!
+}
+
 beforeEach(() => {
+  vi.mocked(submitReport).mockReset()
   document.body.innerHTML =
     '<div id="app"><button id="report-trigger" type="button">举报</button><div id="mount"></div></div>'
 })
@@ -64,6 +94,65 @@ describe('ReportDialog focus behavior', () => {
     first.dispatchEvent(
       new KeyboardEvent('keydown', { key: 'Tab', shiftKey: true, bubbles: true, cancelable: true })
     )
+    expect(document.activeElement).toBe(last)
+  })
+
+  it('focuses the success close button after a successful submission', async () => {
+    mountDialog()
+    await nextTick()
+
+    const closeButton = await submitSuccessfully()
+
+    expect(closeButton).toBeTruthy()
+    expect(document.activeElement).toBe(closeButton)
+  })
+
+  it('keeps focus on the only success control for Tab and Shift+Tab', async () => {
+    mountDialog()
+    await nextTick()
+    const closeButton = await submitSuccessfully()
+
+    closeButton.focus()
+    const tab = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true })
+    closeButton.dispatchEvent(tab)
+    expect(tab.defaultPrevented).toBe(true)
+    expect(document.activeElement).toBe(closeButton)
+
+    const shiftTab = new KeyboardEvent('keydown', {
+      key: 'Tab',
+      shiftKey: true,
+      bubbles: true,
+      cancelable: true,
+    })
+    closeButton.dispatchEvent(shiftTab)
+    expect(shiftTab.defaultPrevented).toBe(true)
+    expect(document.activeElement).toBe(closeButton)
+  })
+
+  it('recovers forward and backward Tab when focus moves outside the dialog', async () => {
+    const trigger = document.querySelector('#report-trigger') as HTMLButtonElement
+    mountDialog()
+    await nextTick()
+
+    const focusable = Array.from(getDialog().querySelectorAll<HTMLElement>(focusableSelector))
+    const first = focusable[0]
+    const last = focusable[focusable.length - 1]
+
+    trigger.focus()
+    const tab = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true })
+    trigger.dispatchEvent(tab)
+    expect(tab.defaultPrevented).toBe(true)
+    expect(document.activeElement).toBe(first)
+
+    trigger.focus()
+    const shiftTab = new KeyboardEvent('keydown', {
+      key: 'Tab',
+      shiftKey: true,
+      bubbles: true,
+      cancelable: true,
+    })
+    trigger.dispatchEvent(shiftTab)
+    expect(shiftTab.defaultPrevented).toBe(true)
     expect(document.activeElement).toBe(last)
   })
 

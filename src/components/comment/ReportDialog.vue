@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, onMounted, onUnmounted, ref } from 'vue'
+import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import type { ReportReason, ReportTargetType } from '@/types/post'
 import { submitReport } from '@/services/reportService'
 
@@ -79,6 +79,13 @@ function handleTabKey(event: KeyboardEvent) {
 
   const first = focusable[0]
   const last = focusable[focusable.length - 1]
+  if (!document.activeElement || !dialogRef.value?.contains(document.activeElement)) {
+    event.preventDefault()
+    const recoveryTarget = event.shiftKey ? last : first
+    recoveryTarget.focus()
+    return
+  }
+
   if (event.shiftKey && document.activeElement === first) {
     event.preventDefault()
     last.focus()
@@ -92,6 +99,11 @@ function handleKeydown(event: KeyboardEvent) {
   handleEscape(event)
   if (!event.defaultPrevented) handleTabKey(event)
 }
+
+watch(submitted, (isSubmitted) => {
+  if (!isSubmitted) return
+  void nextTick(() => getFocusableElements()[0]?.focus())
+})
 
 onMounted(() => {
   previousFocus = document.activeElement as HTMLElement | null
