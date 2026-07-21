@@ -13,6 +13,24 @@ a {
   transition: color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
 }
 
+.glass-surface {
+  color: var(--ink-main);
+  background: var(--glass-surface);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(var(--glass-blur)) saturate(145%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(145%);
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .glass-surface {
+    color: var(--ink-main);
+    background: var(--surface-strong);
+    border-color: var(--line-strong);
+    box-shadow: var(--shadow-sm);
+  }
+}
+
 @media (hover: hover) {
   a:hover {
     color: var(--brand-500);

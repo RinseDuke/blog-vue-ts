@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs'
 import footerSource from '@/components/navigation/TopFooter.vue?raw'
 
 const source = readFileSync(new URL('./base.css', import.meta.url), 'utf8')
+const mainSource = readFileSync(new URL('./main.css', import.meta.url), 'utf8')
 
 function extractBlock(blockSource: string, selector: string) {
   const selectorIndex = blockSource.indexOf(selector)
@@ -70,6 +71,40 @@ function contrastRatio(foreground: Rgba, background: Rgba) {
 }
 
 describe('base theme source contract', () => {
+  it('defines liquid glass tokens for light and dark themes', () => {
+    const rootBlock = extractBlock(source, ':root')
+    const darkThemeBlock = extractBlock(source, ":root[data-theme='dark']")
+    const glassTokens = [
+      '--glass-surface',
+      '--glass-border',
+      '--glass-highlight',
+      '--glass-shadow',
+      '--glass-blur',
+    ]
+
+    for (const token of glassTokens) {
+      expect(rootBlock).toContain(`${token}:`)
+      expect(darkThemeBlock).toContain(`${token}:`)
+    }
+  })
+
+  it('provides a reusable glass surface with a no-backdrop-filter fallback', () => {
+    const glassSurfaceBlock = extractBlock(mainSource, '.glass-surface')
+    const fallbackBlock = extractBlock(
+      mainSource,
+      '@supports not (backdrop-filter: blur(1px))',
+    )
+
+    expect(glassSurfaceBlock).toContain('background: var(--glass-surface);')
+    expect(glassSurfaceBlock).toContain('border: 1px solid var(--glass-border);')
+    expect(glassSurfaceBlock).toContain('box-shadow: var(--glass-shadow);')
+    expect(glassSurfaceBlock).toContain(
+      'backdrop-filter: blur(var(--glass-blur)) saturate(145%);',
+    )
+    expect(fallbackBlock).toContain('.glass-surface')
+    expect(fallbackBlock).toContain('background: var(--surface-strong);')
+  })
+
   it('keeps dark theme main and muted ink readable across canvas and surfaces', () => {
     const darkThemeBlock = extractBlock(source, ":root[data-theme='dark']")
     const footerBlock = extractBlock(footerSource, '.footer')
