@@ -41,6 +41,7 @@ defineEmits<{
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
+  min-height: 44px;
   font-weight: 600;
   border: none;
   border-radius: var(--radius-sm);
@@ -82,7 +83,7 @@ defineEmits<{
 }
 
 .btn--secondary {
-  background: var(--surface-strong);
+  background: var(--control-surface);
   color: var(--ink-strong);
   border: 1px solid var(--line-strong);
 }
@@ -93,7 +94,7 @@ defineEmits<{
 }
 
 .btn--ghost {
-  background: transparent;
+  background: color-mix(in srgb, var(--control-surface) 72%, transparent);
   color: var(--ink-main);
 }
 
@@ -115,7 +116,10 @@ defineEmits<{
 
 .btn--disabled,
 .btn:disabled {
-  opacity: 0.5;
+  color: var(--ink-muted);
+  border: 1px dashed var(--control-border);
+  background: var(--control-disabled);
+  box-shadow: none;
   cursor: not-allowed;
   transform: none !important;
 }

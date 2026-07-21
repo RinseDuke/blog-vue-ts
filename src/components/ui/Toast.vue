@@ -92,12 +92,13 @@ defineExpose({ addToast })
   min-width: 300px;
   max-width: 400px;
   padding: 0.9rem 1rem;
-  background: var(--surface-overlay);
+  background: var(--glass-surface);
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-md);
-  border: 1px solid var(--line-soft);
+  box-shadow: var(--glass-shadow);
+  border: 1px solid var(--glass-border);
   pointer-events: auto;
-  backdrop-filter: blur(20px);
+  backdrop-filter: blur(var(--glass-blur)) saturate(145%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(145%);
 }
 
 .toast__icon {
@@ -151,15 +152,18 @@ defineExpose({ addToast })
   font-size: 0.94rem;
   color: var(--ink-main);
   line-height: 1.5;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .toast__close {
   flex-shrink: 0;
-  width: 24px;
-  height: 24px;
+  width: 44px;
+  height: 44px;
   padding: 0;
   border: none;
-  background: transparent;
+  border: 1px solid var(--control-border);
+  background: var(--control-surface);
   color: var(--ink-muted);
   cursor: pointer;
   border-radius: 4px;
@@ -198,6 +202,14 @@ defineExpose({ addToast })
   transition: transform var(--motion-base) var(--ease-out-quint);
 }
 
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .toast {
+    background: var(--surface-strong);
+    border-color: var(--line-strong);
+    box-shadow: var(--shadow-md);
+  }
+}
+
 @media (max-width: 768px) {
   .toast-container {
     top: auto;
@@ -207,6 +219,7 @@ defineExpose({ addToast })
   }
 
   .toast {
+    width: 100%;
     min-width: auto;
     max-width: none;
   }

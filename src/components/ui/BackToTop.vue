@@ -58,17 +58,17 @@ onUnmounted(() => {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  border: 1px solid var(--line-soft);
-  background: var(--surface-overlay);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-surface);
   color: var(--ink-main);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--glass-shadow);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 30;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(var(--glass-blur)) saturate(145%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(145%);
 }
 
 .back-to-top:hover {
@@ -90,5 +90,20 @@ onUnmounted(() => {
 .back-to-top-leave-to {
   opacity: 0;
   transform: translateY(8px);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .back-to-top {
+    background: var(--surface-strong);
+    border-color: var(--line-strong);
+    box-shadow: var(--shadow-md);
+  }
+}
+
+@media (max-width: 640px) {
+  .back-to-top {
+    right: 16px;
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  }
 }
 </style>

@@ -177,7 +177,6 @@ onBeforeUnmount(() => {
   z-index: 100;
   padding: 18px 0 16px;
   background: var(--write-status-rail-bg);
-  backdrop-filter: blur(12px);
   pointer-events: none;
   font-size: 0.82rem;
   color: var(--ink-muted);
@@ -198,11 +197,12 @@ onBeforeUnmount(() => {
   gap: 16px 18px;
   min-height: 60px;
   padding: 10px 12px;
-  border: 1px solid var(--write-panel-border);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
-  background: var(--write-panel-bg);
-  box-shadow: var(--write-panel-shadow), var(--write-panel-inset-shadow);
-  backdrop-filter: blur(16px);
+  background: var(--glass-surface);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(var(--glass-blur)) saturate(145%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(145%);
   pointer-events: auto;
 }
 
@@ -230,7 +230,7 @@ onBeforeUnmount(() => {
   padding: 0 13px;
   border-radius: 999px;
   border: 1px solid var(--write-panel-inline-border);
-  background: var(--write-panel-inline-bg);
+  background: var(--control-surface);
   box-shadow: var(--write-panel-inset-shadow);
   color: var(--ink-strong);
   font-size: 0.8rem;
@@ -241,7 +241,7 @@ onBeforeUnmount(() => {
 .sb-btn {
   appearance: none;
   border: 1px solid var(--write-panel-inline-border);
-  background: var(--write-panel-inline-bg);
+  background: var(--control-surface);
   box-shadow: var(--write-panel-inset-shadow);
   cursor: pointer;
   font-size: 0.8rem;
@@ -275,7 +275,8 @@ onBeforeUnmount(() => {
 .sb-btn:disabled {
   cursor: not-allowed;
   color: var(--ink-muted);
-  opacity: 0.58;
+  background: var(--control-disabled);
+  border-style: dashed;
   transform: none;
 }
 
@@ -318,9 +319,8 @@ onBeforeUnmount(() => {
   padding: 6px;
   border: 1px solid var(--write-panel-border);
   border-radius: var(--radius-md);
-  background: var(--write-panel-bg);
+  background: var(--control-surface);
   box-shadow: var(--write-panel-shadow);
-  backdrop-filter: blur(16px);
   z-index: 200;
   pointer-events: auto;
 }
@@ -332,7 +332,8 @@ onBeforeUnmount(() => {
   width: 100%;
   padding: 10px 12px;
   border: 1px solid transparent;
-  background: transparent;
+  min-height: 44px;
+  background: var(--control-surface);
   border-radius: 12px;
   cursor: pointer;
   font-size: 0.82rem;
@@ -398,7 +399,7 @@ onBeforeUnmount(() => {
   padding: 0 12px;
   border-radius: 999px;
   border: 1px dashed var(--write-panel-divider);
-  background: color-mix(in srgb, var(--write-panel-inline-bg) 78%, transparent);
+  background: var(--control-surface);
   color: var(--ink-muted);
   font-size: 0.74rem;
   white-space: nowrap;
@@ -433,7 +434,9 @@ onBeforeUnmount(() => {
 .sb-publish:disabled {
   cursor: not-allowed;
   filter: grayscale(0.12);
-  opacity: 0.62;
+  color: var(--ink-muted);
+  border-style: dashed;
+  background: var(--control-disabled);
   box-shadow: none;
 }
 
@@ -470,7 +473,7 @@ onBeforeUnmount(() => {
   .sb-chip,
   .sb-btn,
   .sb-publish {
-    min-height: 36px;
+    min-height: 44px;
   }
 
   .sb-btn,
@@ -489,6 +492,14 @@ onBeforeUnmount(() => {
   .status-bar__right .sb-btn,
   .status-bar__right .sb-publish {
     flex: 1 1 calc(50% - 4px);
+  }
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .status-bar__shell {
+    background: var(--surface-strong);
+    border-color: var(--line-strong);
+    box-shadow: var(--shadow-sm);
   }
 }
 </style>

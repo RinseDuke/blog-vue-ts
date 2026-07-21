@@ -379,11 +379,12 @@ function enterEditMode() {
 }
 
 .panel {
-  border: 1px solid var(--line-soft);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
-  background: linear-gradient(180deg, var(--card-top), var(--card-bottom));
-  box-shadow: var(--shadow-sm);
-  backdrop-filter: blur(12px);
+  background: var(--glass-surface);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(var(--glass-blur)) saturate(145%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(145%);
 }
 
 .profile-hero {
@@ -408,7 +409,6 @@ function enterEditMode() {
   position: absolute;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(40px);
 }
 
 .profile-hero__banner::before {
@@ -568,6 +568,10 @@ function enterEditMode() {
 }
 
 .hero-btn {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 0.78rem 1.3rem;
   border-radius: 999px;
   border: 1px solid var(--line-soft);
@@ -600,16 +604,24 @@ function enterEditMode() {
 .profile-tabs {
   display: flex;
   gap: 0.5rem;
-  padding: 0 1.75rem;
+  padding: 0.45rem;
   margin-top: 1.5rem;
-  border-bottom: 2px solid var(--line-soft);
+  overflow-x: auto;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  background: var(--glass-surface);
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(var(--glass-blur)) saturate(145%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(145%);
 }
 
 .profile-tab {
   position: relative;
+  min-height: 44px;
   padding: 0.8rem 1.2rem;
-  background: transparent;
-  border: none;
+  background: var(--control-surface);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
   color: var(--ink-muted);
   font-size: 0.94rem;
   font-weight: 600;
@@ -620,9 +632,9 @@ function enterEditMode() {
 .profile-tab::after {
   content: '';
   position: absolute;
-  bottom: -2px;
-  left: 0;
-  right: 0;
+  bottom: 5px;
+  left: 25%;
+  right: 25%;
   height: 2px;
   background: var(--brand-500);
   transform: scaleX(0);
@@ -635,10 +647,20 @@ function enterEditMode() {
 
 .profile-tab--active {
   color: var(--brand-500);
+  border-color: color-mix(in srgb, var(--brand-500) 22%, var(--control-border));
 }
 
 .profile-tab--active::after {
   transform: scaleX(1);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .panel,
+  .profile-tabs {
+    background: var(--surface-strong);
+    border-color: var(--line-strong);
+    box-shadow: var(--shadow-sm);
+  }
 }
 
 .profile-layout {

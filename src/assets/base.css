@@ -11,6 +11,10 @@
   --surface-frost: rgba(255, 255, 255, 0.74);
   --surface-hover: rgba(255, 255, 255, 0.82);
   --surface-overlay: rgba(255, 255, 255, 0.94);
+  --control-surface: #ffffff;
+  --control-surface-hover: #f2f5f8;
+  --control-border: rgba(62, 78, 96, 0.22);
+  --control-disabled: #e8edf2;
   --glass-surface: rgba(244, 248, 252, 0.68);
   --glass-border: rgba(112, 137, 163, 0.26);
   --glass-highlight: rgba(255, 255, 255, 0.82);
@@ -112,6 +116,10 @@
   --surface-frost: rgba(16, 21, 29, 0.78);
   --surface-hover: rgba(255, 255, 255, 0.08);
   --surface-overlay: rgba(19, 25, 34, 0.94);
+  --control-surface: #18202b;
+  --control-surface-hover: #202a38;
+  --control-border: rgba(151, 184, 216, 0.24);
+  --control-disabled: #151b23;
   --glass-surface: rgba(13, 27, 42, 0.74);
   --glass-border: rgba(151, 184, 216, 0.2);
   --glass-highlight: rgba(226, 241, 255, 0.12);

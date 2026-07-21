@@ -3,10 +3,12 @@
     <Transition name="modal">
       <div v-if="modelValue" class="modal-overlay" @click="handleOverlayClick">
         <div
+          ref="modalRef"
           class="modal"
           role="dialog"
           aria-modal="true"
           :aria-labelledby="titleId"
+          tabindex="-1"
           @click.stop
         >
           <div class="modal__header">
@@ -38,7 +40,7 @@
 </template>
 
 <script setup lang="ts">
-import { watch, onMounted, onUnmounted } from 'vue'
+import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
 const props = withDefaults(
   defineProps<{
@@ -57,6 +59,8 @@ const emit = defineEmits<{
 }>()
 
 const titleId = `modal-title-${Math.random().toString(36).slice(2, 9)}`
+const modalRef = ref<HTMLElement | null>(null)
+let previouslyFocusedElement: HTMLElement | null = null
 
 const close = () => {
   emit('update:modelValue', false)
@@ -68,27 +72,65 @@ const handleOverlayClick = () => {
   }
 }
 
-const handleEscape = (e: KeyboardEvent) => {
+const handleTabKey = (event: KeyboardEvent) => {
+  if (!props.modelValue || event.key !== 'Tab' || !modalRef.value) return
+
+  const focusable = Array.from(
+    modalRef.value.querySelectorAll<HTMLElement>(
+      'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    )
+  )
+
+  if (!focusable.length) {
+    event.preventDefault()
+    modalRef.value.focus()
+    return
+  }
+
+  const first = focusable[0]
+  const last = focusable[focusable.length - 1]
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault()
+    last.focus()
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault()
+    first.focus()
+  }
+}
+
+const handleKeydown = (e: KeyboardEvent) => {
   if (e.key === 'Escape' && props.modelValue) {
     close()
+    return
   }
+  handleTabKey(e)
 }
 
 watch(() => props.modelValue, (isOpen) => {
   if (isOpen) {
+    previouslyFocusedElement = document.activeElement as HTMLElement | null
     document.body.style.overflow = 'hidden'
+    void nextTick(() => {
+      const firstFocusable = modalRef.value?.querySelector<HTMLElement>(
+        'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      )
+      ;(firstFocusable ?? modalRef.value)?.focus()
+    })
   } else {
     document.body.style.overflow = ''
+    previouslyFocusedElement?.focus()
+    previouslyFocusedElement = null
   }
-})
+}, { immediate: true })
 
 onMounted(() => {
-  document.addEventListener('keydown', handleEscape)
+  document.addEventListener('keydown', handleKeydown)
 })
 
 onUnmounted(() => {
-  document.removeEventListener('keydown', handleEscape)
+  document.removeEventListener('keydown', handleKeydown)
   document.body.style.overflow = ''
+  previouslyFocusedElement?.focus()
 })
 </script>
 
@@ -102,8 +144,6 @@ onUnmounted(() => {
   justify-content: center;
   padding: 1rem;
   background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
 }
 
 .modal {
@@ -111,10 +151,12 @@ onUnmounted(() => {
   width: 100%;
   max-width: 500px;
   max-height: 90vh;
-  background: var(--surface-overlay);
+  background: var(--glass-surface);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
-  border: 1px solid var(--line-soft);
+  box-shadow: var(--glass-shadow);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(var(--glass-blur)) saturate(145%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(145%);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -137,11 +179,11 @@ onUnmounted(() => {
 }
 
 .modal__close {
-  width: 32px;
-  height: 32px;
+  width: 44px;
+  height: 44px;
   padding: 0;
-  border: none;
-  background: transparent;
+  border: 1px solid var(--control-border);
+  background: var(--control-surface);
   color: var(--ink-muted);
   cursor: pointer;
   border-radius: 8px;
@@ -177,6 +219,14 @@ onUnmounted(() => {
   gap: 0.75rem;
   justify-content: flex-end;
   flex-shrink: 0;
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .modal {
+    background: var(--surface-strong);
+    border-color: var(--line-strong);
+    box-shadow: var(--shadow-md);
+  }
 }
 
 .modal-enter-active,

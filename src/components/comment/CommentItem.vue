@@ -86,6 +86,7 @@ async function handleReportClick() {
         type="button"
         class="comment-item__action-btn"
         :class="{ 'comment-item__action-btn--liked': commentLiked }"
+        :aria-pressed="commentLiked"
         :title="isLoggedIn ? undefined : '登录后可点赞评论'"
         @click="emit('like', comment.id)"
       >
@@ -162,18 +163,21 @@ export default { name: 'CommentItem' }
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  padding: 1rem 0;
-  border-bottom: 1px solid var(--line-soft);
+  padding: 1rem;
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius-md);
+  background: var(--control-surface);
 }
 
-.comment-item:last-child {
-  border-bottom: none;
+.comment-item + .comment-item {
+  margin-top: 0.75rem;
 }
 
 .comment-item--nested {
-  padding: 0.75rem 0 0.75rem 1rem;
-  border-bottom: none;
-  border-left: 2px solid rgba(0, 113, 227, 0.18);
+  padding: 0.85rem;
+  border-color: color-mix(in srgb, var(--brand-500) 24%, var(--control-border));
+  border-left-width: 3px;
+  background: var(--control-surface-hover);
 }
 
 .comment-item__header {
@@ -229,26 +233,30 @@ export default { name: 'CommentItem' }
   line-height: 1.7;
   color: var(--ink-main);
   font-size: 0.93rem;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
 }
 
 .comment-item__actions {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.4rem;
+  flex-wrap: wrap;
 }
 
 .comment-item__action-btn {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  background: none;
-  border: none;
+  min-height: 44px;
+  background: var(--control-surface);
+  border: 1px solid var(--control-border);
   color: var(--ink-muted);
   font-weight: 600;
   font-size: 0.82rem;
   cursor: pointer;
-  padding: 0.2rem 0.4rem;
-  border-radius: 6px;
+  padding: 0.45rem 0.7rem;
+  border-radius: 999px;
   transition: color 0.15s ease, background-color 0.15s ease;
 }
 
@@ -259,6 +267,8 @@ export default { name: 'CommentItem' }
 
 .comment-item__action-btn--liked {
   color: var(--brand-500);
+  border-color: color-mix(in srgb, var(--brand-500) 35%, var(--control-border));
+  background: var(--brand-100);
 }
 
 
@@ -271,5 +281,16 @@ export default { name: 'CommentItem' }
   display: flex;
   flex-direction: column;
   margin-top: 0.25rem;
+}
+
+@media (max-width: 390px) {
+  .comment-item {
+    padding: 0.85rem;
+  }
+
+  .comment-item__action-btn {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
 }
 </style>

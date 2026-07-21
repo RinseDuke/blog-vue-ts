@@ -514,7 +514,6 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   border-radius: 22px;
   background: var(--write-editor-card-bg);
   box-shadow: var(--write-editor-card-shadow), var(--write-panel-inset-shadow);
-  backdrop-filter: blur(14px);
 }
 
 .editor-main-card__header {
@@ -528,6 +527,7 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   flex: 1;
   flex-direction: column;
   padding: 8px 24px 24px;
+  background: var(--control-surface);
 }
 
 .meta-toggle-row {
@@ -546,6 +546,7 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   font-weight: 600;
   cursor: pointer;
   padding: 4px 0;
+  min-height: 44px;
   transition: color var(--motion-base) var(--ease-out);
 
   &:hover {
@@ -602,7 +603,7 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   min-height: 100px;
   border: 2px dashed var(--line-strong);
   border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--surface-strong) 60%, transparent);
+  background: var(--control-surface);
   color: var(--ink-muted);
   font-size: 0.82rem;
   cursor: pointer;
@@ -645,7 +646,6 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   font-weight: 600;
   padding: 4px 10px;
   cursor: pointer;
-  backdrop-filter: blur(4px);
   transition: background var(--motion-base) var(--ease-out);
 
   &:hover {
@@ -661,8 +661,8 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   padding: 8px 10px;
   border: 1px solid var(--line-soft);
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--surface-strong) 60%, transparent);
-  min-height: 40px;
+  background: var(--control-surface);
+  min-height: 46px;
 }
 
 .meta-panel__tag {
@@ -726,6 +726,7 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   font-weight: 600;
   padding: 3px 8px;
   cursor: pointer;
+  min-height: 36px;
   transition: color var(--motion-base) var(--ease-out), border-color var(--motion-base) var(--ease-out);
 
   &:hover {

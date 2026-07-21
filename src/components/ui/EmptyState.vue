@@ -43,6 +43,10 @@ withDefaults(
   justify-content: center;
   padding: 3rem 1.5rem;
   text-align: center;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  background: var(--glass-surface);
+  box-shadow: var(--shadow-sm);
 }
 
 .empty-state__icon {
@@ -71,6 +75,7 @@ withDefaults(
   margin: 0 0 1.5rem;
   max-width: 400px;
   line-height: 1.6;
+  overflow-wrap: anywhere;
 }
 
 .empty-state__action {
