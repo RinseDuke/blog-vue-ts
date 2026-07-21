@@ -22,7 +22,7 @@ a {
   -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(145%);
 }
 
-@supports not (backdrop-filter: blur(1px)) {
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .glass-surface {
     color: var(--ink-main);
     background: var(--surface-strong);

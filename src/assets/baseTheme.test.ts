@@ -88,21 +88,40 @@ describe('base theme source contract', () => {
     }
   })
 
-  it('provides a reusable glass surface with a no-backdrop-filter fallback', () => {
+  it('provides a reusable glass surface with a prefix-aware fallback', () => {
     const glassSurfaceBlock = extractBlock(mainSource, '.glass-surface')
-    const fallbackBlock = extractBlock(
-      mainSource,
-      '@supports not (backdrop-filter: blur(1px))',
-    )
+    const fallbackCondition =
+      '@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)))'
 
-    expect(glassSurfaceBlock).toContain('background: var(--glass-surface);')
-    expect(glassSurfaceBlock).toContain('border: 1px solid var(--glass-border);')
-    expect(glassSurfaceBlock).toContain('box-shadow: var(--glass-shadow);')
+    expect(mainSource).toContain(fallbackCondition)
+    const fallbackBlock = extractBlock(mainSource, fallbackCondition)
+
     expect(glassSurfaceBlock).toContain(
       'backdrop-filter: blur(var(--glass-blur)) saturate(145%);',
     )
+    expect(glassSurfaceBlock).toContain(
+      '-webkit-backdrop-filter: blur(var(--glass-blur)) saturate(145%);',
+    )
+    expect(glassSurfaceBlock).toContain('background: var(--glass-surface);')
+    expect(glassSurfaceBlock).toContain('border: 1px solid var(--glass-border);')
+    expect(glassSurfaceBlock).toContain('box-shadow: var(--glass-shadow);')
     expect(fallbackBlock).toContain('.glass-surface')
     expect(fallbackBlock).toContain('background: var(--surface-strong);')
+  })
+
+  it('keeps glass surface text readable after compositing in both themes', () => {
+    const themeBlocks = [extractBlock(source, ':root'), extractBlock(source, ":root[data-theme='dark']")]
+
+    for (const themeBlock of themeBlocks) {
+      const canvas = parseColor(extractToken(themeBlock, '--bg-canvas'))
+      const glassSurface = parseColor(extractToken(themeBlock, '--glass-surface'))
+      const compositeSurface = composite(glassSurface, canvas)
+
+      for (const inkToken of ['--ink-main', '--ink-muted']) {
+        const ink = parseColor(extractToken(themeBlock, inkToken))
+        expect(contrastRatio(ink, compositeSurface)).toBeGreaterThanOrEqual(4.5)
+      }
+    }
   })
 
   it('keeps dark theme main and muted ink readable across canvas and surfaces', () => {
