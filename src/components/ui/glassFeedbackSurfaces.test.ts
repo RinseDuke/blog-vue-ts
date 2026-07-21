@@ -54,11 +54,24 @@ describe('forms, editor and feedback glass contracts', () => {
     for (const source of [loginSource, registerSource]) {
       const card = extractBlock(source, source === loginSource ? '.login-card' : '.register-card')
       const field = extractBlock(source, '.field {')
+      const checkRow = extractBlock(source, '.check-row {')
+      const page = extractBlock(source, source === loginSource ? '.login-page {' : '.register-page {')
+      const formSide = extractBlock(
+        source,
+        source === loginSource ? '.login-page__form-side {' : '.register-page__form-side {'
+      )
 
       expect(card).toContain('background: var(--glass-surface);')
       expect(card).toContain('backdrop-filter: blur(var(--glass-blur))')
       expect(field).toContain('min-height: 46px;')
       expect(field).toContain('background: var(--control-surface);')
+      expect(source).toMatch(/&__toggle\s*\{[^}]*min-width: 44px;[^}]*min-height: 44px;/s)
+      expect(source).toContain('<label class="check-row"')
+      expect(checkRow).toContain('width: 100%;')
+      expect(checkRow).toContain('min-height: 44px;')
+      expect(checkRow).toContain('cursor: pointer;')
+      expect(page).toContain('max-width: 100vw;')
+      expect(formSide).toContain('min-width: 0;')
       expect(source).toMatch(/@media \(max-width: 768px\) {[\s\S]*padding: 1rem;/)
     }
   })
@@ -110,7 +123,7 @@ describe('forms, editor and feedback glass contracts', () => {
   it('keeps report dialogs modal and keyboard dismissible', () => {
     expect(reportDialogSource).toContain('aria-modal="true"')
     expect(reportDialogSource).toContain('handleEscape')
-    expect(reportDialogSource).toContain('document.addEventListener(\'keydown\', handleEscape)')
+    expect(reportDialogSource).toContain('document.addEventListener(\'keydown\', handleKeydown)')
   })
 
   it('uses shared glass and control tokens across generic controls', () => {

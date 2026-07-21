@@ -176,6 +176,7 @@ async function handleSubmit() {
 <style scoped lang="less">
 .register-page {
   width: 100%;
+  max-width: 100vw;
   min-height: calc(100vh - 68px);
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -223,6 +224,8 @@ async function handleSubmit() {
 
 .register-page__form-side {
   display: flex;
+  width: 100%;
+  min-width: 0;
   align-items: center;
   justify-content: center;
   padding: 2rem;
@@ -293,10 +296,12 @@ async function handleSubmit() {
     position: relative;
     display: flex;
     align-items: center;
+    min-width: 0;
   }
 
   input {
     width: 100%;
+    min-width: 0;
     min-height: 46px;
     border: 1px solid var(--control-border);
     border-radius: var(--radius-sm);
@@ -323,7 +328,8 @@ async function handleSubmit() {
     transform: translateY(-50%);
     border: 1px solid color-mix(in srgb, var(--line-soft) 92%, transparent);
     border-radius: 999px;
-    min-height: 36px;
+    min-width: 44px;
+    min-height: 44px;
     background: var(--control-surface-hover);
     color: var(--ink-main);
     padding: 0.26rem 0.62rem;
@@ -363,14 +369,18 @@ async function handleSubmit() {
 
 .check-row {
   display: flex;
+  width: 100%;
+  min-height: 44px;
   align-items: center;
   gap: 0.55rem;
   color: var(--ink-main);
   font-size: 0.88rem;
+  cursor: pointer;
 
   input {
     width: 20px;
     height: 20px;
+    flex: 0 0 20px;
     accent-color: var(--brand-500);
   }
 }

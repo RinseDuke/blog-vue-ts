@@ -28,6 +28,14 @@ const errorMessage = ref('')
 const dialogRef = ref<HTMLElement | null>(null)
 let previousFocus: HTMLElement | null = null
 
+const focusableSelector =
+  'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+
+function getFocusableElements() {
+  if (!dialogRef.value) return []
+  return Array.from(dialogRef.value.querySelectorAll<HTMLElement>(focusableSelector))
+}
+
 async function handleSubmit() {
   if (!selectedReason.value) return
 
@@ -54,17 +62,45 @@ function handleOverlayClick(e: MouseEvent) {
 }
 
 function handleEscape(event: KeyboardEvent) {
-  if (event.key === 'Escape') emit('close')
+  if (event.key !== 'Escape') return
+  event.preventDefault()
+  emit('close')
+}
+
+function handleTabKey(event: KeyboardEvent) {
+  if (event.key !== 'Tab') return
+
+  const focusable = getFocusableElements()
+  if (!focusable.length) {
+    event.preventDefault()
+    dialogRef.value?.focus()
+    return
+  }
+
+  const first = focusable[0]
+  const last = focusable[focusable.length - 1]
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault()
+    last.focus()
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault()
+    first.focus()
+  }
+}
+
+function handleKeydown(event: KeyboardEvent) {
+  handleEscape(event)
+  if (!event.defaultPrevented) handleTabKey(event)
 }
 
 onMounted(() => {
   previousFocus = document.activeElement as HTMLElement | null
-  document.addEventListener('keydown', handleEscape)
-  void nextTick(() => dialogRef.value?.focus())
+  document.addEventListener('keydown', handleKeydown)
+  void nextTick(() => (getFocusableElements()[0] ?? dialogRef.value)?.focus())
 })
 
 onUnmounted(() => {
-  document.removeEventListener('keydown', handleEscape)
+  document.removeEventListener('keydown', handleKeydown)
   previousFocus?.focus()
 })
 </script>
