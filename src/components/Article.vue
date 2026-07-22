@@ -220,6 +220,7 @@ function formatDate(dateString: string) {
   color: var(--ink-muted);
   margin: 0 0 2rem;
   max-width: 60ch;
+  overflow-wrap: anywhere;
 }
 
 .article-hero__meta {

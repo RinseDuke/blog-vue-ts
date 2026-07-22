@@ -91,6 +91,14 @@ describe('Article source contract', () => {
     expect(articleSource).toContain('@media (max-width: 390px)')
   })
 
+  it('wraps long hero excerpts without changing their readable sizing', () => {
+    const excerptBlock = extractBlock(articleSource, '.article-hero__excerpt')
+
+    expect(excerptBlock).toContain('overflow-wrap: anywhere;')
+    expect(excerptBlock).toContain('max-width: 60ch;')
+    expect(excerptBlock).toContain('line-height: 1.55;')
+  })
+
   it('contains rich article content within the readable column', () => {
     for (const selector of [
       '.article-prose',
