@@ -126,28 +126,24 @@ onBeforeUnmount(() => {
   position: relative;
   display: flex;
   flex: 1 1 auto;
-  min-width: 0;
-  max-width: 132px;
+  min-width: 84px;
+  max-width: 96px;
 }
 
 .mobile-top-tabs__trigger {
   width: 100%;
-  min-width: 0;
-  min-height: 38px;
-  padding: 0 0.78rem;
-  border: 1px solid var(--line-soft);
+  min-width: 52px;
+  min-height: 52px;
+  padding: 0 0.58rem;
+  border: 1px solid var(--glass-border);
   border-radius: 14px;
-  background:
-    linear-gradient(180deg, var(--surface-strong), var(--surface)),
-    radial-gradient(circle at top left, var(--brand-100), transparent 56%);
+  background: var(--glass-surface);
   color: var(--ink-main);
   display: inline-flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.45rem;
-  box-shadow:
-    0 10px 22px rgba(15, 23, 42, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.36);
+  box-shadow: inset 0 1px 0 var(--glass-highlight);
   transition:
     border-color 0.22s ease,
     background-color 0.22s ease,
@@ -167,11 +163,16 @@ onBeforeUnmount(() => {
 }
 
 .mobile-top-tabs--open .mobile-top-tabs__trigger {
-  border-color: color-mix(in srgb, var(--brand-100) 92%, transparent);
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--surface-overlay) 98%, transparent), color-mix(in srgb, var(--surface) 97%, transparent)),
-    radial-gradient(circle at top left, color-mix(in srgb, var(--brand-100) 46%, transparent), transparent 58%);
+  border-color: color-mix(in srgb, var(--glass-border) 58%, var(--brand-500) 42%);
+  background: color-mix(in srgb, var(--glass-surface) 78%, var(--brand-100) 22%);
   box-shadow:
+    0 12px 24px rgba(15, 23, 42, 0.08),
+    0 2px 8px rgba(15, 23, 42, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.56);
+}
+
+.mobile-top-tabs--open .mobile-top-tabs__trigger:focus-visible {
+  box-shadow: var(--focus-ring),
     0 12px 24px rgba(15, 23, 42, 0.08),
     0 2px 8px rgba(15, 23, 42, 0.04),
     inset 0 1px 0 rgba(255, 255, 255, 0.56);
@@ -201,6 +202,7 @@ onBeforeUnmount(() => {
   top: calc(100% + 10px);
   right: 0;
   width: max(100%, 188px);
+  max-width: calc(100vw - 1.5rem);
   padding: 0.36rem;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -208,28 +210,21 @@ onBeforeUnmount(() => {
   overflow: hidden;
   isolation: isolate;
   border-radius: 18px;
-  border: 1px solid color-mix(in srgb, var(--line-strong) 86%, transparent);
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--surface-overlay) 99%, transparent), color-mix(in srgb, var(--surface-frost) 100%, transparent)),
-    radial-gradient(circle at top left, color-mix(in srgb, var(--brand-100) 32%, transparent), transparent 58%);
-  box-shadow:
-    0 18px 34px rgba(15, 23, 42, 0.08),
-    0 4px 14px rgba(15, 23, 42, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(18px) saturate(135%);
-  -webkit-backdrop-filter: blur(18px) saturate(135%);
+  border: 1px solid var(--glass-border);
+  background: color-mix(in srgb, var(--glass-surface) 32%, var(--surface-strong) 68%);
+  box-shadow: var(--glass-shadow);
   z-index: 50;
 
   a {
-    min-width: 0;
-    min-height: 40px;
+    min-width: 52px;
+    min-height: 52px;
     display: inline-flex;
     align-items: center;
     justify-content: flex-start;
     padding: 0.74rem 0.9rem;
     border-radius: 13px;
     border: 1px solid transparent;
-    background: color-mix(in srgb, var(--surface-strong) 90%, transparent);
+    background: color-mix(in srgb, var(--glass-surface) 24%, var(--surface-strong) 76%);
     color: var(--ink-muted);
     text-decoration: none;
     font-size: 0.82rem;
@@ -257,6 +252,18 @@ onBeforeUnmount(() => {
 
   a:active {
     transform: scale(0.98);
+  }
+}
+
+.mobile-top-tabs__panel a.router-link-active:focus-visible {
+  box-shadow: var(--focus-ring), inset 0 1px 0 var(--glass-highlight);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .mobile-top-tabs__panel {
+    background: var(--surface-strong);
+    border-color: var(--line-strong);
+    box-shadow: var(--shadow-sm);
   }
 }
 

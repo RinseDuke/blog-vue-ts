@@ -90,6 +90,7 @@ onBeforeUnmount(() => {
           type="button"
           class="dropdown-select__option"
           :class="{ 'dropdown-select__option--active': option.value === modelValue }"
+          :aria-selected="option.value === modelValue"
           @click="selectOption(option.value)"
         >
           <span>{{ option.label }}</span>
@@ -115,10 +116,9 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   gap: 0.75rem;
   padding: 0.62rem 0.78rem;
-  border: 1px solid var(--line-soft);
+  border: 1px solid var(--control-border);
   border-radius: var(--radius-sm);
-  background:
-    linear-gradient(180deg, var(--surface-strong), var(--surface));
+  background: var(--control-surface);
   color: var(--ink-strong);
   cursor: pointer;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
@@ -161,13 +161,10 @@ onBeforeUnmount(() => {
   right: 0;
   z-index: 50;
   padding: 0.42rem;
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--glass-border);
   border-radius: 16px;
-  background:
-    radial-gradient(circle at top left, color-mix(in srgb, var(--brand-100) 80%, transparent), transparent 40%),
-    linear-gradient(180deg, var(--surface-overlay), var(--surface));
-  box-shadow: var(--shadow-md);
-  backdrop-filter: blur(16px);
+  background: var(--glass-surface);
+  box-shadow: var(--glass-shadow);
 }
 
 .dropdown-select__option {
@@ -176,10 +173,11 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
+  min-height: 44px;
   padding: 0.62rem 0.7rem;
   border: 1px solid transparent;
   border-radius: 12px;
-  background: transparent;
+  background: var(--control-surface);
   color: var(--ink-main);
   font-weight: 600;
   text-align: left;
@@ -217,5 +215,13 @@ onBeforeUnmount(() => {
 .dropdown-fade-leave-to {
   opacity: 0;
   transform: translateY(-4px);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .dropdown-select__menu {
+    background: var(--surface-strong);
+    border-color: var(--line-strong);
+    box-shadow: var(--shadow-md);
+  }
 }
 </style>

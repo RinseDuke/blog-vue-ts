@@ -102,7 +102,7 @@ async function handleSubmit() {
             <span>记住登录状态</span>
           </label>
 
-          <p v-if="errorMessage" class="feedback feedback--error">{{ errorMessage }}</p>
+          <p v-if="errorMessage" class="feedback feedback--error" role="alert">{{ errorMessage }}</p>
 
           <button type="submit" class="submit-btn" :disabled="!canSubmit">
             <span v-if="isSubmitting" class="submit-btn__spinner"></span>
@@ -122,9 +122,14 @@ async function handleSubmit() {
 <style scoped lang="less">
 .login-page {
   width: 100%;
+  max-width: 100vw;
   min-height: calc(100vh - 68px);
   display: grid;
   grid-template-columns: 1fr 1fr;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 18% 18%, var(--bg-ambient-cool), transparent 42%),
+    radial-gradient(circle at 82% 76%, var(--bg-ambient-warm), transparent 44%);
 }
 
 .login-page__brand {
@@ -140,7 +145,7 @@ async function handleSubmit() {
 
 .login-page__brand-content {
   text-align: center;
-  color: white;
+  color: var(--on-brand);
 }
 
 .login-page__logo {
@@ -165,6 +170,8 @@ async function handleSubmit() {
 
 .login-page__form-side {
   display: flex;
+  width: 100%;
+  min-width: 0;
   align-items: center;
   justify-content: center;
   padding: 2rem;
@@ -172,7 +179,14 @@ async function handleSubmit() {
 
 .login-card {
   width: min(100%, 420px);
-  padding: 0;
+  min-width: 0;
+  padding: clamp(1.35rem, 3vw, 2rem);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  background: var(--glass-surface);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(var(--glass-blur)) saturate(145%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(145%);
 
   h1 {
     margin: 0.25rem 0 0.35rem;
@@ -229,13 +243,16 @@ async function handleSubmit() {
     position: relative;
     display: flex;
     align-items: center;
+    min-width: 0;
   }
 
   input {
     width: 100%;
-    border: 1px solid var(--line-soft);
+    min-width: 0;
+    min-height: 46px;
+    border: 1px solid var(--control-border);
     border-radius: var(--radius-sm);
-    background: var(--surface-strong);
+    background: var(--control-surface);
     color: var(--ink-strong);
     padding: 0.72rem 4.9rem 0.72rem 0.85rem;
     transition: border-color var(--motion-base) var(--ease-out), box-shadow var(--motion-base) var(--ease-out);
@@ -254,8 +271,9 @@ async function handleSubmit() {
     transform: translateY(-50%);
     border: 1px solid color-mix(in srgb, var(--line-soft) 92%, transparent);
     border-radius: 999px;
-    background:
-      linear-gradient(180deg, color-mix(in srgb, var(--surface-overlay) 98%, transparent), color-mix(in srgb, var(--surface) 96%, transparent));
+    min-width: 44px;
+    min-height: 44px;
+    background: var(--control-surface-hover);
     color: var(--ink-main);
     padding: 0.26rem 0.62rem;
     font-size: 0.78rem;
@@ -272,14 +290,28 @@ async function handleSubmit() {
 
 .check-row {
   display: flex;
+  width: 100%;
+  min-height: 44px;
   align-items: center;
   gap: 0.55rem;
   color: var(--ink-main);
   font-size: 0.88rem;
+  cursor: pointer;
+
+  input {
+    width: 20px;
+    height: 20px;
+    flex: 0 0 20px;
+    accent-color: var(--brand-500);
+  }
 }
 
 .feedback {
   margin: 0;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid color-mix(in srgb, var(--danger-500) 28%, transparent);
+  border-radius: var(--radius-sm);
+  background: var(--danger-bg);
   font-size: 0.87rem;
   font-weight: 600;
 
@@ -292,9 +324,10 @@ async function handleSubmit() {
   margin-top: 0.15rem;
   border: none;
   border-radius: var(--radius-sm);
+  min-height: 46px;
   padding: 0.75rem 0.9rem;
   font-weight: 700;
-  color: #fff;
+  color: var(--on-brand);
   background: linear-gradient(135deg, var(--brand-500), var(--brand-400));
   cursor: pointer;
   display: inline-flex;
@@ -310,15 +343,25 @@ async function handleSubmit() {
 
   &:disabled {
     cursor: not-allowed;
-    opacity: 0.5;
+    color: var(--ink-muted);
+    background: var(--control-disabled);
+    box-shadow: none;
+  }
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .login-card {
+    background: var(--surface-strong);
+    border-color: var(--line-strong);
+    box-shadow: var(--shadow-md);
   }
 }
 
 .submit-btn__spinner {
   width: 14px;
   height: 14px;
-  border: 2px solid rgba(255, 255, 255, 0.4);
-  border-top-color: white;
+  border: 2px solid color-mix(in srgb, var(--on-brand) 40%, transparent);
+  border-top-color: var(--on-brand);
   border-radius: 50%;
   animation: spin 0.6s linear infinite;
 }
@@ -338,7 +381,17 @@ async function handleSubmit() {
 
   .login-page__form-side {
     min-height: calc(100vh - 68px);
-    padding: 2rem 1.25rem;
+    padding: 1rem;
+  }
+
+  .login-card {
+    padding: 1.25rem;
+  }
+}
+
+@media (max-width: 390px) {
+  .login-card {
+    padding: 1rem;
   }
 }
 </style>

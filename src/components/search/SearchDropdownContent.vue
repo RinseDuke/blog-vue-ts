@@ -99,11 +99,15 @@ function formatSuggestionMeta(post: Post) {
   display: flex;
   flex-direction: column;
   gap: 0.58rem;
+  padding: 0.72rem;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--glass-surface) 24%, var(--surface-strong) 76%);
+  box-shadow: inset 0 1px 0 var(--glass-highlight);
 }
 
 .search-dropdown__section + .search-dropdown__section {
-  padding-top: 0.85rem;
-  border-top: 1px solid var(--line-soft);
+  margin-top: 0.1rem;
 }
 
 .search-dropdown__section--empty {
@@ -170,7 +174,7 @@ function formatSuggestionMeta(post: Post) {
 
 .search-dropdown__rank[data-top='true'] {
   background: linear-gradient(135deg, var(--brand-400), var(--brand-500));
-  color: #fff;
+  color: var(--on-brand);
 }
 
 .search-dropdown__hot-text {
@@ -202,6 +206,7 @@ function formatSuggestionMeta(post: Post) {
 }
 
 .search-dropdown__chip {
+  min-height: 44px;
   padding: 0.34rem 0.72rem;
   border-radius: 999px;
   border: 1px solid var(--line-soft);
@@ -224,6 +229,7 @@ function formatSuggestionMeta(post: Post) {
   cursor: pointer;
   font-weight: 600;
   padding: 0;
+  min-height: 44px;
 }
 
 .search-dropdown__suggestion-list {
@@ -244,6 +250,7 @@ function formatSuggestionMeta(post: Post) {
   text-align: left;
   cursor: pointer;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  min-height: 44px;
 
   &:hover {
     border-color: rgba(0, 113, 227, 0.35);
@@ -311,6 +318,23 @@ function formatSuggestionMeta(post: Post) {
 @media (max-width: 900px) {
   .search-dropdown--regular .search-dropdown__hot-list {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 390px) {
+  .search-dropdown__section {
+    padding: 0.6rem;
+  }
+
+  .search-dropdown__header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .search-dropdown__hot-title,
+  .search-dropdown__suggestion-title {
+    overflow-wrap: anywhere;
+    white-space: normal;
   }
 }
 </style>

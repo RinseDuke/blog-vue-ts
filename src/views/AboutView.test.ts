@@ -80,6 +80,12 @@ describe('About view source contract', () => {
     expect(panelMetaBlock).toContain('padding-top: 34px;')
   })
 
+  it('keeps the profile edit action at least 44px tall for mobile touch input', () => {
+    const editButtonBlock = extractBlock(source, '.edit-btn')
+
+    expect(editButtonBlock).toContain('min-height: 44px;')
+  })
+
   it('protects long profile names from the visibility badge at every breakpoint', () => {
     const identityBlock = extractBlock(source, '.profile-hero__banner-identity')
     const headingBlock = extractBlock(source, '.profile-hero__banner-identity h1')

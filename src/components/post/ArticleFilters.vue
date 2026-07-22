@@ -20,6 +20,7 @@ const props = defineProps<{
   sortOptions: SortOption[]
   pageSize: number
   pageSizeOptions: number[]
+  keyword: string
   customStartDate: string
   customEndDate: string
   hasActiveFilters: boolean
@@ -30,6 +31,7 @@ const emit = defineEmits<{
   (e: 'update:datePreset', value: string): void
   (e: 'update:sortMode', value: string): void
   (e: 'update:pageSize', value: number): void
+  (e: 'update:keyword', value: string): void
   (e: 'update:customStartDate', value: string): void
   (e: 'update:customEndDate', value: string): void
   (e: 'clearFilters'): void
@@ -69,6 +71,11 @@ const pageSizeDropdownOptions = computed(() =>
   }))
 )
 
+const keywordValue = computed({
+  get: () => props.keyword,
+  set: (value: string) => emit('update:keyword', value),
+})
+
 const customStartDateValue = computed({
   get: () => props.customStartDate,
   set: (value: string) => emit('update:customStartDate', value),
@@ -81,7 +88,7 @@ const customEndDateValue = computed({
 </script>
 
 <template>
-  <aside class="filter-box" :class="{ 'is-mobile-open': isMobileFiltersOpen }">
+  <aside class="filter-box glass-surface" :class="{ 'is-mobile-open': isMobileFiltersOpen }">
     <div class="filter-box__mobile-bar">
       <button
         type="button"
@@ -110,6 +117,13 @@ const customEndDateValue = computed({
       <h3>筛选</h3>
       <button type="button" class="filter-reset" :disabled="!hasActiveFilters" @click="emit('clearFilters')">重置</button>
     </header>
+
+    <section class="filter-group filter-group--compact">
+      <label class="filter-search">
+        <span class="filter-group__title">搜索文章</span>
+        <input v-model="keywordValue" type="search" placeholder="标题、摘要、作者..." />
+      </label>
+    </section>
 
     <section class="filter-group filter-group--compact">
       <p class="filter-group__title">排序</p>
@@ -144,13 +158,7 @@ const customEndDateValue = computed({
 
 <style scoped lang="less">
 .filter-box {
-  background:
-    radial-gradient(circle at top left, color-mix(in srgb, var(--brand-100) 70%, transparent), transparent 36%),
-    linear-gradient(180deg, color-mix(in srgb, var(--surface-overlay) 98%, transparent), color-mix(in srgb, var(--surface) 96%, transparent));
   border-radius: var(--radius-lg);
-  border: 1px solid var(--line-soft);
-  box-shadow: var(--shadow-sm);
-  backdrop-filter: blur(14px);
   padding: 1rem;
   position: sticky;
   top: 102px;
@@ -190,6 +198,7 @@ const customEndDateValue = computed({
   border-radius: var(--radius-sm);
   font-weight: 700;
   cursor: pointer;
+  min-height: 44px;
   transition: all 0.2s ease;
 
   &:hover {
@@ -223,6 +232,7 @@ const customEndDateValue = computed({
   border-radius: var(--radius-sm);
   font-weight: 600;
   cursor: pointer;
+  min-height: 44px;
   transition: all 0.2s ease;
 
   &:disabled {
@@ -258,6 +268,29 @@ const customEndDateValue = computed({
   margin: 0;
   font-weight: 700;
   color: var(--ink-strong);
+}
+
+.filter-search {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.filter-search input {
+  width: 100%;
+  min-height: 44px;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--glass-surface) 22%, var(--surface-strong) 78%);
+  color: var(--ink-strong);
+  font: inherit;
+  outline: none;
+}
+
+.filter-search input:focus-visible {
+  border-color: color-mix(in srgb, var(--glass-border) 48%, var(--brand-500) 52%);
+  box-shadow: var(--focus-ring);
 }
 
 .date-range {
@@ -305,10 +338,24 @@ const customEndDateValue = computed({
     margin-top: 0.9rem;
     padding-top: 0.9rem;
     border-top: 1px solid var(--line-soft);
+    max-height: min(56vh, 420px);
+    overflow-y: auto;
   }
 
   .filter-box.is-mobile-open .filter-box__panel {
     display: block;
+  }
+}
+
+@media (max-width: 768px) {
+  .filter-box {
+    padding: 0.7rem;
+    border-radius: var(--radius-md);
+  }
+
+  .filter-box__panel {
+    margin-top: 0.7rem;
+    padding: 0.8rem 0.15rem 0.15rem;
   }
 }
 

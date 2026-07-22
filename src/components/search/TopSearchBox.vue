@@ -117,20 +117,20 @@ onUnmounted(() => {
   display: flex;
   justify-content: center;
   min-width: 0;
-  padding: 0 0.1rem;
+  padding: 0 0.15rem;
 }
 
 .search-input-wrapper {
   position: relative;
   width: 100%;
-  max-width: 700px;
+  max-width: 640px;
   display: flex;
   align-items: center;
   transition: max-width var(--motion-base) var(--ease-out-quint);
 }
 
 .search-box--focused .search-input-wrapper {
-  max-width: 800px;
+  max-width: 720px;
 }
 
 .search-icon {
@@ -149,15 +149,13 @@ onUnmounted(() => {
 .search-box input {
   width: 100%;
   padding: 0.72rem 3.4rem 0.72rem 2.6rem;
-  background: linear-gradient(180deg, var(--surface-strong), var(--surface));
-  border: 1px solid color-mix(in srgb, var(--line-strong) 90%, transparent);
+  background: var(--glass-surface);
+  border: 1px solid var(--glass-border);
   border-radius: 999px;
   font-size: 0.9rem;
   color: var(--ink-strong);
   outline: none;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.48),
-    0 10px 22px rgba(15, 23, 42, 0.04);
+  box-shadow: var(--glass-shadow);
   transition: border-color var(--motion-base) var(--ease-out), box-shadow var(--motion-base) var(--ease-out), background-color var(--motion-base) var(--ease-out);
 }
 
@@ -166,19 +164,19 @@ onUnmounted(() => {
 }
 
 .search-box input:focus {
-  border-color: rgba(0, 113, 227, 0.3);
+  border-color: color-mix(in srgb, var(--glass-border) 54%, var(--brand-500) 46%);
   box-shadow:
-    0 0 0 4px rgba(0, 113, 227, 0.1),
-    0 16px 34px rgba(15, 23, 42, 0.08);
-  background: var(--surface-strong);
+    0 0 0 4px color-mix(in srgb, var(--brand-100) 72%, transparent),
+    var(--glass-shadow);
+  background: color-mix(in srgb, var(--glass-surface) 82%, var(--surface-strong) 18%);
 }
 
 .search-shortcut {
   position: absolute;
   right: 3rem;
   padding: 0.2rem 0.5rem;
-  background: var(--surface-hover);
-  border: 1px solid var(--line-soft);
+  background: color-mix(in srgb, var(--glass-surface) 72%, var(--surface-strong) 28%);
+  border: 1px solid var(--glass-border);
   border-radius: 6px;
   color: var(--ink-muted);
   font-size: 0.75rem;
@@ -192,8 +190,8 @@ onUnmounted(() => {
   right: 0.45rem;
   width: 34px;
   height: 34px;
-  background: color-mix(in srgb, var(--surface-strong) 92%, transparent);
-  border: 1px solid var(--line-soft);
+  background: color-mix(in srgb, var(--glass-surface) 64%, var(--surface-strong) 36%);
+  border: 1px solid var(--glass-border);
   border-radius: 50%;
   color: var(--ink-main);
   cursor: pointer;
@@ -214,14 +212,10 @@ onUnmounted(() => {
   top: calc(100% + 0.7rem);
   left: 0;
   right: 0;
-  background:
-    linear-gradient(180deg, var(--surface-overlay), color-mix(in srgb, var(--surface) 98%, transparent)),
-    radial-gradient(circle at top left, var(--brand-100), transparent 44%);
-  border: 1px solid color-mix(in srgb, var(--line-strong) 88%, transparent);
+  background: color-mix(in srgb, var(--glass-surface) 38%, var(--surface-strong) 62%);
+  border: 1px solid var(--glass-border);
   border-radius: 22px;
-  box-shadow:
-    var(--shadow-md),
-    inset 0 1px 0 rgba(255, 255, 255, 0.38);
+  box-shadow: var(--glass-shadow);
   padding: 1rem;
   display: flex;
   flex-direction: column;
@@ -229,7 +223,30 @@ onUnmounted(() => {
   z-index: 40;
   max-height: 70vh;
   overflow-y: auto;
-  backdrop-filter: blur(18px);
+  backdrop-filter: blur(var(--glass-blur)) saturate(135%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(135%);
+}
+
+:global(html[data-theme='dark']) .search-box input {
+  background: var(--glass-surface) !important;
+}
+
+:global(html[data-theme='dark']) .top-search__dropdown {
+  background: color-mix(in srgb, var(--glass-surface) 38%, var(--surface-strong) 62%) !important;
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .search-box input,
+  .top-search__dropdown {
+    background: var(--surface-strong);
+    border-color: var(--line-strong);
+    box-shadow: var(--shadow-sm);
+  }
+
+  :global(html[data-theme='dark']) .search-box input,
+  :global(html[data-theme='dark']) .top-search__dropdown {
+    background: var(--surface-strong) !important;
+  }
 }
 
 @media (max-width: 768px) {

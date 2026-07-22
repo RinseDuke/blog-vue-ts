@@ -1,6 +1,6 @@
 <!-- 评论表单：提交新评论或回复 (弃用中)-->  
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, useId } from 'vue'
 
 const MAX_COMMENT_LENGTH = 500
 
@@ -16,6 +16,7 @@ const emit = defineEmits<{
 
 const content = ref('')
 const touched = ref(false)
+const errorId = useId()
 
 const trimmedContent = computed(() => content.value.trim())
 const charCount = computed(() => trimmedContent.value.length)
@@ -57,11 +58,13 @@ function handleBlur() {
         :class="{ 'comment-form__input--error': validationError }"
         :placeholder="parentId ? '写下你的回复...' : '写下你的评论...'"
         :maxlength="MAX_COMMENT_LENGTH + 50"
+        :aria-invalid="Boolean(validationError)"
+        :aria-describedby="validationError ? errorId : undefined"
         rows="3"
         @blur="handleBlur"
       />
       <div class="comment-form__info">
-        <span v-if="validationError" class="comment-form__error">{{ validationError }}</span>
+        <span v-if="validationError" :id="errorId" class="comment-form__error" role="alert">{{ validationError }}</span>
         <span class="comment-form__counter" :class="{ 'comment-form__counter--warn': isTooLong }">
           {{ charCount }}/{{ MAX_COMMENT_LENGTH }}
         </span>
@@ -92,6 +95,10 @@ function handleBlur() {
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
+  padding: 0.85rem;
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius-md);
+  background: var(--control-surface-hover);
 }
 
 .comment-form__field {
@@ -103,9 +110,9 @@ function handleBlur() {
 .comment-form__input {
   width: 100%;
   padding: 0.75rem 0.9rem;
-  border: 1px solid var(--line-soft);
+  border: 1px solid var(--control-border);
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.88);
+  background: var(--control-surface);
   color: var(--ink-strong);
   font-size: 0.92rem;
   line-height: 1.6;
@@ -123,6 +130,7 @@ function handleBlur() {
 
 .comment-form__input--error {
   border-color: var(--danger-500);
+  background: color-mix(in srgb, var(--danger-bg) 45%, var(--control-surface));
 }
 
 .comment-form__input--error:focus {
@@ -166,6 +174,7 @@ function handleBlur() {
 }
 
 .comment-form__btn {
+  min-height: 44px;
   padding: 0.5rem 1.1rem;
   border-radius: 10px;
   font-weight: 700;
@@ -177,7 +186,7 @@ function handleBlur() {
 .comment-form__btn--submit {
   border: none;
   background: var(--brand-500);
-  color: #fff;
+  color: var(--on-brand);
 }
 
 .comment-form__btn--submit:hover:enabled {
@@ -187,17 +196,29 @@ function handleBlur() {
 
 .comment-form__btn--submit:disabled {
   cursor: not-allowed;
-  background: #9ca3af;
+  border: 1px dashed var(--control-border);
+  background: var(--control-disabled);
+  color: var(--ink-muted);
 }
 
 .comment-form__btn--cancel {
-  border: 1px solid var(--line-soft);
-  background: #fff;
+  border: 1px solid var(--control-border);
+  background: var(--control-surface);
   color: var(--ink-muted);
 }
 
 .comment-form__btn--cancel:hover {
   color: var(--ink-strong);
   border-color: var(--ink-muted);
+}
+
+@media (max-width: 390px) {
+  .comment-form__actions {
+    width: 100%;
+  }
+
+  .comment-form__btn {
+    flex: 1;
+  }
 }
 </style>

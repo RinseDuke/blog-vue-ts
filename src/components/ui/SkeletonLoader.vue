@@ -73,7 +73,7 @@ defineProps<{
 .skeleton__bar {
   height: 14px;
   border-radius: 8px;
-  background: linear-gradient(90deg, #eef1f5 25%, #dde3ea 38%, #eef1f5 63%);
+  background: linear-gradient(90deg, var(--control-surface-hover) 25%, var(--control-disabled) 38%, var(--control-surface-hover) 63%);
   background-size: 800px 100%;
   animation: shimmer 1.6s ease infinite;
 }
@@ -110,7 +110,7 @@ defineProps<{
   height: 36px;
   border-radius: 50%;
   flex-shrink: 0;
-  background: linear-gradient(90deg, #eef1f5 25%, #dde3ea 38%, #eef1f5 63%);
+  background: linear-gradient(90deg, var(--control-surface-hover) 25%, var(--control-disabled) 38%, var(--control-surface-hover) 63%);
   background-size: 800px 100%;
   animation: shimmer 1.6s ease infinite;
 }
@@ -119,7 +119,7 @@ defineProps<{
   width: 100%;
   height: 160px;
   border-radius: 12px;
-  background: linear-gradient(90deg, #eef1f5 25%, #dde3ea 38%, #eef1f5 63%);
+  background: linear-gradient(90deg, var(--control-surface-hover) 25%, var(--control-disabled) 38%, var(--control-surface-hover) 63%);
   background-size: 800px 100%;
   animation: shimmer 1.6s ease infinite;
 }

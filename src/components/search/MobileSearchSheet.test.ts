@@ -3,6 +3,9 @@
 import { mount, type VueWrapper } from '@vue/test-utils'
 import { nextTick } from 'vue'
 import MobileSearchSheet from './MobileSearchSheet.vue'
+import source from './MobileSearchSheet.vue?raw'
+import dropdownSource from './SearchDropdownContent.vue?raw'
+import searchViewSource from '@/views/Search.vue?raw'
 import {
   createMobileSearchBackgroundIsolation,
   createMobileSearchDesktopCloseLifecycle,
@@ -99,6 +102,38 @@ afterEach(() => {
 })
 
 describe('MobileSearchSheet integration', () => {
+  it('uses a high-opacity glass panel with solid fallback and 52px controls', () => {
+    expect(source).toContain(
+      'background: color-mix(in srgb, var(--glass-surface) 28%, var(--surface-strong) 72%);'
+    )
+    expect(source).toContain('border: 1px solid var(--glass-border);')
+    expect(source).toContain('box-shadow: var(--glass-shadow);')
+    expect(source).toContain('backdrop-filter: blur(var(--glass-blur)) saturate(135%);')
+    expect(source).toContain('@supports not ((backdrop-filter: blur(1px))')
+    expect(source).toContain('background: var(--surface-strong);')
+    expect(source).toMatch(
+      /\.mobile-search-sheet__input-wrap input\s*\{[^}]*min-width: 52px;[^}]*height: 52px;/s
+    )
+    expect(source).toMatch(/\.mobile-search-sheet__submit\s*\{[^}]*min-width: 52px;[^}]*height: 52px;/s)
+    expect(source).toMatch(/\.mobile-search-sheet__close\s*\{[^}]*min-width: 52px;[^}]*height: 52px;/s)
+  })
+
+  it('gives results a distinct high-contrast glass hierarchy without another backdrop filter', () => {
+    expect(source).toContain('class="mobile-search-sheet__content mobile-search-sheet__content--glass"')
+    expect(source).toContain('background: color-mix(in srgb, var(--glass-surface) 18%, var(--surface-strong) 82%);')
+    expect(dropdownSource).toContain('border: 1px solid var(--glass-border);')
+    expect(dropdownSource).toContain('background: color-mix(in srgb, var(--glass-surface) 24%, var(--surface-strong) 76%);')
+    expect(dropdownSource).toContain('min-height: 44px;')
+    expect(dropdownSource).not.toContain('backdrop-filter')
+  })
+
+  it('uses the same glass summary and responsive card flow on the full search page', () => {
+    expect(searchViewSource).toContain('class="search__summary glass-surface"')
+    expect(searchViewSource).toContain('<PostList v-else class="feed__grid feed__grid--list"')
+    expect(searchViewSource).toContain('@media (max-width: 768px)')
+    expect(searchViewSource).toContain('padding: 0.95rem;')
+  })
+
   it('teleports a labelled modal, isolates the app, focuses the input, and restores the trigger on close', async () => {
     const app = document.querySelector('#app') as HTMLElement
     const trigger = document.querySelector('#search-trigger') as HTMLButtonElement

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import type { ReportReason, ReportTargetType } from '@/types/post'
 import { submitReport } from '@/services/reportService'
 
@@ -25,6 +25,16 @@ const detail = ref('')
 const submitting = ref(false)
 const submitted = ref(false)
 const errorMessage = ref('')
+const dialogRef = ref<HTMLElement | null>(null)
+let previousFocus: HTMLElement | null = null
+
+const focusableSelector =
+  'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+
+function getFocusableElements() {
+  if (!dialogRef.value) return []
+  return Array.from(dialogRef.value.querySelectorAll<HTMLElement>(focusableSelector))
+}
 
 async function handleSubmit() {
   if (!selectedReason.value) return
@@ -50,12 +60,74 @@ async function handleSubmit() {
 function handleOverlayClick(e: MouseEvent) {
   if (e.target === e.currentTarget) emit('close')
 }
+
+function handleEscape(event: KeyboardEvent) {
+  if (event.key !== 'Escape') return
+  event.preventDefault()
+  emit('close')
+}
+
+function handleTabKey(event: KeyboardEvent) {
+  if (event.key !== 'Tab') return
+
+  const focusable = getFocusableElements()
+  if (!focusable.length) {
+    event.preventDefault()
+    dialogRef.value?.focus()
+    return
+  }
+
+  const first = focusable[0]
+  const last = focusable[focusable.length - 1]
+  if (!document.activeElement || !dialogRef.value?.contains(document.activeElement)) {
+    event.preventDefault()
+    const recoveryTarget = event.shiftKey ? last : first
+    recoveryTarget.focus()
+    return
+  }
+
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault()
+    last.focus()
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault()
+    first.focus()
+  }
+}
+
+function handleKeydown(event: KeyboardEvent) {
+  handleEscape(event)
+  if (!event.defaultPrevented) handleTabKey(event)
+}
+
+watch(submitted, (isSubmitted) => {
+  if (!isSubmitted) return
+  void nextTick(() => getFocusableElements()[0]?.focus())
+})
+
+onMounted(() => {
+  previousFocus = document.activeElement as HTMLElement | null
+  document.addEventListener('keydown', handleKeydown)
+  void nextTick(() => (getFocusableElements()[0] ?? dialogRef.value)?.focus())
+})
+
+onUnmounted(() => {
+  document.removeEventListener('keydown', handleKeydown)
+  previousFocus?.focus()
+})
 </script>
 
 <template>
   <Teleport to="body">
     <div class="report-overlay" @click="handleOverlayClick">
-      <div class="report-dialog" role="dialog" aria-labelledby="report-title">
+      <div
+        ref="dialogRef"
+        class="report-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="report-title"
+        tabindex="-1"
+      >
         <template v-if="!submitted">
           <header class="report-dialog__header">
             <h3 id="report-title">举报{{ targetType === 'comment' ? '评论' : '文章' }}</h3>
@@ -90,7 +162,7 @@ function handleOverlayClick(e: MouseEvent) {
               rows="3"
             />
 
-            <p v-if="errorMessage" class="report-form__error">{{ errorMessage }}</p>
+            <p v-if="errorMessage" class="report-form__error" role="alert">{{ errorMessage }}</p>
 
             <div class="report-form__actions">
               <button type="button" class="report-form__btn report-form__btn--cancel" @click="emit('close')">取消</button>
@@ -137,16 +209,21 @@ function handleOverlayClick(e: MouseEvent) {
   z-index: 100;
   display: grid;
   place-items: center;
+  padding: 1rem;
   background: rgba(0, 0, 0, 0.35);
-  backdrop-filter: blur(4px);
   animation: overlay-in 0.2s ease;
 }
 
 .report-dialog {
   width: min(460px, calc(100% - 2rem));
-  background: #fff;
+  max-height: min(90vh, 720px);
+  overflow-y: auto;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-surface);
   border-radius: 20px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(var(--glass-blur)) saturate(145%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(145%);
   padding: 1.5rem;
   animation: dialog-in 0.25s ease;
 }
@@ -165,8 +242,10 @@ function handleOverlayClick(e: MouseEvent) {
 }
 
 .report-dialog__close {
-  background: none;
-  border: none;
+  width: 44px;
+  height: 44px;
+  background: var(--control-surface);
+  border: 1px solid var(--control-border);
   font-size: 1.1rem;
   color: var(--ink-muted);
   cursor: pointer;
@@ -202,9 +281,11 @@ function handleOverlayClick(e: MouseEvent) {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  min-height: 44px;
   padding: 0.6rem 0.85rem;
   border-radius: 10px;
-  border: 1px solid var(--line-soft);
+  border: 1px solid var(--control-border);
+  background: var(--control-surface);
   cursor: pointer;
   font-size: 0.92rem;
   color: var(--ink-main);
@@ -223,16 +304,23 @@ function handleOverlayClick(e: MouseEvent) {
   font-weight: 600;
 }
 
+.report-form__reason--selected::after {
+  content: '✓';
+  margin-left: auto;
+  font-weight: 800;
+}
+
 .report-form__detail {
   width: 100%;
   padding: 0.65rem 0.8rem;
-  border: 1px solid var(--line-soft);
+  border: 1px solid var(--control-border);
   border-radius: 10px;
   font-family: inherit;
   font-size: 0.9rem;
   color: var(--ink-strong);
   resize: vertical;
   min-height: 60px;
+  background: var(--control-surface);
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -244,6 +332,10 @@ function handleOverlayClick(e: MouseEvent) {
 
 .report-form__error {
   margin: 0;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--danger-500) 34%, var(--control-border));
+  border-radius: var(--radius-sm);
+  background: var(--danger-bg);
   color: var(--danger-500);
   font-size: 0.87rem;
   font-weight: 600;
@@ -256,6 +348,7 @@ function handleOverlayClick(e: MouseEvent) {
 }
 
 .report-form__btn {
+  min-height: 44px;
   padding: 0.5rem 1.1rem;
   border-radius: 10px;
   font-weight: 700;
@@ -265,8 +358,8 @@ function handleOverlayClick(e: MouseEvent) {
 }
 
 .report-form__btn--cancel {
-  border: 1px solid var(--line-soft);
-  background: #fff;
+  border: 1px solid var(--control-border);
+  background: var(--control-surface);
   color: var(--ink-muted);
 }
 
@@ -277,7 +370,7 @@ function handleOverlayClick(e: MouseEvent) {
 .report-form__btn--submit {
   border: none;
   background: var(--danger-500);
-  color: #fff;
+  color: var(--on-danger);
 }
 
 .report-form__btn--submit:hover:enabled {
@@ -287,7 +380,9 @@ function handleOverlayClick(e: MouseEvent) {
 
 .report-form__btn--submit:disabled {
   cursor: not-allowed;
-  background: #9ca3af;
+  border: 1px dashed var(--control-border);
+  background: var(--control-disabled);
+  color: var(--ink-muted);
 }
 
 .report-dialog__success {
@@ -320,6 +415,29 @@ function handleOverlayClick(e: MouseEvent) {
   margin: 0;
   color: var(--ink-muted);
   font-size: 0.92rem;
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .report-dialog {
+    background: var(--surface-strong);
+    border-color: var(--line-strong);
+    box-shadow: var(--shadow-md);
+  }
+}
+
+@media (max-width: 390px) {
+  .report-dialog {
+    width: 100%;
+    padding: 1rem;
+  }
+
+  .report-form__actions {
+    width: 100%;
+  }
+
+  .report-form__btn {
+    flex: 1;
+  }
 }
 
 @keyframes overlay-in {

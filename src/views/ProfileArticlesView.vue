@@ -251,6 +251,13 @@ onMounted(async () => {
   justify-content: space-between;
   gap: 1.5rem;
   flex-wrap: wrap;
+  padding: clamp(1.25rem, 3vw, 2rem);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  background: var(--glass-surface);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(var(--glass-blur)) saturate(145%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(145%);
 }
 
 .manager-hero__eyebrow {
@@ -273,6 +280,7 @@ onMounted(async () => {
   margin: 0.65rem 0 0;
   color: var(--ink-muted);
   max-width: 720px;
+  overflow-wrap: anywhere;
 }
 
 .manager-hero__actions {
@@ -282,11 +290,12 @@ onMounted(async () => {
 }
 
 .panel {
-  border: 1px solid var(--line-soft);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
-  background: linear-gradient(180deg, var(--card-top), var(--card-bottom));
-  box-shadow: var(--shadow-sm);
-  backdrop-filter: blur(12px);
+  background: var(--glass-surface);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(var(--glass-blur)) saturate(145%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(145%);
 }
 
 .manager-btn {
@@ -307,7 +316,7 @@ onMounted(async () => {
 
 .manager-btn--primary {
   background: var(--brand-500);
-  color: #fff;
+  color: var(--on-brand);
   border-color: var(--brand-500);
 }
 
@@ -331,8 +340,8 @@ onMounted(async () => {
 .stat-card {
   padding: 1rem 1.05rem;
   border-radius: var(--radius-md);
-  border: 1px solid var(--line-soft);
-  background: var(--surface-strong);
+  border: 1px solid var(--control-border);
+  background: var(--control-surface);
 }
 
 .stat-card__value {
@@ -489,7 +498,7 @@ onMounted(async () => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 34px;
+  min-height: 44px;
   padding: 0.42rem 0.82rem;
   border-radius: 999px;
   border: 1px solid var(--line-soft);
@@ -537,6 +546,17 @@ onMounted(async () => {
   color: var(--ink-strong);
   text-align: right;
   font-weight: 600;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .manager-hero,
+  .panel {
+    background: var(--surface-strong);
+    border-color: var(--line-strong);
+    box-shadow: var(--shadow-sm);
+  }
 }
 
 @media (max-width: 980px) {
@@ -554,6 +574,10 @@ onMounted(async () => {
 @media (max-width: 640px) {
   .manager-page {
     padding: 40px 14px 40px;
+  }
+
+  .manager-hero {
+    padding: 1rem;
   }
 
   .manager-stats {

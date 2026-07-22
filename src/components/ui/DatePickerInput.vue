@@ -166,6 +166,7 @@ onBeforeUnmount(() => {
               'date-picker__day--today': day.isToday,
               'date-picker__day--selected': day.isSelected,
             }"
+            :aria-pressed="day.isSelected"
             @click="selectDate(day.value)"
           >
             {{ day.day }}
@@ -194,17 +195,19 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   gap: 0.75rem;
   padding: 0.62rem 0.78rem;
-  border: 1px solid var(--line-soft);
+  border: 1px solid var(--control-border);
   border-radius: var(--radius-sm);
-  background: linear-gradient(180deg, var(--surface-strong), var(--surface));
+  background: var(--control-surface);
   color: var(--ink-strong);
   cursor: pointer;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
   transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
 
   &:disabled {
-    opacity: 0.65;
     cursor: not-allowed;
+    border-style: dashed;
+    background: var(--control-disabled);
+    color: var(--ink-muted);
   }
 }
 
@@ -244,13 +247,10 @@ onBeforeUnmount(() => {
   right: 0;
   z-index: 70;
   padding: 0.8rem;
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--glass-border);
   border-radius: 18px;
-  background:
-    radial-gradient(circle at top left, color-mix(in srgb, var(--brand-100) 70%, transparent), transparent 42%),
-    linear-gradient(180deg, var(--surface-overlay), color-mix(in srgb, var(--surface) 98%, transparent));
-  box-shadow: var(--shadow-md);
-  backdrop-filter: blur(16px);
+  background: var(--glass-surface);
+  box-shadow: var(--glass-shadow);
 }
 
 .date-picker__head {
@@ -273,14 +273,14 @@ onBeforeUnmount(() => {
   gap: 0.35rem;
 
   button {
-    width: 32px;
-    height: 32px;
+    width: 44px;
+    height: 44px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid var(--line-soft);
+    border: 1px solid var(--control-border);
     border-radius: 10px;
-    background: color-mix(in srgb, var(--surface-strong) 88%, transparent);
+    background: var(--control-surface);
     color: var(--ink-main);
     cursor: pointer;
     transition: border-color 0.18s ease, background-color 0.18s ease, color 0.18s ease;
@@ -325,13 +325,13 @@ onBeforeUnmount(() => {
 }
 
 .date-picker__day {
-  min-height: 34px;
+  min-height: 44px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border: 1px solid transparent;
   border-radius: 10px;
-  background: transparent;
+  background: var(--control-surface);
   color: var(--ink-main);
   font-weight: 600;
   cursor: pointer;
@@ -370,6 +370,8 @@ onBeforeUnmount(() => {
 }
 
 .date-picker__action {
+  min-height: 44px;
+  padding: 0 0.6rem;
   border: none;
   background: transparent;
   color: var(--ink-muted);
@@ -395,5 +397,13 @@ onBeforeUnmount(() => {
 .date-picker-fade-leave-to {
   opacity: 0;
   transform: translateY(-4px);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .date-picker__panel {
+    background: var(--surface-strong);
+    border-color: var(--line-strong);
+    box-shadow: var(--shadow-md);
+  }
 }
 </style>

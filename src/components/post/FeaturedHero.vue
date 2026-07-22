@@ -1,30 +1,39 @@
 <template>
-  <section v-if="post" class="featured-hero">
-    <div class="featured-hero__bg" />
+  <article class="featured-hero">
+    <img
+      v-if="post.coverImage"
+      :src="post.coverImage"
+      :alt="''"
+      class="featured-hero__media"
+      loading="eager"
+      decoding="async"
+    />
+    <div class="featured-hero__ambient" aria-hidden="true"></div>
 
-    <div class="featured-hero__body">
-      <span class="featured-hero__kicker">最新</span>
-
-      <h2 class="featured-hero__title">{{ post.title }}</h2>
-
+    <div class="featured-hero__body glass-surface">
+      <span class="featured-hero__kicker">编辑精选</span>
+      <h3 class="featured-hero__title">{{ post.title }}</h3>
       <p v-if="post.excerpt" class="featured-hero__excerpt">{{ post.excerpt }}</p>
 
       <div class="featured-hero__meta">
-        <span class="featured-hero__author">{{ post.author.name }}</span>
-        <span class="featured-hero__dot">&middot;</span>
-        <span class="featured-hero__date">{{ formatDate(post.publishedAt) }}</span>
-        <span class="featured-hero__dot">&middot;</span>
-        <span class="featured-hero__read">{{ post.readMinutes }} 分钟阅读</span>
+        <span>{{ post.author.name }}</span>
+        <span>{{ formatDate(post.publishedAt) }}</span>
+        <span>{{ post.readMinutes }} 分钟阅读</span>
       </div>
 
-      <router-link :to="`/article/${post.id}`" class="featured-hero__cta">
-        阅读文章
-      </router-link>
+      <RouterLink
+        :to="{ name: 'article-detail', params: { id: post.id } }"
+        class="featured-hero__cta"
+      >
+        阅读精选
+        <span aria-hidden="true">↗</span>
+      </RouterLink>
     </div>
-  </section>
+  </article>
 </template>
 
 <script setup lang="ts">
+import { RouterLink } from 'vue-router'
 import type { Post } from '@/types/post'
 import { formatPostDate } from '@/features/post/utils/post'
 
@@ -37,118 +46,151 @@ function formatDate(dateString: string) {
 }
 </script>
 
-<style scoped>
+<style scoped lang="less">
 .featured-hero {
   position: relative;
-  width: 100%;
-  max-width: 1040px;
-  margin: 0 auto;
-  height: 380px;
-  border-radius: var(--radius-lg);
-  overflow: hidden;
+  isolation: isolate;
   display: flex;
   align-items: flex-end;
-  padding: 2rem 2.5rem;
-  border: 1px solid var(--line-soft);
-  box-shadow: var(--shadow-sm);
+  min-height: clamp(420px, 52vw, 580px);
+  padding: clamp(1rem, 3vw, 2rem);
+  overflow: hidden;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  background: var(--surface-strong);
+  box-shadow: 0 28px 72px color-mix(in srgb, var(--ink-strong) 14%, transparent);
 }
 
-.featured-hero__bg {
+.featured-hero__media,
+.featured-hero__ambient {
   position: absolute;
   inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.featured-hero__media {
+  z-index: -3;
+  object-fit: cover;
+  transform: scale(1.01);
+}
+
+.featured-hero__ambient {
+  z-index: -2;
   background:
-    radial-gradient(circle at 20% 30%, color-mix(in srgb, var(--brand-100) 80%, transparent), transparent 50%),
-    linear-gradient(135deg, var(--write-panel-bg));
-  z-index: 0;
+    linear-gradient(180deg, transparent 8%, color-mix(in srgb, var(--bg-canvas) 42%, transparent) 54%, color-mix(in srgb, var(--bg-canvas) 82%, transparent) 100%),
+    radial-gradient(circle at 18% 20%, color-mix(in srgb, var(--brand-400) 48%, transparent), transparent 42%),
+    linear-gradient(135deg, color-mix(in srgb, var(--brand-100) 78%, var(--surface-strong)), var(--surface-strong));
 }
 
 .featured-hero__body {
-  position: relative;
-  z-index: 1;
-  max-width: 680px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.9rem;
+  width: min(680px, 100%);
+  padding: clamp(1.25rem, 3vw, 2rem);
+  border-radius: var(--radius-lg);
 }
 
 .featured-hero__kicker {
-  display: inline-block;
-  font-size: var(--text-xs, 0.78rem);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
   color: var(--brand-500);
-  margin-bottom: 0.75rem;
-  padding: 0.2rem 0.6rem;
-  border: 1px solid color-mix(in srgb, var(--brand-500) 30%, transparent);
-  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
 .featured-hero__title {
-  font-size: var(--text-display, 2.75rem);
-  font-weight: 800;
-  line-height: 1.08;
-  letter-spacing: -0.02em;
+  margin: 0;
   color: var(--ink-strong);
-  margin: 0 0 1rem;
+  font-size: clamp(2rem, 5vw, 4.5rem);
+  font-weight: 800;
+  line-height: 1.02;
+  letter-spacing: -0.055em;
+  overflow-wrap: anywhere;
 }
 
 .featured-hero__excerpt {
-  font-size: var(--text-base, 1rem);
-  line-height: 1.6;
-  color: var(--ink-muted);
-  margin: 0 0 1.25rem;
+  max-width: 58ch;
+  margin: 0;
+  color: var(--ink-main);
+  font-size: clamp(0.98rem, 1.5vw, 1.08rem);
+  line-height: 1.72;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
   overflow: hidden;
 }
 
 .featured-hero__meta {
   display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: var(--text-sm, 0.88rem);
+  flex-wrap: wrap;
+  gap: 0.45rem 1rem;
   color: var(--ink-muted);
-  margin-bottom: 1.5rem;
+  font-size: 0.86rem;
+  font-weight: 650;
 }
 
-.featured-hero__dot {
-  opacity: 0.4;
+.featured-hero__meta span + span::before {
+  content: '·';
+  margin-right: 1rem;
+  color: color-mix(in srgb, var(--ink-muted) 58%, transparent);
 }
 
 .featured-hero__cta {
   display: inline-flex;
   align-items: center;
-  padding: 0.6rem 1.4rem;
-  border-radius: 999px;
-  background: var(--brand-500);
-  color: #fff;
-  font-weight: 700;
-  font-size: var(--text-sm, 0.88rem);
+  justify-content: center;
+  gap: 0.55rem;
+  min-height: 44px;
+  margin-top: 0.25rem;
+  padding: 0.65rem 1rem;
+  border-radius: var(--radius-sm);
+  background: var(--ink-strong);
+  color: var(--surface-strong);
+  font-weight: 800;
   text-decoration: none;
-  transition: opacity var(--motion-fast, 120ms) ease;
 }
 
-.featured-hero__cta:hover {
-  opacity: 0.88;
+@media (hover: hover) {
+  .featured-hero__cta:hover {
+    color: var(--surface-strong);
+    transform: translateY(-2px);
+  }
 }
 
 @media (max-width: 768px) {
   .featured-hero {
-    height: 220px;
-    padding: 1.25rem 1.5rem;
+    min-height: 300px;
+    padding: 0.75rem;
+    border-radius: var(--radius-md);
+  }
+
+  .featured-hero__body {
+    gap: 0.7rem;
+    padding: 1.1rem;
     border-radius: var(--radius-md);
   }
 
   .featured-hero__title {
-    font-size: var(--text-2xl, 1.63rem);
+    font-size: clamp(1.65rem, 8vw, 2.45rem);
+    letter-spacing: -0.04em;
   }
 
   .featured-hero__excerpt {
-    display: none;
+    -webkit-line-clamp: 2;
   }
 
+  .featured-hero__meta span + span::before {
+    margin-right: 0.55rem;
+  }
+}
+
+@media (max-width: 390px) {
   .featured-hero__meta {
-    font-size: var(--text-xs, 0.78rem);
-    margin-bottom: 1rem;
+    gap: 0.35rem 0.55rem;
+    font-size: 0.78rem;
   }
 }
 </style>

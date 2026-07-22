@@ -191,7 +191,7 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   background: transparent;
-  padding-top: 68px;
+  padding-top: 84px;
 }
 
 .page {
@@ -205,14 +205,14 @@ onUnmounted(() => {
   min-width: 0;
   display: flex;
   align-items: center;
-  gap: 0.72rem;
+  gap: 0.65rem;
 }
 
 .mobile-topbar {
   display: none;
   width: 100%;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.25rem;
 }
 
 .mobile-topbar__main {
@@ -220,37 +220,52 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
 .mobile-topbar__actions {
   display: flex;
   align-items: center;
-  gap: 0.42rem;
+  gap: 0.25rem;
   margin-left: auto;
+  min-width: 0;
 }
 
 .mobile-search-trigger {
-  width: 38px;
-  height: 38px;
-  border: 1px solid var(--line-soft);
+  min-width: 52px;
+  min-height: 52px;
+  width: 52px;
+  height: 52px;
+  border: 1px solid var(--glass-border);
   border-radius: 14px;
-  background:
-    linear-gradient(180deg, var(--surface-strong), var(--surface)),
-    radial-gradient(circle at top left, var(--brand-100), transparent 50%);
+  background: var(--glass-surface);
   color: var(--ink-main);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   padding: 0;
+  box-shadow: inset 0 1px 0 var(--glass-highlight);
+  cursor: pointer;
+  transition:
+    color var(--motion-base) var(--ease-out),
+    border-color var(--motion-base) var(--ease-out),
+    background-color var(--motion-base) var(--ease-out),
+    box-shadow var(--motion-base) var(--ease-out);
+}
+
+.mobile-search-trigger:hover,
+.mobile-search-trigger[aria-expanded='true'] {
+  color: var(--brand-500);
+  border-color: color-mix(in srgb, var(--glass-border) 64%, var(--brand-500) 36%);
+  background: color-mix(in srgb, var(--glass-surface) 82%, var(--brand-100) 18%);
   box-shadow:
-    0 10px 22px rgba(15, 23, 42, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.36);
+    inset 0 1px 0 var(--glass-highlight),
+    0 8px 18px color-mix(in srgb, var(--brand-500) 10%, transparent);
 }
 
 @media (max-width: 768px) {
   .layout {
-    padding-top: 52px;
+    padding-top: 76px;
   }
 
   .desktop-topbar {
@@ -264,6 +279,16 @@ onUnmounted(() => {
   .mobile-topbar__actions .theme-switch {
     margin-left: 0;
     order: initial;
+  }
+}
+
+@media (max-width: 390px) {
+  .mobile-topbar__main {
+    gap: 0.35rem;
+  }
+
+  .mobile-topbar__actions {
+    gap: 0.18rem;
   }
 }
 

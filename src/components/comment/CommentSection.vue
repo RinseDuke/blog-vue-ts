@@ -86,7 +86,7 @@ watch(
     <div v-if="loading" class="comment-section__skeletons">
       <SkeletonLoader v-for="i in 3" :key="i" variant="comment" />
     </div>
-    <div v-else-if="error" class="comment-section__state comment-section__state--error">{{ error }}</div>
+    <div v-else-if="error" class="comment-section__state comment-section__state--error" role="alert">{{ error }}</div>
 
     <div v-else-if="!topLevelComments.length" class="comment-section__state comment-section__state--empty">
       还没有评论，来发表第一条吧！
@@ -114,8 +114,13 @@ watch(
   flex-direction: column;
   gap: 1.2rem;
   margin-top: 2.5rem;
-  padding-top: 2rem;
-  border-top: 1px solid var(--line-soft);
+  padding: clamp(1rem, 3vw, 1.5rem);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  background: var(--glass-surface);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(var(--glass-blur)) saturate(145%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(145%);
 }
 
 .comment-section__header {
@@ -140,7 +145,7 @@ watch(
   padding: 0 0.4rem;
   border-radius: 999px;
   background: var(--brand-500);
-  color: #fff;
+  color: var(--on-brand);
   font-size: 0.78rem;
   font-weight: 700;
 }
@@ -149,19 +154,20 @@ watch(
   padding: 1.5rem;
   text-align: center;
   border-radius: 14px;
-  border: 1px solid var(--line-soft);
-  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid var(--control-border);
+  background: var(--control-surface);
   color: var(--ink-muted);
   font-size: 0.92rem;
 }
 
 .comment-section__state--error {
-  background: #fff5f5;
+  border-color: color-mix(in srgb, var(--danger-500) 34%, var(--control-border));
+  background: var(--danger-bg);
   color: var(--danger-500);
 }
 
 .comment-section__state--empty {
-  background: #f7f9fc;
+  background: var(--control-surface-hover);
   color: var(--ink-main);
 }
 
@@ -177,8 +183,8 @@ watch(
   gap: 0.8rem;
   padding: 1rem 1.1rem;
   border-radius: 14px;
-  border: 1px solid var(--line-soft);
-  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid var(--control-border);
+  background: var(--control-surface);
   color: var(--ink-muted);
 
   p {
@@ -189,9 +195,12 @@ watch(
 .comment-section__login-link {
   flex-shrink: 0;
   padding: 0.5rem 0.9rem;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
   border-radius: 999px;
   background: var(--brand-500);
-  color: #fff;
+  color: var(--on-brand);
   font-weight: 700;
   text-decoration: none;
 }
@@ -203,7 +212,19 @@ watch(
   padding: 0.5rem 0;
 }
 
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .comment-section {
+    background: var(--surface-strong);
+    border-color: var(--line-strong);
+    box-shadow: var(--shadow-sm);
+  }
+}
+
 @media (max-width: 640px) {
+  .comment-section {
+    padding: 1rem;
+  }
+
   .comment-section__login-gate {
     flex-direction: column;
     align-items: flex-start;

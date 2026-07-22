@@ -12,4 +12,10 @@ describe('Write view source contract', () => {
   it('lets the desktop editor width follow the shared write content max width', () => {
     expect(source).toMatch(/\.editor-main\s*\{[\s\S]*max-width: var\(--write-content-max-width, 980px\);/)
   })
+
+  it('disables StarterKit link and underline when registering standalone extensions', () => {
+    expect(source).toMatch(/StarterKit\.configure\(\{[\s\S]*?link:\s*false,[\s\S]*?underline:\s*false,[\s\S]*?\}\)/)
+    expect(source).toContain('Underline,')
+    expect(source).toContain('Link.configure({')
+  })
 })

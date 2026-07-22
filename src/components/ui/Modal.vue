@@ -3,10 +3,12 @@
     <Transition name="modal">
       <div v-if="modelValue" class="modal-overlay" @click="handleOverlayClick">
         <div
+          ref="modalRef"
           class="modal"
           role="dialog"
           aria-modal="true"
           :aria-labelledby="titleId"
+          tabindex="-1"
           @click.stop
         >
           <div class="modal__header">
@@ -38,7 +40,8 @@
 </template>
 
 <script setup lang="ts">
-import { watch, onMounted, onUnmounted } from 'vue'
+import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { isTopModal, registerModal, unregisterModal } from './modalManager'
 
 const props = withDefaults(
   defineProps<{
@@ -57,38 +60,110 @@ const emit = defineEmits<{
 }>()
 
 const titleId = `modal-title-${Math.random().toString(36).slice(2, 9)}`
+const instanceId = Symbol(titleId)
+const modalRef = ref<HTMLElement | null>(null)
+let isRegistered = false
+
+const focusableSelector =
+  'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+
+function getFocusableElements() {
+  if (!modalRef.value) return []
+  return Array.from(modalRef.value.querySelectorAll<HTMLElement>(focusableSelector))
+}
+
+function focusModal() {
+  const firstFocusable = getFocusableElements()[0]
+  const focusTarget = firstFocusable ?? modalRef.value
+  focusTarget?.focus()
+}
 
 const close = () => {
   emit('update:modelValue', false)
 }
 
 const handleOverlayClick = () => {
-  if (props.closeOnOverlay) {
+  if (props.closeOnOverlay && isTopModal(instanceId)) {
     close()
   }
 }
 
-const handleEscape = (e: KeyboardEvent) => {
+const handleTabKey = (event: KeyboardEvent) => {
+  if (!props.modelValue || event.key !== 'Tab' || !modalRef.value || !isTopModal(instanceId)) return
+
+  const focusable = getFocusableElements()
+
+  if (!focusable.length) {
+    event.preventDefault()
+    modalRef.value.focus()
+    return
+  }
+
+  const first = focusable[0]
+  const last = focusable[focusable.length - 1]
+  if (!document.activeElement || !modalRef.value.contains(document.activeElement)) {
+    event.preventDefault()
+    const recoveryTarget = event.shiftKey ? last : first
+    recoveryTarget.focus()
+    return
+  }
+
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault()
+    last.focus()
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault()
+    first.focus()
+  }
+}
+
+const handleKeydown = (e: KeyboardEvent) => {
+  if (!props.modelValue || !isTopModal(instanceId)) return
+
   if (e.key === 'Escape' && props.modelValue) {
+    e.preventDefault()
     close()
+    return
+  }
+  handleTabKey(e)
+}
+
+function activateModal() {
+  if (isRegistered) return
+
+  registerModal(instanceId, focusModal)
+  isRegistered = true
+  void nextTick(() => {
+    if (!isTopModal(instanceId)) return
+    focusModal()
+  })
+}
+
+function deactivateModal() {
+  if (!isRegistered) return
+
+  const { wasTop, remaining, focusNewTop } = unregisterModal(instanceId)
+  isRegistered = false
+  if (wasTop && remaining > 0) {
+    focusNewTop?.()
   }
 }
 
 watch(() => props.modelValue, (isOpen) => {
   if (isOpen) {
-    document.body.style.overflow = 'hidden'
+    activateModal()
   } else {
-    document.body.style.overflow = ''
+    deactivateModal()
   }
-})
+}, { immediate: true })
 
 onMounted(() => {
-  document.addEventListener('keydown', handleEscape)
+  document.addEventListener('keydown', handleKeydown)
 })
 
 onUnmounted(() => {
-  document.removeEventListener('keydown', handleEscape)
-  document.body.style.overflow = ''
+  document.removeEventListener('keydown', handleKeydown)
+  deactivateModal()
 })
 </script>
 
@@ -102,8 +177,6 @@ onUnmounted(() => {
   justify-content: center;
   padding: 1rem;
   background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
 }
 
 .modal {
@@ -111,10 +184,12 @@ onUnmounted(() => {
   width: 100%;
   max-width: 500px;
   max-height: 90vh;
-  background: var(--surface-overlay);
+  background: var(--glass-surface);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
-  border: 1px solid var(--line-soft);
+  box-shadow: var(--glass-shadow);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(var(--glass-blur)) saturate(145%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(145%);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -137,11 +212,11 @@ onUnmounted(() => {
 }
 
 .modal__close {
-  width: 32px;
-  height: 32px;
+  width: 44px;
+  height: 44px;
   padding: 0;
-  border: none;
-  background: transparent;
+  border: 1px solid var(--control-border);
+  background: var(--control-surface);
   color: var(--ink-muted);
   cursor: pointer;
   border-radius: 8px;
@@ -177,6 +252,14 @@ onUnmounted(() => {
   gap: 0.75rem;
   justify-content: flex-end;
   flex-shrink: 0;
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .modal {
+    background: var(--surface-strong);
+    border-color: var(--line-strong);
+    box-shadow: var(--shadow-md);
+  }
 }
 
 .modal-enter-active,

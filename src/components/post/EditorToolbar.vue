@@ -527,10 +527,12 @@ onBeforeUnmount(() => {
 }
 
 .editor-toolbar__surface {
-  border: 1px solid var(--write-toolbar-border, var(--write-panel-border));
+  border: 1px solid var(--glass-border);
   border-radius: 20px;
-  background: var(--write-toolbar-bg, var(--write-panel-bg));
-  box-shadow: var(--write-toolbar-shadow, var(--write-panel-shadow)), var(--write-panel-inset-shadow);
+  background: var(--glass-surface);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(var(--glass-blur)) saturate(145%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(145%);
   overflow: visible;
 }
 
@@ -575,7 +577,7 @@ onBeforeUnmount(() => {
   padding: 8px 10px;
   border: 1px solid transparent;
   border-radius: 12px;
-  background: transparent;
+  background: var(--control-surface);
   color: var(--ink-muted);
   cursor: pointer;
   transition:
@@ -614,9 +616,11 @@ onBeforeUnmount(() => {
 }
 
 .toolbar-btn:disabled {
-  opacity: 0.42;
+  opacity: 1;
   cursor: not-allowed;
-  color: var(--line-strong);
+  color: var(--ink-muted);
+  background: var(--control-disabled);
+  border-style: dashed;
 }
 
 .toolbar-btn:focus-visible,
@@ -737,9 +741,8 @@ onBeforeUnmount(() => {
   padding: 6px;
   border: 1px solid var(--write-panel-border);
   border-radius: 14px;
-  background: var(--write-panel-bg);
+  background: var(--control-surface);
   box-shadow: var(--write-panel-shadow);
-  backdrop-filter: blur(16px);
   z-index: 20;
 }
 
@@ -751,7 +754,8 @@ onBeforeUnmount(() => {
   padding: 10px 12px;
   border: 1px solid transparent;
   border-radius: 10px;
-  background: transparent;
+  min-height: 44px;
+  background: var(--control-surface);
   color: var(--ink-main);
   cursor: pointer;
   transition: background 0.14s ease, color 0.14s ease, border-color 0.14s ease;
@@ -806,7 +810,7 @@ onBeforeUnmount(() => {
   .toolbar-btn,
   .toolbar-btn--compact {
     min-width: 44px;
-    min-height: 40px;
+    min-height: 44px;
     padding: 7px 9px;
   }
 
@@ -833,6 +837,14 @@ onBeforeUnmount(() => {
 
   .toolbar-more__item--mobile-shortcut {
     display: flex;
+  }
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .editor-toolbar__surface {
+    background: var(--surface-strong);
+    border-color: var(--line-strong);
+    box-shadow: var(--shadow-sm);
   }
 }
 </style>

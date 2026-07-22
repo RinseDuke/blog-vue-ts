@@ -35,14 +35,12 @@ const themeToggleTitle = computed(() => themeToggleLabel.value)
 <style scoped lang="less">
 .theme-switch {
   width: 58px;
-  height: 34px;
+  height: 36px;
   padding: 4px;
-  border: 1px solid var(--line-soft);
+  border: 1px solid var(--glass-border);
   border-radius: 999px;
-  background: linear-gradient(180deg, var(--surface-frost), var(--surface));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.32),
-    0 8px 18px rgba(15, 23, 42, 0.06);
+  background: var(--glass-surface);
+  box-shadow: inset 0 1px 0 var(--glass-highlight);
   cursor: pointer;
   flex-shrink: 0;
   margin-left: auto;
@@ -52,12 +50,13 @@ const themeToggleTitle = computed(() => themeToggleLabel.value)
 }
 
 .theme-switch:hover {
-  background: var(--surface-hover);
+  border-color: color-mix(in srgb, var(--glass-border) 68%, var(--brand-500) 32%);
+  background: color-mix(in srgb, var(--glass-surface) 82%, var(--surface-hover) 18%);
 }
 
 .theme-switch__thumb {
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   background: var(--surface-strong);
   color: var(--ink-muted);
@@ -85,8 +84,8 @@ const themeToggleTitle = computed(() => themeToggleLabel.value)
 }
 
 .theme-switch--dark {
-  background: rgba(105, 180, 255, 0.18);
-  border-color: rgba(105, 180, 255, 0.28);
+  background: color-mix(in srgb, var(--glass-surface) 78%, var(--brand-100) 22%);
+  border-color: color-mix(in srgb, var(--glass-border) 62%, var(--brand-400) 38%);
 
   .theme-switch__thumb {
     transform: translateX(24px);
@@ -114,6 +113,20 @@ const themeToggleTitle = computed(() => themeToggleLabel.value)
 @media (max-width: 768px) {
   .theme-switch {
     order: 1;
+    min-width: 52px;
+    min-height: 52px;
+    width: 62px;
+    height: 52px;
+    padding: 5px;
+  }
+
+  .theme-switch__thumb {
+    width: 32px;
+    height: 32px;
+  }
+
+  .theme-switch--dark .theme-switch__thumb {
+    transform: translateX(20px);
   }
 }
 </style>
