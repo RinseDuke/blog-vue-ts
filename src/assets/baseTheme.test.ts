@@ -87,6 +87,7 @@ describe('base theme source contract', () => {
     for (const themeBlock of themeBlocks) {
       const pairs = [
         ['--on-brand', '--brand-500'],
+        ['--on-brand', '--brand-400'],
         ['--on-danger', '--danger-500'],
       ] as const
 
