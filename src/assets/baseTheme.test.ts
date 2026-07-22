@@ -102,7 +102,11 @@ describe('base theme source contract', () => {
   it('uses semantic foreground tokens on representative solid action surfaces', () => {
     expect(extractBlock(buttonSource, '.btn--primary')).toContain('color: var(--on-brand);')
     expect(extractBlock(buttonSource, '.btn--danger')).toContain('color: var(--on-danger);')
-    expect(extractBlock(statusBarSource, '.sb-publish {')).toContain('color: var(--on-brand);')
+    const publishBlock = extractBlock(statusBarSource, '.sb-publish {')
+    expect(publishBlock).toContain('color: var(--on-brand);')
+    expect(publishBlock).toContain(
+      'background: linear-gradient(180deg, var(--brand-400), var(--brand-500));',
+    )
     expect(extractBlock(articleListSource, '.is-active')).toContain('color: var(--on-brand);')
     expect(extractBlock(commentSectionSource, '.comment-section__count')).toContain(
       'color: var(--on-brand);',
@@ -124,6 +128,16 @@ describe('base theme source contract', () => {
         if (solidBackground.test(block) && legacyForeground.test(block)) violations.push(path)
       }
     }
+
+    expect(violations).toEqual([])
+  })
+
+  it('does not lighten audited solid brand gradient endpoints toward white', () => {
+    const violations = Object.entries(vueSources)
+      .filter(([, componentSource]) =>
+        /color-mix\([^;]*var\(--brand-400\)[^;]*white[^;]*\)/i.test(componentSource),
+      )
+      .map(([path]) => path)
 
     expect(violations).toEqual([])
   })
