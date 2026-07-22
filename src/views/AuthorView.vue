@@ -129,7 +129,7 @@ watch(author, (value) => {
   display: grid;
   place-items: center;
   background: linear-gradient(145deg, var(--accent-500), var(--brand-500));
-  color: var(--on-accent);
+  color: var(--on-brand);
   font-size: 2.3rem;
   font-weight: 800;
 }
@@ -216,7 +216,7 @@ watch(author, (value) => {
   border: 1px solid var(--brand-500);
   border-radius: var(--radius-sm);
   background: var(--brand-500);
-  color: var(--on-accent);
+  color: var(--on-brand);
   font: inherit;
   font-weight: 700;
   cursor: pointer;

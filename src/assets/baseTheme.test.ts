@@ -2,9 +2,19 @@
 import { readFileSync } from 'node:fs'
 
 import footerSource from '@/components/navigation/TopFooter.vue?raw'
+import articleListSource from '@/views/ArticleListView.vue?raw'
+import buttonSource from '@/components/ui/Button.vue?raw'
+import commentSectionSource from '@/components/comment/CommentSection.vue?raw'
+import reportDialogSource from '@/components/comment/ReportDialog.vue?raw'
+import statusBarSource from '@/components/post/StatusBar.vue?raw'
 
 const source = readFileSync(new URL('./base.css', import.meta.url), 'utf8')
 const mainSource = readFileSync(new URL('./main.css', import.meta.url), 'utf8')
+const vueSources = import.meta.glob('/src/**/*.vue', {
+  eager: true,
+  import: 'default',
+  query: '?raw',
+}) as Record<string, string>
 
 function extractBlock(blockSource: string, selector: string) {
   const selectorIndex = blockSource.indexOf(selector)
@@ -71,6 +81,52 @@ function contrastRatio(foreground: Rgba, background: Rgba) {
 }
 
 describe('base theme source contract', () => {
+  it('keeps solid brand and danger foreground tokens at normal-text contrast in both themes', () => {
+    const themeBlocks = [extractBlock(source, ':root'), extractBlock(source, ":root[data-theme='dark']")]
+
+    for (const themeBlock of themeBlocks) {
+      const pairs = [
+        ['--on-brand', '--brand-500'],
+        ['--on-danger', '--danger-500'],
+      ] as const
+
+      for (const [foregroundToken, backgroundToken] of pairs) {
+        const foreground = parseColor(extractToken(themeBlock, foregroundToken))
+        const background = parseColor(extractToken(themeBlock, backgroundToken))
+        expect(contrastRatio(foreground, background)).toBeGreaterThanOrEqual(4.5)
+      }
+    }
+  })
+
+  it('uses semantic foreground tokens on representative solid action surfaces', () => {
+    expect(extractBlock(buttonSource, '.btn--primary')).toContain('color: var(--on-brand);')
+    expect(extractBlock(buttonSource, '.btn--danger')).toContain('color: var(--on-danger);')
+    expect(extractBlock(statusBarSource, '.sb-publish {')).toContain('color: var(--on-brand);')
+    expect(extractBlock(articleListSource, '.is-active')).toContain('color: var(--on-brand);')
+    expect(extractBlock(commentSectionSource, '.comment-section__count')).toContain(
+      'color: var(--on-brand);',
+    )
+    expect(extractBlock(reportDialogSource, '.report-form__btn--submit')).toContain(
+      'color: var(--on-danger);',
+    )
+  })
+
+  it('does not pair legacy light foregrounds with solid brand or danger backgrounds', () => {
+    const solidBackground =
+      /background:\s*(?:var\(--(?:brand|danger)-500\)|linear-gradient\([^;]*(?:brand-400|brand-500)[^;]*\));/i
+    const legacyForeground = /color:\s*(?:#fff(?:fff)?|white|var\(--on-accent\));/i
+    const violations: string[] = []
+
+    for (const [path, componentSource] of Object.entries(vueSources)) {
+      const leafBlocks = componentSource.match(/[^{}]+\{[^{}]*\}/g) ?? []
+      for (const block of leafBlocks) {
+        if (solidBackground.test(block) && legacyForeground.test(block)) violations.push(path)
+      }
+    }
+
+    expect(violations).toEqual([])
+  })
+
   it('defines liquid glass tokens for light and dark themes', () => {
     const rootBlock = extractBlock(source, ':root')
     const darkThemeBlock = extractBlock(source, ":root[data-theme='dark']")

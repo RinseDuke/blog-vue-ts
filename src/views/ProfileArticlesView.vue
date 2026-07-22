@@ -316,7 +316,7 @@ onMounted(async () => {
 
 .manager-btn--primary {
   background: var(--brand-500);
-  color: #fff;
+  color: var(--on-brand);
   border-color: var(--brand-500);
 }
 

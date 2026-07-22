@@ -469,7 +469,7 @@ function enterEditMode() {
     linear-gradient(145deg, var(--brand-400) 0%, var(--brand-500) 100%);
   display: grid;
   place-items: center;
-  color: #fff;
+  color: var(--on-brand);
   font-size: 2.5rem;
   font-weight: 800;
   box-shadow: 0 20px 40px rgba(0, 113, 227, 0.3);
@@ -587,7 +587,7 @@ function enterEditMode() {
 
 .hero-btn--primary {
   background: var(--brand-500);
-  color: #fff;
+  color: var(--on-brand);
   border-color: var(--brand-500);
 }
 
@@ -843,7 +843,7 @@ function enterEditMode() {
 
 .side-action--primary {
   background: var(--brand-500);
-  color: #fff;
+  color: var(--on-brand);
   border-color: var(--brand-500);
 }
 
@@ -910,7 +910,7 @@ function enterEditMode() {
 .bio-btn--save {
   border: none;
   background: var(--brand-500);
-  color: #fff;
+  color: var(--on-brand);
 }
 
 .bio-btn--cancel {

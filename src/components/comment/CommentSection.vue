@@ -145,7 +145,7 @@ watch(
   padding: 0 0.4rem;
   border-radius: 999px;
   background: var(--brand-500);
-  color: #fff;
+  color: var(--on-brand);
   font-size: 0.78rem;
   font-weight: 700;
 }
@@ -200,7 +200,7 @@ watch(
   align-items: center;
   border-radius: 999px;
   background: var(--brand-500);
-  color: #fff;
+  color: var(--on-brand);
   font-weight: 700;
   text-decoration: none;
 }

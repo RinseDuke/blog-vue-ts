@@ -186,7 +186,7 @@ function handleBlur() {
 .comment-form__btn--submit {
   border: none;
   background: var(--brand-500);
-  color: #fff;
+  color: var(--on-brand);
 }
 
 .comment-form__btn--submit:hover:enabled {

@@ -421,7 +421,7 @@ function isPostInDateRange(publishedAt: string) {
 
   .is-active {
     background: var(--brand-500);
-    color: #fff;
+    color: var(--on-brand);
     border-color: var(--brand-500);
   }
 }

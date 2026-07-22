@@ -73,7 +73,7 @@ defineEmits<{
 
 .btn--primary {
   background: linear-gradient(135deg, var(--brand-500), var(--brand-400));
-  color: white;
+  color: var(--on-brand);
   box-shadow: 0 4px 12px rgba(0, 113, 227, 0.24);
 }
 
@@ -105,7 +105,7 @@ defineEmits<{
 
 .btn--danger {
   background: var(--danger-500);
-  color: white;
+  color: var(--on-danger);
   box-shadow: 0 4px 12px rgba(198, 40, 40, 0.24);
 }
 

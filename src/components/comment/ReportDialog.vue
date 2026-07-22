@@ -370,7 +370,7 @@ onUnmounted(() => {
 .report-form__btn--submit {
   border: none;
   background: var(--danger-500);
-  color: #fff;
+  color: var(--on-danger);
 }
 
 .report-form__btn--submit:hover:enabled {

@@ -205,8 +205,8 @@ export default { name: 'CommentItem' }
   height: 100%;
   display: grid;
   place-items: center;
-  background: linear-gradient(135deg, #2f8fff, #0071e3);
-  color: #fff;
+  background: linear-gradient(135deg, var(--brand-400), var(--brand-500));
+  color: var(--on-brand);
   font-weight: 700;
   font-size: 0.9rem;
 }

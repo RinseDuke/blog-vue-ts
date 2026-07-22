@@ -1,5 +1,5 @@
 <template>
-  <article class="post-card glass-surface">
+  <article class="post-card">
     <RouterLink :to="{ name: 'article-detail', params: { id: post.id } }" class="card-link-wrapper">
       <div class="post-card__body">
         <div class="post-card__meta">
@@ -53,10 +53,11 @@ defineProps<{
   position: relative;
   min-width: 0;
   height: 100%;
+  background: var(--post-card-bg);
+  border: 1px solid var(--post-card-border);
   border-radius: var(--radius-lg);
-  border-color: var(--glass-border);
   overflow: hidden;
-  box-shadow: var(--glass-shadow);
+  box-shadow: var(--post-card-shadow);
   transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
 
   &::before {

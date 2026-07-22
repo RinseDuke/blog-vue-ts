@@ -174,7 +174,7 @@ function formatSuggestionMeta(post: Post) {
 
 .search-dropdown__rank[data-top='true'] {
   background: linear-gradient(135deg, var(--brand-400), var(--brand-500));
-  color: #fff;
+  color: var(--on-brand);
 }
 
 .search-dropdown__hot-text {

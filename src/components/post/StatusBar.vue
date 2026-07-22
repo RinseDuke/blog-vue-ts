@@ -411,7 +411,7 @@ onBeforeUnmount(() => {
   border: 1px solid color-mix(in srgb, var(--brand-500) 60%, var(--write-panel-inline-border) 40%);
   border-radius: 999px;
   background: linear-gradient(180deg, color-mix(in srgb, var(--brand-400) 86%, white 14%), var(--brand-500));
-  color: #fff;
+  color: var(--on-brand);
   box-shadow: 0 14px 24px color-mix(in srgb, var(--brand-100) 42%, transparent);
   font-size: 0.8rem;
   font-weight: 700;

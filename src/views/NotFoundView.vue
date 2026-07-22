@@ -161,7 +161,7 @@ const route = useRoute()
 .not-found__action--primary {
   border-color: var(--brand-500);
   background: var(--brand-500);
-  color: var(--on-accent);
+  color: var(--on-brand);
 }
 
 .not-found__action--primary:hover,

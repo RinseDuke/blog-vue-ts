@@ -145,7 +145,7 @@ async function handleSubmit() {
 
 .login-page__brand-content {
   text-align: center;
-  color: white;
+  color: var(--on-brand);
 }
 
 .login-page__logo {
@@ -327,7 +327,7 @@ async function handleSubmit() {
   min-height: 46px;
   padding: 0.75rem 0.9rem;
   font-weight: 700;
-  color: #fff;
+  color: var(--on-brand);
   background: linear-gradient(135deg, var(--brand-500), var(--brand-400));
   cursor: pointer;
   display: inline-flex;
@@ -360,8 +360,8 @@ async function handleSubmit() {
 .submit-btn__spinner {
   width: 14px;
   height: 14px;
-  border: 2px solid rgba(255, 255, 255, 0.4);
-  border-top-color: white;
+  border: 2px solid color-mix(in srgb, var(--on-brand) 40%, transparent);
+  border-top-color: var(--on-brand);
   border-radius: 50%;
   animation: spin 0.6s linear infinite;
 }
