@@ -269,12 +269,15 @@ function formatDate(dateString: string) {
 
 .article-prose {
   width: min(760px, calc(100vw - 2rem));
+  max-width: 100%;
   margin: 0 auto;
   padding: 0;
   min-width: 0;
 }
 
 .article-reading-panel {
+  min-width: 0;
+  max-width: 100%;
   padding: clamp(1.35rem, 4vw, 3rem);
   border: 1px solid var(--line-soft);
   border-radius: var(--radius-lg);
@@ -284,6 +287,7 @@ function formatDate(dateString: string) {
 
 .article-body {
   min-width: 0;
+  max-width: 100%;
   line-height: 1.85;
   color: var(--article-prose-text);
   font-size: 17px;
@@ -346,6 +350,8 @@ function formatDate(dateString: string) {
     max-width: 100%;
 
     code {
+      display: block;
+      min-width: max-content;
       background: none;
       padding: 0;
       color: #e6edf3;

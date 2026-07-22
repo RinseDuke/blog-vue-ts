@@ -90,4 +90,26 @@ describe('Article source contract', () => {
     expect(articleSource).toContain('width: min(760px, calc(100vw - 2rem));')
     expect(articleSource).toContain('@media (max-width: 390px)')
   })
+
+  it('contains rich article content within the readable column', () => {
+    for (const selector of [
+      '.article-prose',
+      '.article-reading-panel',
+      '.article-body',
+    ]) {
+      const block = extractBlock(articleSource, selector)
+      expect(block).toContain('min-width: 0;')
+      expect(block).toContain('max-width: 100%;')
+    }
+  })
+
+  it('keeps long code lines inside the pre scroll container', () => {
+    const preBlock = extractBlock(articleSource, ':deep(pre)')
+    const codeBlock = extractBlock(preBlock, 'code')
+
+    expect(preBlock).toContain('max-width: 100%;')
+    expect(preBlock).toContain('overflow-x: auto;')
+    expect(codeBlock).toContain('display: block;')
+    expect(codeBlock).toContain('min-width: max-content;')
+  })
 })
