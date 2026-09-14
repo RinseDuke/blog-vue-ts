@@ -1,7 +1,6 @@
 import { createComment, setCommentLike } from '@/services/commentService'
 import { mockComments } from '@/mocks/comments'
-
-const AUTH_KEY = 'blog_auth_session_v1'
+import { AUTH_SESSION_KEY } from '@/services/authSession'
 
 interface StorageLike {
   getItem: (key: string) => string | null
@@ -51,7 +50,7 @@ describe('commentService auth guard', () => {
 
   it('creates a comment for the logged in user', async () => {
     localStorage.setItem(
-      AUTH_KEY,
+      AUTH_SESSION_KEY,
       JSON.stringify({
         email: 'tester@example.com',
         rememberMe: true,
@@ -72,7 +71,7 @@ describe('commentService auth guard', () => {
 
   it('uses the registered username instead of the email prefix for new comments', async () => {
     localStorage.setItem(
-      AUTH_KEY,
+      AUTH_SESSION_KEY,
       JSON.stringify({
         email: 'mailbox@example.com',
         rememberMe: true,
@@ -103,7 +102,7 @@ describe('commentService auth guard', () => {
 
   it('supports toggling comment likes for the logged in user', async () => {
     localStorage.setItem(
-      AUTH_KEY,
+      AUTH_SESSION_KEY,
       JSON.stringify({
         email: 'tester@example.com',
         rememberMe: true,

@@ -1,10 +1,18 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { apiFetch, isMockMode } from '@/services/apiClient'
+import {
+  clearStoredAuthSession,
+  persistStoredAuthSession,
+  readStoredAuthSession,
+  sanitizeAuthUser,
+  type AuthSession,
+  type AuthUser,
+} from '@/services/authSession'
 
-const AUTH_KEY = 'blog_auth_session_v1'
 const USERS_KEY = 'blog_auth_users_v1'
 
+<<<<<<< HEAD
 export interface AuthUser {
   id: string
   username: string
@@ -25,6 +33,9 @@ export interface AuthSession {
 
 interface RegisteredUser {
   user: AuthUser
+=======
+interface RegisteredUser extends AuthUser {
+>>>>>>> origin/main
   password: string
   createdAt: string
 }
@@ -61,10 +72,10 @@ interface RegisterPayload extends AuthCredentials {
 
 const DEFAULT_MOCK_CREATED_AT = '2026-01-01T00:00:00.000Z'
 
-export const DEFAULT_MOCK_LOGIN = {
-  username: 'demo',
-  password: 'Demo123456',
-  email: 'demo@sign.local',
+const DEFAULT_MOCK_LOGIN = {
+  username: import.meta.env.DEV ? 'demo' : '',
+  password: import.meta.env.DEV ? 'Demo123456' : '',
+  email: import.meta.env.DEV ? 'demo@sign.local' : '',
 } as const
 
 const DEFAULT_MOCK_USERS: RegisteredUser[] = [
@@ -93,18 +104,6 @@ function normalizeUsername(username: string) {
   return username.trim()
 }
 
-function buildLegacyUser(email: string): AuthUser {
-  const fallbackName = email.split('@')[0]?.trim() || 'sign'
-
-  return {
-    id: `user-${email}`,
-    username: fallbackName,
-    nickname: fallbackName,
-    email,
-    visibility: 'public',
-  }
-}
-
 function mapBackendUser(user: BackendUser): AuthUser {
   const normalizedEmail = normalizeEmail(user.email)
   const normalizedUsername = normalizeUsername(user.username)
@@ -120,6 +119,7 @@ function mapBackendUser(user: BackendUser): AuthUser {
   }
 }
 
+<<<<<<< HEAD
 function copyPublicUser(user: AuthUser): AuthUser {
   return {
     id: user.id,
@@ -160,11 +160,19 @@ function clearLegacySensitiveAuthData() {
   }
 }
 
+=======
+>>>>>>> origin/main
 function buildSession(user: AuthUser, rememberMe: boolean, token?: string): AuthSession {
+  const safeUser = sanitizeAuthUser(user)
+  if (!safeUser) {
+    throw new Error('无法创建无效的登录会话。')
+  }
+
   return {
-    email: user.email,
+    email: safeUser.email,
     rememberMe,
     loggedAt: new Date().toISOString(),
+<<<<<<< HEAD
     token: token ?? `mock-token-${Date.now()}`,
     user: copyPublicUser(user),
   }
@@ -221,6 +229,20 @@ export function requireAuthSession(errorMessage: string) {
 export const useAuthStore = defineStore('auth', () => {
   const session = ref<AuthSession | null>(null)
   const registeredUsers = DEFAULT_MOCK_USERS.map((user) => ({ ...user }))
+=======
+    token: token ?? (import.meta.env.DEV ? `mock-token-${Date.now()}` : ''),
+    user: safeUser,
+  }
+}
+
+export const useAuthStore = defineStore('auth', () => {
+  const session = ref<AuthSession | null>(null)
+  const registeredUsers = DEFAULT_MOCK_USERS.map((user) => ({ ...user }))
+
+  // Older versions persisted mock passwords in browser storage. They are never migrated.
+  localStorage.removeItem(USERS_KEY)
+  sessionStorage.removeItem(USERS_KEY)
+>>>>>>> origin/main
 
   const isLoggedIn = computed(() => session.value !== null)
   const userEmail = computed(() => session.value?.email ?? '')
@@ -229,6 +251,7 @@ export const useAuthStore = defineStore('auth', () => {
   const displayName = computed(() => session.value?.user.username ?? '')
 
   function persistSession(nextSession: AuthSession) {
+<<<<<<< HEAD
     localStorage.removeItem(AUTH_KEY)
     sessionStorage.removeItem(AUTH_KEY)
 
@@ -239,18 +262,21 @@ export const useAuthStore = defineStore('auth', () => {
     const storage = safeSession.rememberMe ? localStorage : sessionStorage
     storage.setItem(AUTH_KEY, JSON.stringify(safeSession))
     session.value = safeSession
+=======
+    session.value = persistStoredAuthSession(nextSession)
+>>>>>>> origin/main
   }
 
   function loadSession() {
     const storedSession = readStoredAuthSession()
     if (storedSession) {
-      session.value = storedSession
+      // Re-persist the sanitized shape to remove fields left by older versions.
+      session.value = persistStoredAuthSession(storedSession)
       return
     }
 
     session.value = null
-    localStorage.removeItem(AUTH_KEY)
-    sessionStorage.removeItem(AUTH_KEY)
+    clearStoredAuthSession()
   }
 
   async function login(payload: AuthCredentials) {
@@ -259,7 +285,7 @@ export const useAuthStore = defineStore('auth', () => {
       throw new Error('请输入用户名。')
     }
 
-    if (isMockMode()) {
+    if (import.meta.env.DEV && isMockMode()) {
       await wait()
 
       const user = registeredUsers.find((item) =>
@@ -289,10 +315,6 @@ export const useAuthStore = defineStore('auth', () => {
     persistSession(buildSession(mapBackendUser(data.user), payload.rememberMe, data.token))
   }
 
-  async function sendVerificationCode() {
-    throw new Error('当前后端规范未提供邮箱验证码接口。')
-  }
-
   async function register(payload: RegisterPayload) {
     const normalizedUsername = normalizeUsername(payload.username)
     const normalizedEmail = normalizeEmail(payload.email)
@@ -302,14 +324,22 @@ export const useAuthStore = defineStore('auth', () => {
       throw new Error('请输入用户名。')
     }
 
-    if (isMockMode()) {
+    if (import.meta.env.DEV && isMockMode()) {
       await wait(500)
 
+<<<<<<< HEAD
       if (registeredUsers.some((item) => item.user.username === normalizedUsername)) {
         throw new Error('该用户名已存在，请更换后重试。')
       }
 
       if (registeredUsers.some((item) => item.user.email === normalizedEmail)) {
+=======
+      if (registeredUsers.some((item) => item.username === normalizedUsername)) {
+        throw new Error('该用户名已存在，请更换后重试。')
+      }
+
+      if (registeredUsers.some((item) => item.email === normalizedEmail)) {
+>>>>>>> origin/main
         throw new Error('该邮箱已注册，请直接登录。')
       }
 
@@ -328,7 +358,11 @@ export const useAuthStore = defineStore('auth', () => {
       }
 
       registeredUsers.push(nextUser)
+<<<<<<< HEAD
       persistSession(buildSession(nextUser.user, payload.rememberMe))
+=======
+      persistSession(buildSession(nextUser, payload.rememberMe))
+>>>>>>> origin/main
       return
     }
 
@@ -354,8 +388,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   function logout() {
     session.value = null
-    localStorage.removeItem(AUTH_KEY)
-    sessionStorage.removeItem(AUTH_KEY)
+    clearStoredAuthSession()
   }
 
   clearLegacySensitiveAuthData()
@@ -370,7 +403,6 @@ export const useAuthStore = defineStore('auth', () => {
     displayName,
     loadSession,
     login,
-    sendVerificationCode,
     register,
     logout,
   }

@@ -109,6 +109,32 @@ describe('write markdown table roundtrip', () => {
     expect(html).toContain('<table>')
     expect(html).toContain('<td>单元 1</td>')
   })
+
+  it('preserves highlighted code block languages as fenced markdown', () => {
+    const markdown = serializeEditorHtmlToMarkdown(
+      '<div class="highlight-source-js"><pre>const answer = 42</pre></div>',
+    )
+
+    expect(markdown).toBe('```js\nconst answer = 42\n```')
+  })
+
+  it('serializes tiptap task items with checked state', () => {
+    const markdown = serializeEditorHtmlToMarkdown(`
+      <ul data-type="taskList">
+        <li data-type="taskItem" data-checked="true">
+          <label><input type="checkbox" checked><span></span></label>
+          <div><p>已完成</p></div>
+        </li>
+        <li data-type="taskItem" data-checked="false">
+          <label><input type="checkbox"><span></span></label>
+          <div><p>待处理</p></div>
+        </li>
+      </ul>
+    `)
+
+    expect(markdown).toContain('- [x] 已完成')
+    expect(markdown).toContain('- [ ] 待处理')
+  })
 })
 
 describe('write markdown extended rendering', () => {

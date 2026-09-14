@@ -1,4 +1,5 @@
 import { mockPosts } from '@/mocks/posts'
+import { AUTH_SESSION_KEY } from '@/services/authSession'
 import {
   createPost,
   deletePost,
@@ -9,7 +10,6 @@ import {
   setPostLike,
 } from '@/services/postService'
 
-const AUTH_KEY = 'blog_auth_session_v1'
 const PUBLISHED_POSTS_KEY = 'blog_published_posts_v1'
 
 interface StorageLike {
@@ -40,7 +40,7 @@ function setSession(email: string, nickname = 'writer', userId = `user-${email}`
   const username = email.split('@')[0]
 
   localStorage.setItem(
-    AUTH_KEY,
+    AUTH_SESSION_KEY,
     JSON.stringify({
       email,
       rememberMe: true,
@@ -59,7 +59,7 @@ function setSession(email: string, nickname = 'writer', userId = `user-${email}`
 
 function setSessionWithUser(email: string, username: string, nickname = username, userId = `user-${username}`) {
   localStorage.setItem(
-    AUTH_KEY,
+    AUTH_SESSION_KEY,
     JSON.stringify({
       email,
       rememberMe: true,

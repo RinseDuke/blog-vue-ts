@@ -1,7 +1,7 @@
 import { createPinia, setActivePinia } from 'pinia'
 import { useAuthStore } from '@/features/auth/stores/useAuthStore'
+import { AUTH_SESSION_KEY } from '@/services/authSession'
 
-const AUTH_KEY = 'blog_auth_session_v1'
 const USERS_KEY = 'blog_auth_users_v1'
 
 interface StorageLike {
@@ -54,6 +54,7 @@ describe('useAuthStore backend-aligned auth flow', () => {
     expect(store.userEmail).toBe('tester@example.com')
     expect(store.userId).toContain('user-')
     expect(store.displayName).toBe('tester_user')
+<<<<<<< HEAD
     expect(localStorage.getItem(AUTH_KEY)).toContain('tester@example.com')
     const persistedAuth = [
       localStorage.getItem(AUTH_KEY),
@@ -63,6 +64,13 @@ describe('useAuthStore backend-aligned auth flow', () => {
 
     expect(persistedAuth.join('\n')).not.toContain('SecurePass123')
     expect(localStorage.getItem(USERS_KEY)).toBeNull()
+=======
+    const storedSession = localStorage.getItem(AUTH_SESSION_KEY) ?? ''
+    expect(storedSession).toContain('tester@example.com')
+    expect(storedSession).not.toContain('SecurePass123')
+    expect(localStorage.getItem(USERS_KEY)).toBeNull()
+    expect(sessionStorage.getItem(USERS_KEY)).toBeNull()
+>>>>>>> origin/main
   })
 
   it('allows logging in with seeded mock credentials in a fresh environment', async () => {
@@ -77,7 +85,7 @@ describe('useAuthStore backend-aligned auth flow', () => {
     expect(store.isLoggedIn).toBe(true)
     expect(store.username).toBe('demo')
     expect(store.userEmail).toBe('demo@sign.local')
-    expect(localStorage.getItem(AUTH_KEY)).toContain('demo@sign.local')
+    expect(localStorage.getItem(AUTH_SESSION_KEY)).toContain('demo@sign.local')
   })
 
   it('rejects duplicate usernames during registration', async () => {
@@ -102,6 +110,7 @@ describe('useAuthStore backend-aligned auth flow', () => {
     ).rejects.toThrow('该用户名已存在，请更换后重试。')
   })
 
+<<<<<<< HEAD
   it('keeps a newly registered mock account available in the current page', async () => {
     const store = useAuthStore()
     const credentials = {
@@ -117,10 +126,27 @@ describe('useAuthStore backend-aligned auth flow', () => {
     await store.login({
       username: credentials.username,
       password: credentials.password,
+=======
+  it('keeps a registered mock credential only for the current store lifetime', async () => {
+    const store = useAuthStore()
+
+    await store.register({
+      username: 'memory_user',
+      email: 'memory@example.com',
+      password: 'MemoryOnly123',
+      rememberMe: false,
+    })
+    store.logout()
+
+    await store.login({
+      username: 'memory_user',
+      password: 'MemoryOnly123',
+>>>>>>> origin/main
       rememberMe: false,
     })
 
     expect(store.isLoggedIn).toBe(true)
+<<<<<<< HEAD
     expect(store.username).toBe(credentials.username)
   })
 
@@ -133,24 +159,50 @@ describe('useAuthStore backend-aligned auth flow', () => {
         email: 'legacy@example.com',
         rememberMe: true,
         loggedAt: '2026-01-01T00:00:00.000Z',
+=======
+    expect(sessionStorage.getItem(AUTH_SESSION_KEY)).not.toContain('MemoryOnly123')
+  })
+
+  it('removes legacy password storage and strips unknown session fields', () => {
+    localStorage.setItem(USERS_KEY, JSON.stringify([{ email: 'legacy@example.com', password: 'Leaked123' }]))
+    localStorage.setItem(
+      AUTH_SESSION_KEY,
+      JSON.stringify({
+        email: 'legacy@example.com',
+        rememberMe: true,
+        loggedAt: '2026-09-14T00:00:00.000Z',
+>>>>>>> origin/main
         token: 'legacy-token',
         user: {
           id: 'legacy-user',
           username: 'legacy',
           nickname: 'legacy',
           email: 'legacy@example.com',
+<<<<<<< HEAD
           visibility: 'public',
           password: legacyPassword,
         },
       })
+=======
+          password: 'Leaked123',
+          visibility: 'public',
+        },
+      }),
+>>>>>>> origin/main
     )
 
     const store = useAuthStore()
 
+<<<<<<< HEAD
     expect(localStorage.getItem(USERS_KEY)).toBeNull()
     expect(localStorage.getItem(AUTH_KEY)).toBeNull()
     expect(sessionStorage.getItem(AUTH_KEY)).toBeNull()
     expect(JSON.stringify(store.session)).not.toContain(legacyPassword)
     expect(store.session).toBeNull()
+=======
+    expect(store.isLoggedIn).toBe(true)
+    expect(localStorage.getItem(USERS_KEY)).toBeNull()
+    expect(localStorage.getItem(AUTH_SESSION_KEY)).not.toContain('Leaked123')
+>>>>>>> origin/main
   })
 })

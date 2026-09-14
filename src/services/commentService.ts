@@ -1,22 +1,19 @@
 import type { Comment } from '@/types/post'
-import { mockComments } from '@/mocks/comments'
-import { readStoredAuthSession } from '@/features/auth/stores/useAuthStore'
+import { requireAuthSession } from './authSession'
 import { apiFetch, isMockMode, networkDelay } from './apiClient'
 
 let nextMockId = 100
 
-function requireAuthSession(errorMessage: string) {
-    const session = readStoredAuthSession()
-    if (!session) {
-        throw new Error(errorMessage)
-    }
-
-    return session
+async function getMockComments() {
+    if (!import.meta.env.DEV) return []
+    const { mockComments } = await import('@/mocks/comments')
+    return mockComments
 }
 
 export async function fetchCommentsByPostId(postId: string): Promise<Comment[]> {
-    if (isMockMode()) {
+    if (import.meta.env.DEV && isMockMode()) {
         await networkDelay()
+        const mockComments = await getMockComments()
         return structuredClone(mockComments
             .filter((c) => c.postId === postId)
             .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()))
@@ -32,9 +29,10 @@ export interface CreateCommentPayload {
 }
 
 export async function createComment(payload: CreateCommentPayload): Promise<Comment> {
-    if (isMockMode()) {
+    if (import.meta.env.DEV && isMockMode()) {
         await networkDelay(200)
         const session = requireAuthSession('请先登录后再发表评论')
+        const mockComments = await getMockComments()
 
         const newComment: Comment = {
             id: `mock-c-${nextMockId++}`,
@@ -61,9 +59,10 @@ export async function createComment(payload: CreateCommentPayload): Promise<Comm
 }
 
 export async function setCommentLike(commentId: string, liked: boolean): Promise<number> {
-    if (isMockMode()) {
+    if (import.meta.env.DEV && isMockMode()) {
         await networkDelay(100)
         requireAuthSession('请先登录后再点赞评论')
+        const mockComments = await getMockComments()
 
         const comment = mockComments.find((c) => c.id === commentId)
         if (comment) {

@@ -1,5 +1,5 @@
 import { ref } from 'vue'
-import { readStoredAuthSession } from '@/features/auth/stores/useAuthStore'
+import { readStoredAuthSession } from '@/services/authSession'
 
 export interface DraftPayload {
   title: string

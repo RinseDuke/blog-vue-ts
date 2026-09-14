@@ -31,7 +31,6 @@ function readFileAsDataUrl(file: File) {
 
 export function useCoverUpload(onDirty: () => void) {
   const coverInputRef = ref<HTMLInputElement | null>(null)
-  const coverFile = ref<File | null>(null)
   const coverPreviewUrl = ref<string | null>(null)
 
   function triggerCoverInput() {
@@ -49,12 +48,10 @@ export function useCoverUpload(onDirty: () => void) {
     }
 
     try {
-      coverFile.value = file
       coverPreviewUrl.value = await readFileAsDataUrl(file)
       onDirty()
       return null
     } catch (err) {
-      coverFile.value = null
       coverPreviewUrl.value = null
       return err instanceof Error ? err.message : '封面读取失败，请重试'
     } finally {
@@ -64,7 +61,6 @@ export function useCoverUpload(onDirty: () => void) {
 
   function removeCover(options: { markDirty?: boolean } = {}) {
     const { markDirty = true } = options
-    coverFile.value = null
     coverPreviewUrl.value = null
     resetInputValue(coverInputRef.value)
 
@@ -74,14 +70,12 @@ export function useCoverUpload(onDirty: () => void) {
   }
 
   function restoreCoverFromUrl(url: string | null) {
-    coverFile.value = null
     coverPreviewUrl.value = url && !url.startsWith('blob:') ? url : null
     resetInputValue(coverInputRef.value)
   }
 
   return {
     coverInputRef,
-    coverFile,
     coverPreviewUrl,
     triggerCoverInput,
     handleCoverSelect,

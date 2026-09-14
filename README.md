@@ -12,7 +12,7 @@
 | 路由 | Vue Router (HTML5 History) | ^4.5.1 |
 | 状态管理 | Pinia (Setup Store 语法) | ^3.0.4 |
 | 富文本编辑器 | TipTap | ^3.20.0 |
-| Markdown | markdown-it + turndown (GFM) | 14.1 / 7.2 |
+| Markdown | markdown-it + turndown（内建 GFM 规则） | 14.1 / 7.2 |
 | HTML 净化 | DOMPurify | ^3.3.0 |
 | CSS 预处理器 | Less | ^4.4.2 |
 | 代码检查 | ESLint + typescript-eslint + eslint-plugin-vue | ^10.0.2 |
@@ -22,8 +22,8 @@
 
 - **首页展示** -- 最新文章列表，支持加载/错误/重试状态
 - **文章列表** -- 标签筛选、日期预设（7d/30d/90d/365d/自定义）、多种排序（最新/最早/阅读量/标题）、分页，全部与 URL query 双向同步
-- **文章详情** -- 文章渲染（DOMPurify 净化 HTML）、评论系统
-- **评论系统** -- 嵌套回复、点赞（乐观更新 + 失败回滚）、骨架屏加载、内容举报
+- **文章详情** -- 文章渲染（DOMPurify 净化 HTML）
+- **评论系统（预留）** -- 代码尚未接入当前文章详情界面
 - **全局搜索** -- 实时建议、相关性排序（标题/摘要/作者/标签多维评分）、搜索历史持久化、推荐文章
 - **富文本写作** -- 基于 TipTap 的 WYSIWYG 编辑器 + Markdown 源码模式双切换，支持图片/链接/表格/任务列表/下划线，草稿自动保存（500ms 防抖）、封面上传、标签管理（预设 + 自定义，最多 5 个）
 - **认证系统** -- 登录/登出，会话持久化（localStorage / sessionStorage），路由守卫保护写作页
@@ -41,7 +41,7 @@
 # 1. 安装依赖
 npm install
 
-# 2. 配置环境变量（可选，默认使用 Mock 数据）
+# 2. 配置环境变量（开发模式默认使用 Mock 数据）
 cp .env.example .env.local
 
 # 3. 启动开发服务器
@@ -69,7 +69,8 @@ npm run dev
 | `VITE_API_BASE_URL` | 空 | 真实后端地址，例如 `https://api.example.com` |
 | `VITE_USE_MOCK` | `true` | 是否启用前端内置 Mock 数据 |
 
-当 `VITE_USE_MOCK` 不为 `'false'` 或 `VITE_API_BASE_URL` 为空时，自动进入 Mock 模式。
+Mock 仅允许在 Vite 开发模式启用。生产构建始终使用真实 API；如果未配置
+`VITE_API_BASE_URL`，请求会以明确的配置错误中止，不会静默降级到 Mock 认证。
 
 ## 项目结构
 
@@ -126,7 +127,9 @@ src/
 | `/search` | `search` | Search | 否 |
 | `/write` | `write` | Write | 是 |
 | `/login` | `login` | LoginView | 否 |
+| `/register` | `register` | RegisterView | 否 |
 | `/about` | `about` | AboutView | 否 |
+| `/about/articles` | `profile-articles` | ProfileArticlesView | 是 |
 
 ## 数据层架构
 
@@ -181,6 +184,7 @@ interface Comment {
 ## 测试
 
 测试框架使用 Vitest，运行于 Node 环境，启用全局 API（无需手动 import `describe`/`it`/`expect`）。
+GitHub Actions 会执行 lint、单元测试、覆盖率阈值检查和生产构建。
 
 ```bash
 # watch 模式
@@ -188,14 +192,13 @@ npm run test
 
 # 单次运行
 npm run test:run
+
+# 生成覆盖率并检查最低阈值
+npm run test:coverage
 ```
 
-现有测试文件：
-
-| 文件 | 覆盖内容 |
-|---|---|
-| `src/features/post/utils/post.test.ts` | 文章相关性排序、日期排序、推荐文章生成 |
-| `src/features/post/utils/articleListQuery.test.ts` | 列表页 URL query state 解析与构建 |
+测试与源码共置，覆盖 service、store、composable、纯工具函数以及部分页面源码契约。
+核心网络层和文章 Store 均有独立行为测试。
 
 ## 构建产物
 
@@ -204,7 +207,3 @@ npm run build
 ```
 
 产物输出到 `dist/`，构建过程会并行执行 TypeScript 类型检查和 Vite 打包。
-
-## 架构文档
-
-更详细的模块职责与架构说明见 `docs/CODEBASE_MAP.md`。

@@ -14,9 +14,11 @@ export function useSearchHistory(options: UseSearchHistoryOptions = {}) {
       const raw = localStorage.getItem(storageKey)
       if (!raw) return
 
-      const parsed = JSON.parse(raw)
+      const parsed = JSON.parse(raw) as unknown
       if (Array.isArray(parsed)) {
-        searchHistory.value = parsed.slice(0, limit)
+        searchHistory.value = parsed
+          .filter((item): item is string => typeof item === 'string')
+          .slice(0, limit)
       }
     } catch (err) {
       console.warn('Failed to load search history', err)

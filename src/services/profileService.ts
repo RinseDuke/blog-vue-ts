@@ -1,5 +1,5 @@
 import { apiFetch, isMockMode } from '@/services/apiClient'
-import { readStoredAuthSession, type AuthSession } from '@/features/auth/stores/useAuthStore'
+import { requireAuthSession, type AuthSession } from './authSession'
 
 export interface UserProfile {
     id: string
@@ -27,15 +27,6 @@ interface BackendUserProfile {
 }
 
 const PROFILE_STORAGE_KEY = 'blog_user_profile_v1'
-
-function requireAuthSession(errorMessage: string) {
-    const session = readStoredAuthSession()
-    if (!session) {
-        throw new Error(errorMessage)
-    }
-
-    return session
-}
 
 function getProfileStorageKey(email: string) {
     return `${PROFILE_STORAGE_KEY}:${email}`
