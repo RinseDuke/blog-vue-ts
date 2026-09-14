@@ -12,30 +12,7 @@ import {
 
 const USERS_KEY = 'blog_auth_users_v1'
 
-<<<<<<< HEAD
-export interface AuthUser {
-  id: string
-  username: string
-  nickname: string
-  email: string
-  avatar?: string
-  bio?: string
-  visibility: 'public' | 'private'
-}
-
-export interface AuthSession {
-  email: string
-  rememberMe: boolean
-  loggedAt: string
-  token: string
-  user: AuthUser
-}
-
-interface RegisteredUser {
-  user: AuthUser
-=======
 interface RegisteredUser extends AuthUser {
->>>>>>> origin/main
   password: string
   createdAt: string
 }
@@ -80,14 +57,12 @@ const DEFAULT_MOCK_LOGIN = {
 
 const DEFAULT_MOCK_USERS: RegisteredUser[] = [
   {
-    user: {
-      id: 'mock-demo-user',
-      username: DEFAULT_MOCK_LOGIN.username,
-      nickname: DEFAULT_MOCK_LOGIN.username,
-      email: DEFAULT_MOCK_LOGIN.email,
-      visibility: 'public',
-    },
+    id: 'mock-demo-user',
+    username: DEFAULT_MOCK_LOGIN.username,
+    nickname: DEFAULT_MOCK_LOGIN.username,
+    email: DEFAULT_MOCK_LOGIN.email,
     password: DEFAULT_MOCK_LOGIN.password,
+    visibility: 'public',
     createdAt: DEFAULT_MOCK_CREATED_AT,
   },
 ]
@@ -119,49 +94,6 @@ function mapBackendUser(user: BackendUser): AuthUser {
   }
 }
 
-<<<<<<< HEAD
-function copyPublicUser(user: AuthUser): AuthUser {
-  return {
-    id: user.id,
-    username: user.username,
-    nickname: user.nickname,
-    email: user.email,
-    avatar: user.avatar,
-    bio: user.bio,
-    visibility: user.visibility,
-  }
-}
-
-function hasStoredPassword(raw: string) {
-  try {
-    const parsed = JSON.parse(raw) as { user?: unknown }
-    return (
-      parsed.user !== null &&
-      typeof parsed.user === 'object' &&
-      Object.prototype.hasOwnProperty.call(parsed.user, 'password')
-    )
-  } catch {
-    return false
-  }
-}
-
-function clearLegacySensitiveAuthData() {
-  try {
-    localStorage.removeItem(USERS_KEY)
-
-    for (const storage of [localStorage, sessionStorage]) {
-      const raw = storage.getItem(AUTH_KEY)
-      if (raw && hasStoredPassword(raw)) {
-        storage.removeItem(AUTH_KEY)
-      }
-    }
-  } catch {
-    // Storage can be unavailable in restricted browser contexts.
-  }
-}
-
-=======
->>>>>>> origin/main
 function buildSession(user: AuthUser, rememberMe: boolean, token?: string): AuthSession {
   const safeUser = sanitizeAuthUser(user)
   if (!safeUser) {
@@ -172,64 +104,6 @@ function buildSession(user: AuthUser, rememberMe: boolean, token?: string): Auth
     email: safeUser.email,
     rememberMe,
     loggedAt: new Date().toISOString(),
-<<<<<<< HEAD
-    token: token ?? `mock-token-${Date.now()}`,
-    user: copyPublicUser(user),
-  }
-}
-
-export function readStoredAuthSession(): AuthSession | null {
-  try {
-    const raw = localStorage.getItem(AUTH_KEY) ?? sessionStorage.getItem(AUTH_KEY)
-    if (!raw) return null
-
-    const parsed = JSON.parse(raw) as Partial<AuthSession> & {
-      email?: string
-      user?: Partial<AuthUser>
-    }
-
-    if (!parsed?.token) return null
-
-    const normalizedEmail = normalizeEmail(parsed.user?.email ?? parsed.email ?? '')
-    if (!normalizedEmail) return null
-
-    const storedUser = parsed.user
-    const fallbackUser = buildLegacyUser(normalizedEmail)
-    const normalizedUsername = normalizeUsername(storedUser?.username ?? fallbackUser.username)
-    const user = copyPublicUser({
-      id: typeof storedUser?.id === 'string' ? storedUser.id : fallbackUser.id,
-      username: normalizedUsername,
-      nickname: normalizedUsername,
-      email: normalizedEmail,
-      avatar: typeof storedUser?.avatar === 'string' ? storedUser.avatar : undefined,
-      bio: typeof storedUser?.bio === 'string' ? storedUser.bio : undefined,
-      visibility: storedUser?.visibility === 'private' ? 'private' : 'public',
-    })
-
-    return {
-      email: normalizedEmail,
-      rememberMe: Boolean(parsed.rememberMe),
-      loggedAt: typeof parsed.loggedAt === 'string' ? parsed.loggedAt : new Date().toISOString(),
-      token: parsed.token,
-      user,
-    }
-  } catch {
-    return null
-  }
-}
-
-export function requireAuthSession(errorMessage: string) {
-  const session = readStoredAuthSession()
-  if (!session) {
-    throw new Error(errorMessage)
-  }
-  return session
-}
-
-export const useAuthStore = defineStore('auth', () => {
-  const session = ref<AuthSession | null>(null)
-  const registeredUsers = DEFAULT_MOCK_USERS.map((user) => ({ ...user }))
-=======
     token: token ?? (import.meta.env.DEV ? `mock-token-${Date.now()}` : ''),
     user: safeUser,
   }
@@ -242,7 +116,6 @@ export const useAuthStore = defineStore('auth', () => {
   // Older versions persisted mock passwords in browser storage. They are never migrated.
   localStorage.removeItem(USERS_KEY)
   sessionStorage.removeItem(USERS_KEY)
->>>>>>> origin/main
 
   const isLoggedIn = computed(() => session.value !== null)
   const userEmail = computed(() => session.value?.email ?? '')
@@ -251,20 +124,7 @@ export const useAuthStore = defineStore('auth', () => {
   const displayName = computed(() => session.value?.user.username ?? '')
 
   function persistSession(nextSession: AuthSession) {
-<<<<<<< HEAD
-    localStorage.removeItem(AUTH_KEY)
-    sessionStorage.removeItem(AUTH_KEY)
-
-    const safeSession: AuthSession = {
-      ...nextSession,
-      user: copyPublicUser(nextSession.user),
-    }
-    const storage = safeSession.rememberMe ? localStorage : sessionStorage
-    storage.setItem(AUTH_KEY, JSON.stringify(safeSession))
-    session.value = safeSession
-=======
     session.value = persistStoredAuthSession(nextSession)
->>>>>>> origin/main
   }
 
   function loadSession() {
@@ -289,7 +149,7 @@ export const useAuthStore = defineStore('auth', () => {
       await wait()
 
       const user = registeredUsers.find((item) =>
-        item.user.username === normalizedUsername || item.user.email === normalizeEmail(normalizedUsername)
+        item.username === normalizedUsername || item.email === normalizeEmail(normalizedUsername)
       )
 
       if (!user) {
@@ -300,7 +160,7 @@ export const useAuthStore = defineStore('auth', () => {
         throw new Error('用户名或密码错误。')
       }
 
-      persistSession(buildSession(user.user, payload.rememberMe))
+      persistSession(buildSession(user, payload.rememberMe))
       return
     }
 
@@ -318,7 +178,7 @@ export const useAuthStore = defineStore('auth', () => {
   async function register(payload: RegisterPayload) {
     const normalizedUsername = normalizeUsername(payload.username)
     const normalizedEmail = normalizeEmail(payload.email)
-    const visibility: AuthUser['visibility'] = payload.visibility === 'private' ? 'private' : 'public'
+    const visibility: RegisteredUser['visibility'] = payload.visibility === 'private' ? 'private' : 'public'
 
     if (!normalizedUsername) {
       throw new Error('请输入用户名。')
@@ -327,42 +187,28 @@ export const useAuthStore = defineStore('auth', () => {
     if (import.meta.env.DEV && isMockMode()) {
       await wait(500)
 
-<<<<<<< HEAD
-      if (registeredUsers.some((item) => item.user.username === normalizedUsername)) {
-        throw new Error('该用户名已存在，请更换后重试。')
-      }
-
-      if (registeredUsers.some((item) => item.user.email === normalizedEmail)) {
-=======
       if (registeredUsers.some((item) => item.username === normalizedUsername)) {
         throw new Error('该用户名已存在，请更换后重试。')
       }
 
       if (registeredUsers.some((item) => item.email === normalizedEmail)) {
->>>>>>> origin/main
         throw new Error('该邮箱已注册，请直接登录。')
       }
 
       const nextUser: RegisteredUser = {
-        user: {
-          id: `user-${Date.now()}`,
-          username: normalizedUsername,
-          nickname: normalizedUsername,
-          email: normalizedEmail,
-          avatar: payload.avatar,
-          bio: payload.bio,
-          visibility,
-        },
+        id: `user-${Date.now()}`,
+        username: normalizedUsername,
+        nickname: normalizedUsername,
+        email: normalizedEmail,
         password: payload.password,
+        avatar: payload.avatar,
+        bio: payload.bio,
+        visibility,
         createdAt: new Date().toISOString(),
       }
 
       registeredUsers.push(nextUser)
-<<<<<<< HEAD
-      persistSession(buildSession(nextUser.user, payload.rememberMe))
-=======
       persistSession(buildSession(nextUser, payload.rememberMe))
->>>>>>> origin/main
       return
     }
 
@@ -391,7 +237,6 @@ export const useAuthStore = defineStore('auth', () => {
     clearStoredAuthSession()
   }
 
-  clearLegacySensitiveAuthData()
   loadSession()
 
   return {

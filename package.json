@@ -19,16 +19,12 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-<<<<<<< HEAD
     "@codemirror/commands": "^6.11.0",
     "@codemirror/lang-markdown": "^6.5.2",
     "@codemirror/language": "^6.12.4",
     "@codemirror/state": "^6.7.2",
     "@codemirror/view": "^6.43.10",
     "@lezer/highlight": "^1.2.3",
-    "@tiptap/extension-image": "^3.20.0",
-=======
->>>>>>> origin/main
     "@tiptap/extension-link": "^3.20.0",
     "@tiptap/extension-placeholder": "^3.20.0",
     "@tiptap/extension-table": "^3.20.0",
@@ -63,11 +59,8 @@
     "@types/node": "^22.16.5",
     "@types/turndown": "^5.0.6",
     "@vitejs/plugin-vue": "^6.0.1",
-<<<<<<< HEAD
-    "@vue/test-utils": "2.4.6",
-=======
     "@vitest/coverage-v8": "^4.0.18",
->>>>>>> origin/main
+    "@vue/test-utils": "2.4.6",
     "@vue/tsconfig": "^0.7.0",
     "eslint": "^10.0.2",
     "eslint-plugin-vue": "^10.8.0",

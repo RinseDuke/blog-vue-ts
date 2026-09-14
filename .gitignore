@@ -15,12 +15,9 @@ dist-ssr
 coverage
 *.local
 .env
-<<<<<<< HEAD
 .env.*
 !.env.example
 Thumbs.db
-=======
->>>>>>> origin/main
 
 /cypress/videos/
 /cypress/screenshots/
