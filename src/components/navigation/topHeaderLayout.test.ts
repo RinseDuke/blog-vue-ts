@@ -46,7 +46,7 @@ function extractBlock(source: string, selector: string) {
 }
 
 describe('top header layout source contract', () => {
-  it('uses a solid topbar shell instead of a floating glass card', () => {
+  it('uses a solid topbar shell without blur', () => {
     const topbarBlock = extractBlock(topHeaderLayoutSource, '.topbar')
     const topbarInnerBlock = extractBlock(topHeaderLayoutSource, '.topbar__inner')
     const hiddenTopbarBlock = extractBlock(topHeaderLayoutSource, '.topbar.hidden')
@@ -62,14 +62,15 @@ describe('top header layout source contract', () => {
 
     expect(topbarBlock).toContain('padding: 0 1rem;')
     expect(topbarBlock).toContain('background: var(--nav-backdrop);')
-    expect(topbarBlock).toContain('backdrop-filter: blur(20px) saturate(1.8);')
-    expect(topbarBlock).toContain('border-bottom: 1px solid transparent;')
+    expect(topbarBlock).not.toContain('backdrop-filter')
+    expect(topbarBlock).not.toContain('-webkit-backdrop-filter')
+    expect(topbarBlock).toContain('border-bottom: 1px solid var(--line-soft);')
     expect(topbarBlock).not.toContain('background: transparent;')
 
-    expect(topbarInnerBlock).toContain('width: min(1360px, 100%);')
+    expect(topbarInnerBlock).toContain('width: min(1320px, 100%);')
     expect(topbarInnerBlock).toContain('gap: 0.72rem;')
     expect(topbarInnerBlock).toContain('min-height: 68px;')
-    expect(topbarInnerBlock).toContain('padding: 0.7rem 0;')
+    expect(topbarInnerBlock).toContain('padding: 0.62rem 0;')
     expect(topbarInnerBlock).not.toContain('border-radius: 24px;')
     expect(topbarInnerBlock).not.toContain('backdrop-filter')
     expect(topbarInnerBlock).not.toContain('box-shadow')

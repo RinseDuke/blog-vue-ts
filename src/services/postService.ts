@@ -13,12 +13,44 @@ interface BackendBlog {
   id: string
   title: string
   content?: string
+  markdown?: string
   html_content?: string
+  htmlContent?: string
   author?: BackendBlogAuthor
   created_at: string
   updated_at?: string
   visibility?: 'public' | 'private'
   status?: 'draft' | 'published'
+}
+
+const HTML_BLOCK_TAGS = new Set([
+  'address', 'article', 'aside', 'blockquote', 'caption', 'dd', 'div', 'dl', 'dt',
+  'fieldset', 'figcaption', 'figure', 'footer', 'form', 'h1', 'h2', 'h3', 'h4', 'h5',
+  'h6', 'header', 'html', 'li', 'main', 'nav', 'ol', 'p', 'pre', 'section', 'table',
+  'tbody', 'td', 'tfoot', 'th', 'thead', 'tr', 'ul',
+])
+const HTML_INLINE_TAGS = new Set([
+  'a', 'abbr', 'b', 'br', 'cite', 'code', 'del', 'em', 'i', 'img', 'input', 'kbd',
+  'label', 'mark', 'q', 's', 'small', 'span', 'strong', 'sub', 'sup', 'time', 'u', 'wbr',
+])
+const HTML_VOID_TAGS = new Set(['br', 'hr', 'img', 'input', 'wbr'])
+const leadingHtmlTagPattern = /^\s*<([a-z][\w:-]*)\b[^>]*>/iu
+
+function looksLikeHtml(source: string) {
+  const openingTag = leadingHtmlTagPattern.exec(source)
+  if (!openingTag) return false
+
+  const tagName = openingTag[1].toLowerCase()
+  if (HTML_BLOCK_TAGS.has(tagName) || HTML_VOID_TAGS.has(tagName)) return true
+  if (!HTML_INLINE_TAGS.has(tagName)) return false
+
+  return new RegExp(`</${tagName}\\s*>`, 'iu').test(source)
+}
+
+function getCanonicalMarkdown(blog: BackendBlog) {
+  const source = blog.markdown ?? blog.content
+  if (typeof source !== 'string' || !source.trim()) return undefined
+  return looksLikeHtml(source) ? undefined : source
 }
 
 export interface FetchPostsParams {
@@ -171,14 +203,18 @@ function buildSlug(title: string, existingSlugs: Set<string>) {
 }
 
 function mapBackendBlogToPost(blog: BackendBlog): Post {
-  const excerptSource = blog.content ?? blog.html_content ?? ''
+  const source = blog.markdown ?? blog.content
+  const renderedHtml = blog.html_content ?? blog.htmlContent
+  const excerptSource = source ?? renderedHtml ?? ''
+  const markdown = getCanonicalMarkdown(blog)
 
   return {
     id: blog.id,
     slug: blog.id,
     title: blog.title,
     excerpt: buildExcerpt(excerptSource) || '暂无摘要',
-    content: blog.html_content,
+    content: renderedHtml ?? (markdown ? undefined : source),
+    markdown,
     tags: [],
     author: {
       id: blog.author?.id ?? 'unknown',
@@ -187,7 +223,7 @@ function mapBackendBlogToPost(blog: BackendBlog): Post {
     },
     publishedAt: blog.created_at,
     updatedAt: blog.updated_at,
-    readMinutes: estimateReadMinutes(blog.content ?? excerptSource),
+    readMinutes: estimateReadMinutes(source ?? excerptSource),
     status: blog.status ?? 'published',
     visibility: blog.visibility ?? 'public',
   }
@@ -325,6 +361,7 @@ export async function createPost(payload: CreatePostPayload): Promise<Post> {
       excerpt: excerpt || '新发布的文章',
       coverImage: payload.coverImage || undefined,
       content: payload.html,
+      markdown: payload.markdown,
       tags: Array.from(new Set((payload.tags ?? []).map((tag) => tag.trim()).filter(Boolean))),
       author: buildAuthor(session.user.id, session.email, session.user.nickname, session.user.username),
       publishedAt,

@@ -127,9 +127,11 @@ describe('postService auth guard', () => {
   it('creates a published post that is visible in post queries', async () => {
     setSession('writer@example.com', 'Writer')
 
+    const markdown = '# 新的发布文章\n\n这是一篇用于测试发布流程的内容。\n\n```mermaid\ngraph LR\nA --> B\n```'
+
     const createdPost = await createPost({
       title: '新的发布文章',
-      markdown: '# 新的发布文章\n\n这是一篇用于测试发布流程的内容。',
+      markdown,
       html: '<h1>新的发布文章</h1><p>这是一篇用于测试发布流程的内容。</p>',
       status: 'published',
       visibility: 'public',
@@ -137,8 +139,10 @@ describe('postService auth guard', () => {
 
     expect(createdPost.author.id).toBe('user-writer@example.com')
     expect(createdPost.status).toBe('published')
+    expect(createdPost.markdown).toBe(markdown)
     await expect(fetchPostById(createdPost.id)).resolves.toEqual(expect.objectContaining({ id: createdPost.id }))
-    await expect(fetchPostBySlug(createdPost.slug)).resolves.toEqual(expect.objectContaining({ id: createdPost.id }))
+    await expect(fetchPostById(createdPost.id)).resolves.toEqual(expect.objectContaining({ markdown }))
+    await expect(fetchPostBySlug(createdPost.slug)).resolves.toEqual(expect.objectContaining({ id: createdPost.id, markdown }))
 
     const posts = await fetchPosts()
     expect(posts[0]?.id).toBe(createdPost.id)

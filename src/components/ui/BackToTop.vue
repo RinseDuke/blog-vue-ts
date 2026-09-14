@@ -67,8 +67,6 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   z-index: 30;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
 }
 
 .back-to-top:hover {

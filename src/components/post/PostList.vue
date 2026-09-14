@@ -1,14 +1,16 @@
 <template>
-  <div class="post-list">
-    <PostCard v-for="post in posts" :key="post.id" :post="post" />
-  </div>
+  <TopicList :topics="topics" />
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import type { Post } from '@/types/post'
-import PostCard from '@/components/post/PostCard.vue'
+import TopicList from '@/components/topic/TopicList.vue'
+import { mapPostToTopic } from '@/features/topic/topic'
 
-defineProps<{
+const props = defineProps<{
   posts: Post[]
 }>()
+
+const topics = computed(() => props.posts.map(mapPostToTopic))
 </script>

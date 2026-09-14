@@ -31,9 +31,9 @@ const latestPublishedLabel = computed(() =>
 )
 
 const summaryCards = computed(() => [
-  { label: '已发布', value: managedPosts.value.length, helper: '当前账号的文章' },
+  { label: '已发布', value: managedPosts.value.length, helper: '当前账号的主题' },
   { label: '草稿', value: currentDraft.value ? 1 : 0, helper: currentDraft.value ? '可继续编辑' : '暂无草稿' },
-  { label: '阅读时长', value: `${totalReadMinutes.value} 分钟`, helper: '按文章预计时长' },
+  { label: '阅读时长', value: `${totalReadMinutes.value} 分钟`, helper: '按主题预计时长' },
   { label: '最近发布', value: latestPublishedLabel.value, helper: '最近一次发布时间' },
 ])
 
@@ -62,7 +62,7 @@ async function loadManagedPosts() {
   try {
     managedPosts.value = await fetchUserPosts(userId.value)
   } catch (err) {
-    error.value = err instanceof Error ? err.message : '加载文章失败，请稍后重试。'
+    error.value = err instanceof Error ? err.message : '加载主题失败，请稍后重试。'
   } finally {
     loading.value = false
   }
@@ -70,7 +70,7 @@ async function loadManagedPosts() {
 
 async function handleDeletePost(postId: string) {
   if (deletingPostId.value) return
-  if (!window.confirm('确定要删除这篇已发布文章吗？该操作不可撤销。')) return
+  if (!window.confirm('确定要删除这个已发布主题吗？该操作不可撤销。')) return
 
   deletingPostId.value = postId
   actionMessage.value = ''
@@ -79,9 +79,9 @@ async function handleDeletePost(postId: string) {
   try {
     await deletePost(postId)
     await loadManagedPosts()
-    actionMessage.value = '文章已删除。'
+    actionMessage.value = '主题已删除。'
   } catch (err) {
-    actionError.value = err instanceof Error ? err.message : '删除文章失败，请稍后重试。'
+    actionError.value = err instanceof Error ? err.message : '删除主题失败，请稍后重试。'
   } finally {
     deletingPostId.value = ''
   }
@@ -108,13 +108,13 @@ onMounted(async () => {
     <div class="manager-page__inner">
       <header class="manager-hero">
         <div>
-          <p class="manager-hero__eyebrow">内容管理</p>
-          <h1>我的文章</h1>
-          <p class="manager-hero__hint">集中管理当前账号的已发布文章和本地草稿，文章卡片复用了站内现有展示组件。</p>
+          <p class="manager-hero__eyebrow">CONTENT CONTROL</p>
+          <h1>发布控制台</h1>
+          <p class="manager-hero__hint">集中管理当前账号的已发布主题和本地草稿。</p>
         </div>
 
         <div class="manager-hero__actions">
-          <RouterLink to="/write" class="manager-btn manager-btn--primary">写新文章</RouterLink>
+          <RouterLink to="/write" class="manager-btn manager-btn--primary">新建信号</RouterLink>
           <RouterLink to="/about" class="manager-btn">返回个人中心</RouterLink>
         </div>
       </header>
@@ -135,7 +135,7 @@ onMounted(async () => {
           <article class="panel draft-panel">
             <header class="section-head">
               <div>
-                <p class="section-head__eyebrow">草稿</p>
+                <p class="section-head__eyebrow">DRAFT BUFFER</p>
                 <h2>当前草稿</h2>
               </div>
               <RouterLink v-if="currentDraft" to="/write" class="section-head__link">继续编辑</RouterLink>
@@ -164,17 +164,17 @@ onMounted(async () => {
           <article class="panel published-panel">
             <header class="section-head">
               <div>
-                <p class="section-head__eyebrow">已发布</p>
-                <h2>文章列表</h2>
+                <p class="section-head__eyebrow">LIVE STREAM</p>
+                <h2>主题列表</h2>
               </div>
               <span class="section-head__meta">{{ managedPosts.length }} 篇</span>
             </header>
 
-            <div v-if="loading" class="state-card">正在加载你的文章...</div>
+            <div v-if="loading" class="state-card">正在加载你的主题...</div>
             <div v-else-if="error" class="state-card state-card--error">{{ error }}</div>
 
             <div v-else-if="!managedPosts.length" class="state-card state-card--empty">
-              <p>当前账号还没有已发布文章。</p>
+              <p>当前账号还没有已发布主题。</p>
               <RouterLink to="/write" class="manager-btn manager-btn--primary">立即发布第一篇</RouterLink>
             </div>
 
@@ -186,7 +186,7 @@ onMounted(async () => {
                       :to="{ name: 'article-detail', params: { id: managedPost.id } }"
                       class="manage-post-actions__link"
                     >
-                      查看文章
+                      查看主题
                     </RouterLink>
                     <button
                       type="button"
@@ -194,7 +194,7 @@ onMounted(async () => {
                       :disabled="deletingPostId === managedPost.id"
                       @click="handleDeletePost(managedPost.id)"
                     >
-                      {{ deletingPostId === managedPost.id ? '删除中...' : '删除文章' }}
+                      {{ deletingPostId === managedPost.id ? '删除中...' : '删除主题' }}
                     </button>
                   </div>
                 </template>
@@ -207,7 +207,7 @@ onMounted(async () => {
           <article class="panel side-panel">
             <header class="section-head section-head--side">
               <div>
-                <p class="section-head__eyebrow">概览</p>
+                <p class="section-head__eyebrow">STATUS BOARD</p>
                 <h2>发布状态</h2>
               </div>
             </header>
@@ -256,9 +256,10 @@ onMounted(async () => {
 .manager-hero__eyebrow {
   margin: 0;
   color: var(--brand-500);
+  font-family: var(--font-mono);
   font-size: 0.76rem;
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: 0;
   text-transform: uppercase;
 }
 
@@ -266,7 +267,7 @@ onMounted(async () => {
   margin: 0.3rem 0 0;
   color: var(--ink-strong);
   font-size: clamp(2rem, 3.8vw, 2.8rem);
-  letter-spacing: -0.03em;
+  letter-spacing: 0;
 }
 
 .manager-hero__hint {
@@ -284,9 +285,8 @@ onMounted(async () => {
 .panel {
   border: 1px solid var(--line-soft);
   border-radius: var(--radius-lg);
-  background: linear-gradient(180deg, var(--card-top), var(--card-bottom));
+  background: var(--surface);
   box-shadow: var(--shadow-sm);
-  backdrop-filter: blur(12px);
 }
 
 .manager-btn {
@@ -295,7 +295,7 @@ onMounted(async () => {
   justify-content: center;
   min-height: 44px;
   padding: 0.78rem 1.3rem;
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   border: 1px solid var(--line-soft);
   background: var(--surface-strong);
   color: var(--ink-strong);
@@ -307,7 +307,7 @@ onMounted(async () => {
 
 .manager-btn--primary {
   background: var(--brand-500);
-  color: #fff;
+  color: var(--on-accent);
   border-color: var(--brand-500);
 }
 
@@ -407,9 +407,10 @@ onMounted(async () => {
 .section-head__eyebrow {
   margin: 0;
   color: var(--brand-500);
+  font-family: var(--font-mono);
   font-size: 0.76rem;
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: 0;
   text-transform: uppercase;
 }
 
@@ -491,7 +492,7 @@ onMounted(async () => {
   justify-content: center;
   min-height: 34px;
   padding: 0.42rem 0.82rem;
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   border: 1px solid var(--line-soft);
   background: var(--surface-strong);
   color: var(--brand-500);

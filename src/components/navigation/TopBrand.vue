@@ -1,9 +1,9 @@
 <template>
-  <RouterLink to="/" class="brand">
-    <img src="@/assets/logo.svg" alt="博客 Logo" />
+  <RouterLink to="/" class="brand" aria-label="墨言社区首页">
+    <span class="brand__glyph" aria-hidden="true">墨</span>
     <span class="brand__text">
-      <strong>Sign</strong>
-      <!-- <em></em> -->
+      <strong>墨言社区</strong>
+      <em>写作与讨论</em>
     </span>
   </RouterLink>
 </template>
@@ -16,37 +16,45 @@ import { RouterLink } from 'vue-router'
 .brand {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.55rem;
   color: var(--ink-strong);
   text-decoration: none;
-  font-weight: 700;
-  font-size: 1rem;
   flex-shrink: 0;
   min-width: fit-content;
+}
 
-  img {
-    width: 34px;
-    height: 34px;
-    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.12));
-  }
+.brand__glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  background: var(--ink-strong);
+  color: var(--on-accent);
+  font-size: 0.88rem;
+  font-weight: 720;
+  line-height: 1;
+  border-radius: 10px;
+  user-select: none;
 }
 
 .brand__text {
   display: flex;
   flex-direction: column;
-  line-height: 1.05;
+  line-height: 1.1;
 }
 
 .brand__text strong {
-  font-size: 0.97rem;
-  font-weight: 800;
-  letter-spacing: 0.03em;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 720;
+  letter-spacing: 0;
 }
 
 .brand__text em {
   font-style: normal;
-  font-size: 0.7rem;
-  font-weight: 600;
+  font-size: 0.64rem;
+  font-weight: 520;
   color: var(--ink-muted);
 }
 

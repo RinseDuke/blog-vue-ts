@@ -38,11 +38,11 @@ const themeToggleTitle = computed(() => themeToggleLabel.value)
   height: 34px;
   padding: 4px;
   border: 1px solid var(--line-soft);
-  border-radius: 999px;
+  border-radius: var(--radius-lg);
   background: linear-gradient(180deg, var(--surface-frost), var(--surface));
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.32),
-    0 8px 18px rgba(15, 23, 42, 0.06);
+    0 8px 18px rgba(28, 24, 21, 0.06);
   cursor: pointer;
   flex-shrink: 0;
   margin-left: auto;
@@ -64,7 +64,7 @@ const themeToggleTitle = computed(() => themeToggleLabel.value)
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.16);
+  box-shadow: 0 6px 14px rgba(28, 24, 21, 0.16);
   transform: translateX(0);
   transition:
     transform 0.24s var(--ease-out-quint),
@@ -85,8 +85,8 @@ const themeToggleTitle = computed(() => themeToggleLabel.value)
 }
 
 .theme-switch--dark {
-  background: rgba(105, 180, 255, 0.18);
-  border-color: rgba(105, 180, 255, 0.28);
+  background: color-mix(in srgb, var(--brand-500) 18%, transparent);
+  border-color: color-mix(in srgb, var(--brand-500) 28%, transparent);
 
   .theme-switch__thumb {
     transform: translateX(24px);

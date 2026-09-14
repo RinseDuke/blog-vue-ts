@@ -68,12 +68,12 @@ onMounted(() => {
 <template>
   <section class="comment-section">
     <header class="comment-section__header">
-      <h3>评论 <span v-if="commentCount" class="comment-section__count">{{ commentCount }}</span></h3>
+      <h3>回复 <span v-if="commentCount" class="comment-section__count">{{ commentCount }}</span></h3>
     </header>
 
     <CommentForm v-if="isLoggedIn" :submitting="submitting" @submit="handleSubmit" />
     <div v-else class="comment-section__login-gate">
-      <p>登录后才能发表评论和回复。</p>
+      <p>登录后可以参与这次讨论。</p>
       <RouterLink class="comment-section__login-link" :to="loginLocation">前往登录</RouterLink>
     </div>
 
@@ -83,7 +83,7 @@ onMounted(() => {
     <div v-else-if="error" class="comment-section__state comment-section__state--error">{{ error }}</div>
 
     <div v-else-if="!topLevelComments.length" class="comment-section__state comment-section__state--empty">
-      还没有评论，来发表第一条吧！
+      还没有回复，开始这次讨论吧。
     </div>
 
     <div v-else class="comment-section__list">
@@ -107,9 +107,8 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 1.2rem;
-  margin-top: 2.5rem;
-  padding-top: 2rem;
-  border-top: 1px solid var(--line-soft);
+  margin: 0;
+  padding: 1.5rem clamp(1rem, 4vw, 2rem) 2rem;
 }
 
 .comment-section__header {
@@ -120,9 +119,9 @@ onMounted(() => {
 
 .comment-section__header h3 {
   margin: 0;
-  font-size: 1.35rem;
+  font-size: 1.05rem;
   color: var(--ink-strong);
-  letter-spacing: -0.01em;
+  letter-spacing: 0;
 }
 
 .comment-section__count {
@@ -132,9 +131,9 @@ onMounted(() => {
   min-width: 24px;
   height: 24px;
   padding: 0 0.4rem;
-  border-radius: 999px;
-  background: var(--brand-500);
-  color: #fff;
+  border-radius: 7px;
+  background: var(--brand-100);
+  color: var(--brand-500);
   font-size: 0.78rem;
   font-weight: 700;
 }
@@ -142,20 +141,20 @@ onMounted(() => {
 .comment-section__state {
   padding: 1.5rem;
   text-align: center;
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   border: 1px solid var(--line-soft);
-  background: rgba(255, 255, 255, 0.78);
+  background: var(--bg-canvas-soft);
   color: var(--ink-muted);
   font-size: 0.92rem;
 }
 
 .comment-section__state--error {
-  background: #fff5f5;
+  background: var(--danger-bg);
   color: var(--danger-500);
 }
 
 .comment-section__state--empty {
-  background: #f7f9fc;
+  background: var(--bg-canvas-soft);
   color: var(--ink-main);
 }
 
@@ -170,9 +169,9 @@ onMounted(() => {
   justify-content: space-between;
   gap: 0.8rem;
   padding: 1rem 1.1rem;
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   border: 1px solid var(--line-soft);
-  background: rgba(255, 255, 255, 0.82);
+  background: var(--bg-canvas-soft);
   color: var(--ink-muted);
 
   p {
@@ -183,9 +182,9 @@ onMounted(() => {
 .comment-section__login-link {
   flex-shrink: 0;
   padding: 0.5rem 0.9rem;
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   background: var(--brand-500);
-  color: #fff;
+  color: var(--on-accent);
   font-weight: 700;
   text-decoration: none;
 }

@@ -7,11 +7,11 @@
             ref="inputEl"
             v-model="searchValue"
             type="text"
-            placeholder="搜索文章..."
+            placeholder="搜索主题..."
             autocomplete="off"
             @keyup.enter="triggerSearch"
           />
-          <button type="button" class="mobile-search-sheet__submit" aria-label="搜索文章" @click="triggerSearch">
+          <button type="button" class="mobile-search-sheet__submit" aria-label="搜索主题" @click="triggerSearch">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="11" cy="11" r="8"></circle>
               <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -98,16 +98,10 @@ function formatSuggestionMeta(post: Post) {
   gap: 0.7rem;
   width: 100%;
   padding: 0.45rem;
-  border-radius: 18px;
-  border: 1px solid color-mix(in srgb, var(--line-strong) 86%, transparent);
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--surface-overlay) 94%, transparent), color-mix(in srgb, var(--surface) 96%, transparent)),
-    radial-gradient(circle at top left, var(--brand-100), transparent 46%);
-  box-shadow:
-    0 18px 44px rgba(15, 23, 42, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.34);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--line-strong);
+  background: var(--surface-overlay);
+  box-shadow: var(--shadow-md);
 }
 
 .mobile-search-sheet__toolbar {
@@ -127,13 +121,11 @@ function formatSuggestionMeta(post: Post) {
   height: 42px;
   padding: 0 2.95rem 0 0.95rem;
   border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--line-strong) 88%, transparent);
-  background: linear-gradient(180deg, var(--surface-strong), var(--surface));
+  border: 1px solid var(--line-strong);
+  background: var(--surface-strong);
   color: var(--ink-strong);
   outline: none;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.42),
-    0 8px 20px rgba(15, 23, 42, 0.05);
+  box-shadow: var(--shadow-sm);
   transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
 }
 
@@ -142,10 +134,8 @@ function formatSuggestionMeta(post: Post) {
 }
 
 .mobile-search-sheet__input-wrap input:focus {
-  border-color: rgba(0, 113, 227, 0.34);
-  box-shadow:
-    0 0 0 4px rgba(0, 113, 227, 0.1),
-    0 12px 28px rgba(15, 23, 42, 0.08);
+  border-color: var(--brand-500);
+  box-shadow: var(--focus-ring);
 }
 
 .mobile-search-sheet__submit {
@@ -172,7 +162,7 @@ function formatSuggestionMeta(post: Post) {
   height: 42px;
   padding: 0 0.8rem;
   border: 1px solid var(--line-soft);
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   background: linear-gradient(180deg, var(--surface-strong), var(--surface));
   color: var(--ink-main);
   font-size: 0.82rem;

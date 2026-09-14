@@ -1,11 +1,12 @@
 export type DatePreset = 'all' | '7d' | '30d' | '90d' | '365d' | 'custom'
-export type SortMode = 'newest' | 'oldest' | 'readDesc' | 'readAsc' | 'titleAsc'
+export type SortMode = 'newest' | 'popular' | 'oldest' | 'readDesc' | 'readAsc' | 'titleAsc'
 
 export interface ArticleListQueryState {
   datePreset: DatePreset
   customStartDate: string
   customEndDate: string
   keyword: string
+  tag?: string
   sortMode: SortMode
   pageSize: number
   currentPage: number
@@ -18,7 +19,7 @@ export interface ParseQueryOptions {
 }
 
 const DATE_PRESETS: DatePreset[] = ['all', '7d', '30d', '90d', '365d', 'custom']
-const SORT_MODES: SortMode[] = ['newest', 'oldest', 'readDesc', 'readAsc', 'titleAsc']
+const SORT_MODES: SortMode[] = ['newest', 'popular', 'oldest', 'readDesc', 'readAsc', 'titleAsc']
 
 export function parseArticleListQueryState(query: Record<string, unknown>, options: ParseQueryOptions): ArticleListQueryState {
   const { pageSizeOptions, defaultPageSize = 6, defaultSortMode = 'newest' } = options
@@ -35,7 +36,8 @@ export function parseArticleListQueryState(query: Record<string, unknown>, optio
     datePreset: parsedDatePreset,
     customStartDate: parsedDatePreset === 'custom' ? toQueryString(query.start) : '',
     customEndDate: parsedDatePreset === 'custom' ? toQueryString(query.end) : '',
-    keyword: toQueryString(query.q),
+    keyword: toQueryString(query.q) || toQueryString(query.keyword),
+    ...(toQueryString(query.tag).trim() ? { tag: toQueryString(query.tag).trim() } : {}),
     sortMode: parsedSortMode,
     pageSize: pageSizeOptions.includes(size) ? size : defaultPageSize,
     currentPage: Number.isFinite(page) && page > 0 ? page : 1,
@@ -53,6 +55,7 @@ export function buildArticleListQuery(state: ArticleListQueryState, options: { d
     if (state.customEndDate) query.end = state.customEndDate
   }
   if (normalizedKeyword) query.q = normalizedKeyword
+  if (state.tag?.trim()) query.tag = state.tag.trim()
   if (state.sortMode !== defaultSortMode) query.sort = state.sortMode
   if (state.pageSize !== defaultPageSize) query.size = String(state.pageSize)
   if (state.currentPage > 1) query.page = String(state.currentPage)

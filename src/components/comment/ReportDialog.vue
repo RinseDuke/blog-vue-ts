@@ -138,14 +138,13 @@ function handleOverlayClick(e: MouseEvent) {
   display: grid;
   place-items: center;
   background: rgba(0, 0, 0, 0.35);
-  backdrop-filter: blur(4px);
   animation: overlay-in 0.2s ease;
 }
 
 .report-dialog {
   width: min(460px, calc(100% - 2rem));
-  background: #fff;
-  border-radius: 20px;
+  background: var(--surface-strong);
+  border-radius: var(--radius-lg);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
   padding: 1.5rem;
   animation: dialog-in 0.25s ease;
@@ -203,7 +202,7 @@ function handleOverlayClick(e: MouseEvent) {
   align-items: center;
   gap: 0.5rem;
   padding: 0.6rem 0.85rem;
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   border: 1px solid var(--line-soft);
   cursor: pointer;
   font-size: 0.92rem;
@@ -227,7 +226,7 @@ function handleOverlayClick(e: MouseEvent) {
   width: 100%;
   padding: 0.65rem 0.8rem;
   border: 1px solid var(--line-soft);
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   font-family: inherit;
   font-size: 0.9rem;
   color: var(--ink-strong);
@@ -257,7 +256,7 @@ function handleOverlayClick(e: MouseEvent) {
 
 .report-form__btn {
   padding: 0.5rem 1.1rem;
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   font-weight: 700;
   font-size: 0.88rem;
   cursor: pointer;
@@ -266,7 +265,7 @@ function handleOverlayClick(e: MouseEvent) {
 
 .report-form__btn--cancel {
   border: 1px solid var(--line-soft);
-  background: #fff;
+  background: var(--surface-strong);
   color: var(--ink-muted);
 }
 
@@ -277,7 +276,7 @@ function handleOverlayClick(e: MouseEvent) {
 .report-form__btn--submit {
   border: none;
   background: var(--danger-500);
-  color: #fff;
+  color: var(--on-accent);
 }
 
 .report-form__btn--submit:hover:enabled {
@@ -287,7 +286,7 @@ function handleOverlayClick(e: MouseEvent) {
 
 .report-form__btn--submit:disabled {
   cursor: not-allowed;
-  background: #9ca3af;
+  background: var(--disabled-bg);
 }
 
 .report-dialog__success {

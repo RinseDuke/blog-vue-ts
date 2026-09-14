@@ -3,6 +3,7 @@ import {
   renderWriteMarkdownToHtml,
   serializeEditorHtmlToMarkdown,
 } from './writeMarkdown'
+import * as writeMarkdown from './writeMarkdown'
 
 describe('write markdown table roundtrip', () => {
   it('serializes empty tiptap tables into valid markdown tables', () => {
@@ -107,5 +108,106 @@ describe('write markdown table roundtrip', () => {
 
     expect(html).toContain('<table>')
     expect(html).toContain('<td>单元 1</td>')
+  })
+})
+
+describe('write markdown extended rendering', () => {
+  it('renders technical writing extensions from one markdown source', () => {
+    const fence = String.fromCharCode(96).repeat(3)
+    const markdown = [
+      '# 标题',
+      '',
+      '[[toc]]',
+      '',
+      '- [x] 已完成',
+      '',
+      '脚注[^1]',
+      '',
+      '[^1]: 说明',
+      '',
+      '$$E = mc^2$$',
+      '',
+      fence + 'ts',
+      'const value = 1',
+      fence,
+    ].join('\n')
+
+    const html = renderWriteMarkdownToHtml(markdown)
+
+    expect(html).toMatch(/<h1 id="[^"]+"/)
+    expect(html).toContain('table-of-contents')
+    expect(html).toContain('task-list-item')
+    expect(html).toContain('footnotes')
+    expect(html).toContain('katex')
+    expect(html).toContain('hljs')
+  })
+
+  it('keeps mermaid fences available for the preview renderer', () => {
+    const fence = String.fromCharCode(96).repeat(3)
+    const markdown = [fence + 'mermaid', 'graph LR', 'A --> B', fence].join('\n')
+
+    const html = renderWriteMarkdownToHtml(markdown)
+
+    expect(html).toContain('language-mermaid')
+    expect(html).toContain('graph LR')
+  })
+
+  it('removes unsafe html from rendered markdown', () => {
+    const html = renderWriteMarkdownToHtml('[链接](javascript:alert(1))<script>alert(1)</script>')
+
+    expect(html).not.toContain('javascript:')
+    expect(html).not.toContain('<script')
+  })
+
+  it('keeps safe inline html while stripping executable attributes', () => {
+    const html = renderWriteMarkdownToHtml('<mark onclick="alert(1)">重点</mark>')
+
+    expect(html).toContain('<mark>重点</mark>')
+    expect(html).not.toContain('onclick')
+  })
+
+  it('adds safe attributes to external links', () => {
+    const html = renderWriteMarkdownToHtml('[外链](https://example.com/docs)')
+
+    expect(html).toContain('target="_blank"')
+    expect(html).toContain('rel="noopener noreferrer"')
+  })
+
+  it('sanitizes arbitrary html in the node test environment', () => {
+    const sanitizeRenderedHtml = (
+      writeMarkdown as typeof writeMarkdown & {
+        sanitizeRenderedHtml?: (html: string) => string
+      }
+    ).sanitizeRenderedHtml
+
+    expect(sanitizeRenderedHtml).toBeTypeOf('function')
+
+    const html = sanitizeRenderedHtml?.(
+      '<p onclick="alert(1)">安全</p><a href="javascript:alert(1)">链接</a><script>alert(1)</script>'
+    )
+
+    expect(html).toContain('<p>安全</p>')
+    expect(html).not.toContain('onclick')
+    expect(html).not.toContain('javascript:')
+    expect(html).not.toContain('<script')
+  })
+
+  it('does not reconstruct script tags from malformed nested markup', () => {
+    const html = writeMarkdown.sanitizeRenderedHtml(
+      '<scr<script>ipt>alert(1)</scr</script>ipt>'
+    )
+
+    expect(html).not.toMatch(/<script\b/iu)
+  })
+
+  it('rejects oversized numeric entities without throwing', () => {
+    let html = ''
+
+    expect(() => {
+      html = writeMarkdown.sanitizeRenderedHtml(
+        '<a href="&#999999999999;javascript:alert(1)">链接</a>'
+      )
+    }).not.toThrow()
+    expect(html).not.toContain('javascript:')
   })
 })

@@ -9,7 +9,7 @@
         v-model="searchValue"
         ref="inputEl"
         type="text"
-        placeholder="搜索文章..."
+        placeholder="搜索主题..."
         autocomplete="off"
         @keyup.enter="triggerSearch"
         @focus="handleFocus"
@@ -149,15 +149,13 @@ onUnmounted(() => {
 .search-box input {
   width: 100%;
   padding: 0.72rem 3.4rem 0.72rem 2.6rem;
-  background: linear-gradient(180deg, var(--surface-strong), var(--surface));
-  border: 1px solid color-mix(in srgb, var(--line-strong) 90%, transparent);
+  background: var(--surface-strong);
+  border: 1px solid var(--line-strong);
   border-radius: 999px;
   font-size: 0.9rem;
   color: var(--ink-strong);
   outline: none;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.48),
-    0 10px 22px rgba(15, 23, 42, 0.04);
+  box-shadow: var(--shadow-sm);
   transition: border-color var(--motion-base) var(--ease-out), box-shadow var(--motion-base) var(--ease-out), background-color var(--motion-base) var(--ease-out);
 }
 
@@ -166,10 +164,8 @@ onUnmounted(() => {
 }
 
 .search-box input:focus {
-  border-color: rgba(0, 113, 227, 0.3);
-  box-shadow:
-    0 0 0 4px rgba(0, 113, 227, 0.1),
-    0 16px 34px rgba(15, 23, 42, 0.08);
+  border-color: var(--brand-500);
+  box-shadow: var(--focus-ring);
   background: var(--surface-strong);
 }
 
@@ -179,10 +175,12 @@ onUnmounted(() => {
   padding: 0.2rem 0.5rem;
   background: var(--surface-hover);
   border: 1px solid var(--line-soft);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   color: var(--ink-muted);
-  font-size: 0.75rem;
-  font-family: inherit;
+  font-size: 0.72rem;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  letter-spacing: 0.02em;
   pointer-events: none;
   line-height: 1;
 }
@@ -192,7 +190,7 @@ onUnmounted(() => {
   right: 0.45rem;
   width: 34px;
   height: 34px;
-  background: color-mix(in srgb, var(--surface-strong) 92%, transparent);
+  background: var(--surface-hover);
   border: 1px solid var(--line-soft);
   border-radius: 50%;
   color: var(--ink-main);
@@ -201,12 +199,12 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
-  transition: color var(--motion-base) var(--ease-out);
+  transition: color var(--motion-base) var(--ease-out), border-color var(--motion-base) var(--ease-out);
 }
 
 .search-btn:hover {
   color: var(--brand-500);
+  border-color: var(--brand-500);
 }
 
 .top-search__dropdown {
@@ -214,14 +212,10 @@ onUnmounted(() => {
   top: calc(100% + 0.7rem);
   left: 0;
   right: 0;
-  background:
-    linear-gradient(180deg, var(--surface-overlay), color-mix(in srgb, var(--surface) 98%, transparent)),
-    radial-gradient(circle at top left, var(--brand-100), transparent 44%);
-  border: 1px solid color-mix(in srgb, var(--line-strong) 88%, transparent);
-  border-radius: 22px;
-  box-shadow:
-    var(--shadow-md),
-    inset 0 1px 0 rgba(255, 255, 255, 0.38);
+  background: var(--surface-overlay);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
   padding: 1rem;
   display: flex;
   flex-direction: column;
@@ -229,7 +223,6 @@ onUnmounted(() => {
   z-index: 40;
   max-height: 70vh;
   overflow-y: auto;
-  backdrop-filter: blur(18px);
 }
 
 @media (max-width: 768px) {

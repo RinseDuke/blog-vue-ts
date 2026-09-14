@@ -12,6 +12,7 @@ export default [
       'node_modules/**',
       '.worktrees/**',
       '.codex-artifacts/**',
+      'static_analysis_codeql_*/**',
     ],
   },
   js.configs.recommended,

@@ -5,7 +5,7 @@
       class="mobile-top-tabs__trigger"
       :aria-expanded="menuOpen"
       aria-controls="mobile-top-tabs-panel"
-      aria-label="打开移动端导航"
+      aria-label="打开社区导航"
       @click="toggleMenu"
     >
       <span class="mobile-top-tabs__current">{{ currentTabLabel }}</span>
@@ -28,8 +28,10 @@
 
     <Transition name="mobile-top-tabs-panel">
       <nav v-if="menuOpen" id="mobile-top-tabs-panel" class="mobile-top-tabs__panel" aria-label="移动端主导航">
-        <RouterLink v-for="item in navItems" :key="item.to" :to="item.to" @click="closeMenu">
+        <RouterLink v-for="item in navItems" :key="item.to" :to="item.to" custom v-slot="{ href, navigate }">
+          <a :href="href" :class="{ 'router-link-active': item.active }" :aria-current="item.active ? 'page' : undefined" @click="navigate($event); closeMenu()">
           {{ item.label }}
+          </a>
         </RouterLink>
       </nav>
     </Transition>
@@ -65,12 +67,17 @@ const navItems = computed(() => [
   },
   {
     to: '/article',
-    label: '文章',
-    active: route.path === '/article' || route.path.startsWith('/article/') || route.path.startsWith('/search'),
+    label: '最新',
+    active: route.path === '/article' && (!route.query.sort || route.query.sort === 'newest') && !route.query.tag && !route.query.q && !route.query.keyword,
+  },
+  {
+    to: '/article?sort=popular',
+    label: '热门',
+    active: route.path === '/article' && route.query.sort === 'popular' && !route.query.tag && !route.query.q && !route.query.keyword,
   },
   {
     to: '/write',
-    label: '写作',
+    label: '发起主题',
     active: route.path.startsWith('/write'),
   },
   {
@@ -81,7 +88,7 @@ const navItems = computed(() => [
   },
 ])
 
-const currentTabLabel = computed(() => navItems.value.find((item) => item.active)?.label ?? '导航')
+const currentTabLabel = computed(() => navItems.value.find((item) => item.active)?.label ?? (route.path.startsWith('/article') ? '主题' : '导航'))
 
 function toggleMenu() {
   menuOpen.value = !menuOpen.value
@@ -136,18 +143,14 @@ onBeforeUnmount(() => {
   min-height: 38px;
   padding: 0 0.78rem;
   border: 1px solid var(--line-soft);
-  border-radius: 14px;
-  background:
-    linear-gradient(180deg, var(--surface-strong), var(--surface)),
-    radial-gradient(circle at top left, var(--brand-100), transparent 56%);
+  border-radius: var(--radius-md);
+  background: var(--surface-strong);
   color: var(--ink-main);
   display: inline-flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.45rem;
-  box-shadow:
-    0 10px 22px rgba(15, 23, 42, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.36);
+  box-shadow: none;
   transition:
     border-color 0.22s ease,
     background-color 0.22s ease,
@@ -163,18 +166,13 @@ onBeforeUnmount(() => {
   outline: none;
   box-shadow:
     0 0 0 3px color-mix(in srgb, var(--brand-100) 72%, transparent),
-    0 10px 22px rgba(15, 23, 42, 0.08);
+    0 10px 22px rgba(28, 24, 21, 0.08);
 }
 
 .mobile-top-tabs--open .mobile-top-tabs__trigger {
   border-color: color-mix(in srgb, var(--brand-100) 92%, transparent);
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--surface-overlay) 98%, transparent), color-mix(in srgb, var(--surface) 97%, transparent)),
-    radial-gradient(circle at top left, color-mix(in srgb, var(--brand-100) 46%, transparent), transparent 58%);
-  box-shadow:
-    0 12px 24px rgba(15, 23, 42, 0.08),
-    0 2px 8px rgba(15, 23, 42, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.56);
+  background: var(--surface-hover);
+  box-shadow: none;
 }
 
 .mobile-top-tabs__current {
@@ -207,17 +205,10 @@ onBeforeUnmount(() => {
   gap: 0.3rem;
   overflow: hidden;
   isolation: isolate;
-  border-radius: 18px;
+  border-radius: var(--radius-md);
   border: 1px solid color-mix(in srgb, var(--line-strong) 86%, transparent);
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--surface-overlay) 99%, transparent), color-mix(in srgb, var(--surface-frost) 100%, transparent)),
-    radial-gradient(circle at top left, color-mix(in srgb, var(--brand-100) 32%, transparent), transparent 58%);
-  box-shadow:
-    0 18px 34px rgba(15, 23, 42, 0.08),
-    0 4px 14px rgba(15, 23, 42, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(18px) saturate(135%);
-  -webkit-backdrop-filter: blur(18px) saturate(135%);
+  background: var(--surface-overlay);
+  box-shadow: var(--shadow-md);
   z-index: 50;
 
   a {
@@ -227,9 +218,9 @@ onBeforeUnmount(() => {
     align-items: center;
     justify-content: flex-start;
     padding: 0.74rem 0.9rem;
-    border-radius: 13px;
+    border-radius: var(--radius-sm);
     border: 1px solid transparent;
-    background: color-mix(in srgb, var(--surface-strong) 90%, transparent);
+    background: var(--surface-strong);
     color: var(--ink-muted);
     text-decoration: none;
     font-size: 0.82rem;
@@ -247,12 +238,8 @@ onBeforeUnmount(() => {
   a.router-link-active {
     color: var(--ink-strong);
     border-color: color-mix(in srgb, var(--brand-100) 88%, transparent);
-    background: linear-gradient(180deg,
-        color-mix(in srgb, var(--surface-strong) 98%, transparent),
-        color-mix(in srgb, var(--surface-overlay) 96%, transparent));
-    box-shadow:
-      0 8px 18px rgba(15, 23, 42, 0.06),
-      inset 0 1px 0 rgba(255, 255, 255, 0.72);
+    background: var(--surface-hover);
+    box-shadow: none;
   }
 
   a:active {

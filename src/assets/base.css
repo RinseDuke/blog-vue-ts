@@ -1,206 +1,182 @@
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
-
 :root {
+  --font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'PingFang SC',
+    'Helvetica Neue', 'Microsoft YaHei', Arial, sans-serif;
+  --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'PingFang SC',
+    'Helvetica Neue', 'Microsoft YaHei', Arial, sans-serif;
+  --font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+
+  /* System-neutral canvas */
   --bg-canvas: #f5f5f7;
-  --bg-canvas-soft: #fbfbfd;
-  --bg-orb: rgba(255, 255, 255, 0.9);
-  --surface: rgba(255, 255, 255, 0.88);
+  --bg-canvas-soft: #fafafa;
+  --paper-edge: #e5e5e7;
+
+  --surface: #fbfbfd;
   --surface-strong: #ffffff;
-  --surface-frost: rgba(255, 255, 255, 0.74);
-  --surface-hover: rgba(255, 255, 255, 0.82);
-  --surface-overlay: rgba(255, 255, 255, 0.94);
-  --card-top: rgba(255, 255, 255, 0.98);
-  --card-bottom: rgba(255, 255, 255, 0.92);
-  --post-card-bg: linear-gradient(180deg, var(--card-top), var(--card-bottom));
+  --surface-frost: #ffffff;
+  --surface-hover: #f0f0f2;
+  --surface-overlay: #ffffff;
+
+  /* Labels */
+  --ink-strong: #1d1d1f;
+  --ink-main: #3a3a3c;
+  --ink-muted: #6e6e73;
+
+  /* Hairlines */
+  --line-soft: rgba(29, 29, 31, 0.1);
+  --line-strong: rgba(29, 29, 31, 0.18);
+  --rule-ink: #1d1d1f;
+
+  /* Interaction and semantic colors */
+  --brand-500: #0071e3;
+  --brand-400: #147ce5;
+  --brand-100: rgba(0, 113, 227, 0.1);
+  --accent-500: #5856d6;
+  --accent-100: rgba(88, 86, 214, 0.1);
+  --signal-amber: #b26a00;
+
+  --danger-500: #d70015;
+  --danger-bg: #fff0f1;
+  --success-500: #248a3d;
+  --success-bg: #eef9f0;
+  --warning-500: #a15c00;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.1);
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+
+  /* Post card tokens (paper sheet) */
+  --card-top: #ffffff;
+  --card-bottom: #fbfbfd;
+  --post-card-bg: var(--surface);
   --post-card-border: var(--line-soft);
   --post-card-divider: var(--line-soft);
-  --post-card-edge: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.72), transparent);
-  --post-card-footer-bg:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.14), transparent),
-    color-mix(in srgb, var(--surface) 88%, transparent);
-  --post-card-shadow: var(--shadow-sm);
-  --post-card-hover-border: rgba(0, 113, 227, 0.26);
-  --post-card-hover-shadow:
-    0 20px 40px rgba(15, 23, 42, 0.1),
-    0 8px 18px rgba(15, 23, 42, 0.06);
+  --post-card-edge: transparent;
+  --post-card-footer-bg: transparent;
+  --post-card-shadow: none;
+  --post-card-hover-border: var(--rule-ink);
+  --post-card-hover-shadow: none;
   --post-card-title: var(--ink-strong);
   --post-card-text: var(--ink-main);
   --post-card-meta: var(--ink-muted);
-  --post-card-avatar-border: var(--line-soft);
-  --ink-strong: #1d1d1f;
-  --ink-main: #2d2d32;
-  --ink-muted: #6e6e73;
-  --line-soft: rgba(0, 0, 0, 0.08);
-  --line-strong: rgba(0, 0, 0, 0.14);
-  --brand-500: #0071e3;
-  --brand-400: #2f8fff;
-  --brand-100: rgba(0, 113, 227, 0.12);
-  --danger-500: #c62828;
-  --danger-bg: #fef5f5;
-  --success-500: #1f8a52;
-  --success-bg: #e8f5e9;
-  --warning-500: #e65100;
-  --shadow-sm: 0 10px 24px rgba(0, 0, 0, 0.08);
-  --shadow-md: 0 18px 46px rgba(0, 0, 0, 0.12);
-  --radius-sm: 10px;
-  --radius-md: 14px;
-  --radius-lg: 22px;
-  --write-content-max-width: 980px;
-  --write-panel-border: color-mix(in srgb, var(--line-soft) 94%, transparent);
-  --write-panel-divider: color-mix(in srgb, var(--line-strong) 56%, transparent);
-  --write-panel-shadow:
-    0 18px 38px rgba(15, 23, 42, 0.08),
-    0 6px 14px rgba(15, 23, 42, 0.05);
-  --write-panel-bg:
-    radial-gradient(circle at top left, color-mix(in srgb, var(--brand-100) 78%, transparent), transparent 34%),
-    linear-gradient(180deg, color-mix(in srgb, var(--surface-overlay) 99%, transparent), color-mix(in srgb, var(--surface) 95%, transparent));
-  --write-panel-muted-bg:
-    linear-gradient(180deg, color-mix(in srgb, var(--surface-strong) 84%, transparent), color-mix(in srgb, var(--surface) 76%, transparent));
-  --write-panel-inline-bg: color-mix(in srgb, var(--surface-strong) 88%, transparent);
-  --write-panel-inline-hover: color-mix(in srgb, var(--surface-overlay) 90%, var(--brand-100) 10%);
-  --write-panel-inline-border: color-mix(in srgb, var(--line-soft) 90%, transparent);
-  --write-panel-inset-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.38);
-  --write-toolbar-group-bg: color-mix(in srgb, var(--write-panel-inline-bg) 84%, transparent);
-  --write-toolbar-bg:
-    linear-gradient(180deg, color-mix(in srgb, var(--surface-overlay) 98%, transparent), color-mix(in srgb, var(--surface) 94%, transparent));
-  --write-toolbar-border: color-mix(in srgb, var(--line-soft) 92%, transparent);
-  --write-toolbar-shadow:
-    0 14px 28px rgba(15, 23, 42, 0.06),
-    0 6px 14px rgba(15, 23, 42, 0.04);
-  --write-editor-card-border: color-mix(in srgb, var(--line-soft) 96%, transparent);
-  --write-editor-card-bg:
-    linear-gradient(180deg, color-mix(in srgb, var(--surface-overlay) 99%, transparent), color-mix(in srgb, var(--surface-strong) 96%, transparent));
-  --write-editor-card-shadow:
-    0 22px 46px rgba(15, 23, 42, 0.08),
-    0 10px 20px rgba(15, 23, 42, 0.05);
-  --write-editor-header-bg:
-    linear-gradient(180deg, color-mix(in srgb, var(--surface-overlay) 96%, transparent), color-mix(in srgb, var(--surface) 90%, transparent));
-  --write-editor-divider: color-mix(in srgb, var(--line-strong) 44%, transparent);
-  --write-editor-canvas-bg:
-    linear-gradient(180deg, color-mix(in srgb, var(--surface-strong) 88%, transparent), color-mix(in srgb, var(--bg-canvas-soft) 90%, transparent));
-  --write-editor-canvas-border: color-mix(in srgb, var(--line-soft) 82%, transparent);
-  --write-editor-canvas-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.34),
-    0 1px 0 rgba(255, 255, 255, 0.08);
-  --write-status-rail-bg:
-    linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--bg-canvas) 82%, transparent) 48%, color-mix(in srgb, var(--bg-canvas) 96%, transparent) 100%);
+  --post-card-avatar-border: var(--line-strong);
+
+  /* Write editor tokens (kept for editor surfaces) */
+  --write-content-max-width: 820px;
+  --write-panel-border: var(--line-soft);
+  --write-panel-divider: var(--line-soft);
+  --write-panel-shadow: var(--shadow-sm);
+  --write-panel-bg: var(--surface);
+  --write-panel-muted-bg: var(--bg-canvas-soft);
+  --write-panel-inline-bg: var(--surface-strong);
+  --write-panel-inline-hover: var(--surface-hover);
+  --write-panel-inline-border: var(--line-soft);
+  --write-panel-inset-shadow: none;
+  --write-toolbar-group-bg: var(--bg-canvas-soft);
+  --write-toolbar-bg: var(--surface);
+  --write-toolbar-border: var(--line-soft);
+  --write-toolbar-shadow: var(--shadow-sm);
+  --write-editor-card-border: var(--line-soft);
+  --write-editor-card-bg: var(--surface-strong);
+  --write-editor-card-shadow: var(--shadow-sm);
+  --write-editor-header-bg: var(--surface);
+  --write-editor-divider: var(--line-soft);
+  --write-editor-canvas-bg: var(--surface-strong);
+  --write-editor-canvas-border: var(--line-soft);
+  --write-editor-canvas-shadow: none;
+  --write-status-rail-bg: linear-gradient(180deg, transparent, var(--bg-canvas) 64%);
   --write-status-bar-height: 112px;
   --write-status-bar-height-mobile: 150px;
+  --write-markdown-syntax: #aaa4a0;
+  --write-markdown-caret: var(--ink-strong);
+
+  --auth-panel-bg: #1d1d1f;
+  --auth-panel-ink: #f5f5f7;
+  --auth-panel-muted: rgba(245, 245, 247, 0.66);
+  --auth-panel-rule: rgba(245, 245, 247, 0.2);
 }
 
 :root[data-theme='dark'] {
-  --bg-canvas: #0d1117;
-  --bg-canvas-soft: #151b23;
-  --bg-orb: rgba(74, 122, 173, 0.2);
-  --surface: rgba(19, 25, 34, 0.84);
-  --surface-strong: #18202b;
-  --surface-frost: rgba(16, 21, 29, 0.78);
-  --surface-hover: rgba(255, 255, 255, 0.08);
-  --surface-overlay: rgba(19, 25, 34, 0.94);
-  --nav-backdrop: rgba(16, 21, 29, 0.78);
-  --nav-border-scrolled: rgba(255, 255, 255, 0.16);
-  --nav-shadow-scrolled: 0 8px 24px rgba(0, 0, 0, 0.36);
-  --article-code-block-bg: #0d1117;
-  --card-top: rgba(24, 32, 43, 0.98);
-  --card-bottom: rgba(18, 25, 34, 0.92);
-  --post-card-bg: linear-gradient(180deg, rgba(22, 27, 34, 0.98), rgba(20, 25, 32, 0.98));
-  --post-card-border: #30363d;
-  --post-card-divider: rgba(48, 54, 61, 0.92);
-  --post-card-edge: linear-gradient(90deg, transparent, rgba(240, 246, 252, 0.08), transparent);
-  --post-card-footer-bg:
-    linear-gradient(180deg, rgba(240, 246, 252, 0.03), rgba(13, 17, 23, 0.08)),
-    linear-gradient(180deg, rgba(25, 31, 40, 0.98), rgba(22, 27, 34, 0.98));
-  --post-card-shadow: 0 16px 34px rgba(1, 4, 9, 0.28);
-  --post-card-hover-border: rgba(88, 166, 255, 0.34);
-  --post-card-hover-shadow:
-    0 18px 34px rgba(1, 4, 9, 0.26),
-    0 8px 16px rgba(1, 4, 9, 0.16);
-  --post-card-title: #e6edf3;
-  --post-card-text: #c9d1d9;
-  --post-card-meta: #8b949e;
-  --post-card-avatar-border: rgba(139, 148, 158, 0.28);
-  --ink-strong: #f3f6fb;
-  --ink-main: #d9e0ea;
-  --ink-muted: #95a3b8;
-  --line-soft: rgba(255, 255, 255, 0.08);
-  --line-strong: rgba(255, 255, 255, 0.16);
-  --brand-500: #69b4ff;
-  --brand-400: #93cbff;
-  --brand-100: rgba(105, 180, 255, 0.14);
-  --danger-500: #ff8f87;
-  --danger-bg: rgba(255, 143, 135, 0.12);
-  --success-500: #4fd18f;
-  --success-bg: rgba(79, 209, 143, 0.12);
-  --warning-500: #ffb15e;
-  --shadow-sm: 0 16px 36px rgba(0, 0, 0, 0.36);
-  --shadow-md: 0 26px 60px rgba(0, 0, 0, 0.42);
-  --write-panel-border: rgba(110, 118, 129, 0.34);
-  --write-panel-divider: rgba(110, 118, 129, 0.26);
-  --write-panel-shadow:
-    0 18px 34px rgba(1, 4, 9, 0.32),
-    0 8px 16px rgba(1, 4, 9, 0.18);
-  --write-panel-bg:
-    radial-gradient(circle at top left, rgba(88, 166, 255, 0.12), transparent 36%),
-    linear-gradient(180deg, rgba(24, 32, 43, 0.96), rgba(20, 27, 36, 0.95));
-  --write-panel-muted-bg:
-    linear-gradient(180deg, rgba(28, 35, 46, 0.92), rgba(21, 27, 36, 0.9));
-  --write-panel-inline-bg: rgba(23, 29, 39, 0.9);
-  --write-panel-inline-hover: rgba(31, 40, 53, 0.96);
-  --write-panel-inline-border: rgba(110, 118, 129, 0.3);
-  --write-panel-inset-shadow: inset 0 1px 0 rgba(240, 246, 252, 0.04);
-  --write-toolbar-group-bg: rgba(19, 26, 35, 0.9);
-  --write-toolbar-bg:
-    linear-gradient(180deg, rgba(23, 29, 39, 0.96), rgba(18, 24, 33, 0.94));
-  --write-toolbar-border: rgba(110, 118, 129, 0.28);
-  --write-toolbar-shadow:
-    0 16px 28px rgba(1, 4, 9, 0.22),
-    0 8px 16px rgba(1, 4, 9, 0.14);
-  --write-editor-card-border: rgba(110, 118, 129, 0.34);
-  --write-editor-card-bg:
-    linear-gradient(180deg, rgba(22, 27, 34, 0.98), rgba(17, 23, 30, 0.98));
-  --write-editor-card-shadow:
-    0 22px 44px rgba(1, 4, 9, 0.28),
-    0 10px 20px rgba(1, 4, 9, 0.16);
-  --write-editor-header-bg:
-    linear-gradient(180deg, rgba(26, 32, 41, 0.96), rgba(22, 27, 34, 0.92));
-  --write-editor-divider: rgba(110, 118, 129, 0.24);
-  --write-editor-canvas-bg:
-    linear-gradient(180deg, rgba(19, 24, 31, 0.96), rgba(16, 20, 26, 0.96));
-  --write-editor-canvas-border: rgba(110, 118, 129, 0.22);
-  --write-editor-canvas-shadow:
-    inset 0 1px 0 rgba(240, 246, 252, 0.05),
-    0 1px 0 rgba(255, 255, 255, 0.02);
-  --write-status-rail-bg:
-    linear-gradient(180deg, rgba(13, 17, 23, 0) 0%, rgba(13, 17, 23, 0.72) 42%, rgba(13, 17, 23, 0.96) 100%);
-  --focus-ring: 0 0 0 3px color-mix(in srgb, var(--brand-400) 32%, transparent);
+  --bg-canvas: #000000;
+  --bg-canvas-soft: #111113;
+  --paper-edge: #2c2c2e;
+
+  --surface: #1c1c1e;
+  --surface-strong: #1c1c1e;
+  --surface-frost: #1c1c1e;
+  --surface-hover: #2c2c2e;
+  --surface-overlay: #242426;
+
+  --ink-strong: #f5f5f7;
+  --ink-main: #e5e5ea;
+  --ink-muted: #98989d;
+
+  --line-soft: rgba(255, 255, 255, 0.12);
+  --line-strong: rgba(255, 255, 255, 0.2);
+  --rule-ink: #f5f5f7;
+
+  --brand-500: #0a84ff;
+  --brand-400: #409cff;
+  --brand-100: rgba(10, 132, 255, 0.16);
+  --accent-500: #5e5ce6;
+  --accent-100: rgba(94, 92, 230, 0.16);
+  --signal-amber: #ffd60a;
+
+  --danger-500: #ff453a;
+  --danger-bg: rgba(255, 69, 58, 0.14);
+  --success-500: #30d158;
+  --success-bg: rgba(48, 209, 88, 0.14);
+  --warning-500: #ffd60a;
+
+  --shadow-sm: 0 1px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 18px 40px rgba(0, 0, 0, 0.5);
+
+  --nav-backdrop: #1c1c1e;
+  --nav-border-scrolled: var(--line-strong);
+  --nav-shadow-scrolled: 0 1px 0 rgba(0, 0, 0, 0.4);
+  --article-code-block-bg: #111113;
+
+  --card-top: #242426;
+  --card-bottom: #1c1c1e;
+  --post-card-avatar-border: var(--line-strong);
+  --write-markdown-syntax: #6f6f75;
+  --write-markdown-caret: var(--ink-strong);
+
+  --focus-ring: 0 0 0 2px var(--brand-500);
 }
 
-/* ── Design Tokens (增量) ── */
+/* ── Incremental tokens ── */
 
 :root {
   --text-xs: 0.78rem;
   --text-sm: 0.88rem;
   --text-base: 1rem;
-  --text-lg: 1.13rem;
-  --text-xl: 1.31rem;
-  --text-2xl: 1.63rem;
-  --text-3xl: 2.06rem;
-  --text-display: 2.75rem;
+  --text-lg: 1.15rem;
+  --text-xl: 1.35rem;
+  --text-2xl: 1.7rem;
+  --text-3xl: 2.2rem;
+  --text-display: 3rem;
   --motion-fast: 120ms;
   --motion-base: 220ms;
   --motion-slow: 420ms;
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
   --ease-out: cubic-bezier(0, 0, 0.2, 1);
   --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
-  --focus-ring: 0 0 0 3px color-mix(in srgb, var(--brand-500) 32%, transparent);
-  --nav-backdrop: rgba(255, 255, 255, 0.74);
+  --focus-ring: 0 0 0 2px var(--brand-500);
+  --nav-backdrop: #ffffff;
   --nav-border-scrolled: var(--line-strong);
-  --nav-shadow-scrolled: 0 8px 24px rgba(15, 23, 42, 0.08);
+  --nav-shadow-scrolled: 0 1px 0 rgba(28, 24, 21, 0.1);
   --article-prose-text: var(--ink-main);
   --article-prose-heading: var(--ink-strong);
-  --article-quote-bg: color-mix(in srgb, var(--brand-100) 40%, transparent);
-  --article-code-bg: var(--surface-strong);
-  --article-code-block-bg: #1a2332;
+  --article-quote-bg: var(--bg-canvas-soft);
+  --article-code-bg: var(--bg-canvas-soft);
+  --article-code-block-bg: #1d1d1f;
+  --article-code-block-text: #f5f5f7;
+  --article-inline-code-text: var(--brand-500);
+  --on-accent: #ffffff;
+  --disabled-bg: #aeaeb2;
 }
 
 *,
@@ -219,23 +195,22 @@ body {
 
 body {
   color: var(--ink-main);
-  background:
-    radial-gradient(900px 400px at 14% -10%, var(--bg-orb), transparent 62%),
-    linear-gradient(180deg, var(--bg-canvas-soft) 0%, var(--bg-canvas) 100%);
-  line-height: 1.55;
-  font-family: 'Manrope', sans-serif;
-  font-size: 15px;
-  letter-spacing: 0.01em;
+  background-color: var(--bg-canvas);
+  line-height: 1.65;
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-optical-sizing: auto;
+  letter-spacing: 0;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  transition: background 0.24s ease, color 0.24s ease;
+  transition: background-color 0.24s ease, color 0.24s ease;
 }
 
-/* 自定义滚动条 */
+/* Scrollbar */
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 11px;
+  height: 11px;
 }
 
 ::-webkit-scrollbar-track {
@@ -244,15 +219,14 @@ body {
 
 ::-webkit-scrollbar-thumb {
   background: var(--line-strong);
-  border-radius: 5px;
-  transition: background var(--motion-base) ease;
+  border: 3px solid var(--bg-canvas);
+  border-radius: 0;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--brand-500);
+  background: var(--ink-muted);
 }
 
-/* Firefox 滚动条 */
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--line-strong) var(--bg-canvas);
@@ -270,7 +244,6 @@ textarea {
   font: inherit;
 }
 
-/* 焦点可见性 */
 button:focus-visible,
 a:focus-visible,
 input:focus-visible,
@@ -280,7 +253,6 @@ select:focus-visible {
   box-shadow: var(--focus-ring);
 }
 
-/* 尊重用户的动画偏好 */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -293,23 +265,11 @@ select:focus-visible {
 }
 
 ::selection {
-  background: var(--brand-100);
-  color: var(--ink-strong);
+  background: var(--ink-strong);
+  color: var(--bg-canvas);
 }
 
-html[data-theme='dark'] .navigation {
-  background: var(--surface-frost) !important;
-}
-
-html[data-theme='dark'] .navigation a.router-link-active {
-  background: var(--surface-strong) !important;
-  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.24);
-}
-
-html[data-theme='dark'] .navigation a:hover {
-  background: var(--surface-hover) !important;
-}
-
+/* ── Dark theme component nudges ── */
 html[data-theme='dark'] .search-box input,
 html[data-theme='dark'] .search__bar input,
 html[data-theme='dark'] .login-card .field input,
@@ -329,20 +289,18 @@ html[data-theme='dark'] .article-content,
 html[data-theme='dark'] .article-actions__btn,
 html[data-theme='dark'] .comment-section__state,
 html[data-theme='dark'] .comment-section__login-gate,
-html[data-theme='dark'] .report-dialog,
-html[data-theme='dark'] .login-card,
-html[data-theme='dark'] .register-card {
+html[data-theme='dark'] .report-dialog {
   background: var(--surface-overlay) !important;
 }
 
 html[data-theme='dark'] .search-dropdown__rank {
-  background: #243042;
+  background: var(--surface-hover);
   color: var(--ink-main);
 }
 
 html[data-theme='dark'] .search-dropdown__rank[data-top='true'] {
   background: var(--brand-500);
-  color: #071019;
+  color: var(--bg-canvas);
 }
 
 html[data-theme='dark'] .comment-section__state--error {
@@ -350,7 +308,7 @@ html[data-theme='dark'] .comment-section__state--error {
 }
 
 html[data-theme='dark'] .comment-section__state--empty {
-  background: rgba(255, 255, 255, 0.04) !important;
+  background: var(--surface-hover) !important;
 }
 
 html[data-theme='dark'] .comment-form__btn--cancel,
@@ -374,25 +332,20 @@ html[data-theme='dark'] .report-form__btn--cancel {
 @keyframes vt-fade-out {
   to {
     opacity: 0;
-    transform: translateY(-8px);
   }
 }
 
 @keyframes vt-fade-in {
   from {
     opacity: 0;
-    transform: translateY(8px);
   }
 }
 
 /* ── Micro-interactions ── */
-
-/* Button press */
 button:active {
-  transform: scale(0.98);
+  transform: scale(0.99);
 }
 
-/* Staggered list appear */
 .stagger-enter {
   opacity: 0;
   transform: translateY(6px);

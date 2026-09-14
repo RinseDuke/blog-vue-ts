@@ -1,5 +1,5 @@
 <template>
-  <div v-if="editor" class="editor-toolbar">
+  <div class="editor-toolbar">
     <div class="editor-toolbar__surface">
       <div class="editor-toolbar__layout">
         <div class="editor-toolbar__scroll">
@@ -7,9 +7,9 @@
             <button
               type="button"
               class="toolbar-btn toolbar-btn--compact toolbar-btn--desktop-regular"
-              :disabled="!editor.can().undo()"
+              :disabled="!props.state.canUndo"
               title="撤销 (Ctrl+Z)"
-              @click="editor.chain().focus().undo().run()"
+              @click="runCommand('undo')"
             >
               <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M3 7v6h6" />
@@ -21,9 +21,9 @@
             <button
               type="button"
               class="toolbar-btn toolbar-btn--compact toolbar-btn--desktop-regular"
-              :disabled="!editor.can().redo()"
+              :disabled="!props.state.canRedo"
               title="重做 (Ctrl+Y)"
-              @click="editor.chain().focus().redo().run()"
+              @click="runCommand('redo')"
             >
               <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 7v6h-6" />
@@ -38,11 +38,11 @@
                 'toolbar-btn',
                 'toolbar-btn--compact',
                 'toolbar-btn--desktop-token',
-                { 'is-active': editor.isActive('heading', { level: 2 }) },
+                { 'is-active': props.state.heading2 },
               ]"
               aria-label="H2"
               title="标题 2 (H2)"
-              @click="editor.chain().focus().toggleHeading({ level: 2 }).run()"
+              @click="runCommand('heading-2')"
             >
               <span class="toolbar-icon-text" aria-hidden="true">H2</span>
               <span class="toolbar-label toolbar-label--desktop-hidden">H2</span>
@@ -54,11 +54,11 @@
                 'toolbar-btn',
                 'toolbar-btn--compact',
                 'toolbar-btn--desktop-token',
-                { 'is-active': editor.isActive('heading', { level: 3 }) },
+                { 'is-active': props.state.heading3 },
               ]"
               aria-label="H3"
               title="标题 3 (H3)"
-              @click="editor.chain().focus().toggleHeading({ level: 3 }).run()"
+              @click="runCommand('heading-3')"
             >
               <span class="toolbar-icon-text" aria-hidden="true">H3</span>
               <span class="toolbar-label toolbar-label--desktop-hidden">H3</span>
@@ -70,10 +70,10 @@
                 'toolbar-btn',
                 'toolbar-btn--compact',
                 'toolbar-btn--desktop-regular',
-                { 'is-active': editor.isActive('bold') },
+                { 'is-active': props.state.bold },
               ]"
               title="加粗 (Ctrl+B)"
-              @click="editor.chain().focus().toggleBold().run()"
+              @click="runCommand('bold')"
             >
               <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z" />
@@ -88,10 +88,10 @@
                 'toolbar-btn',
                 'toolbar-btn--compact',
                 'toolbar-btn--desktop-regular',
-                { 'is-active': editor.isActive('italic') },
+                { 'is-active': props.state.italic },
               ]"
               title="斜体 (Ctrl+I)"
-              @click="editor.chain().focus().toggleItalic().run()"
+              @click="runCommand('italic')"
             >
               <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="19" y1="4" x2="10" y2="4" />
@@ -107,10 +107,10 @@
                 'toolbar-btn',
                 'toolbar-btn--compact',
                 'toolbar-btn--desktop-regular',
-                { 'is-active': editor.isActive('bulletList') },
+                { 'is-active': props.state.bulletList },
               ]"
               title="无序列表"
-              @click="editor.chain().focus().toggleBulletList().run()"
+              @click="runCommand('bullet-list')"
             >
               <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="8" y1="6" x2="21" y2="6" />
@@ -129,10 +129,10 @@
                 'toolbar-btn',
                 'toolbar-btn--compact',
                 'toolbar-btn--desktop-regular',
-                { 'is-active': editor.isActive('blockquote') },
+                { 'is-active': props.state.blockquote },
               ]"
               title="引用"
-              @click="editor.chain().focus().toggleBlockquote().run()"
+              @click="runCommand('blockquote')"
             >
               <span class="toolbar-icon-text" aria-hidden="true">”</span>
               <span class="toolbar-label">引用</span>
@@ -144,10 +144,10 @@
                 'toolbar-btn',
                 'toolbar-btn--compact',
                 'toolbar-btn--desktop-regular',
-                { 'is-active': editor.isActive('codeBlock') },
+                { 'is-active': props.state.codeBlock },
               ]"
               title="代码块"
-              @click="editor.chain().focus().toggleCodeBlock().run()"
+              @click="runCommand('code-block')"
             >
               <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="16 18 22 12 16 6" />
@@ -163,10 +163,10 @@
                 'toolbar-btn--compact',
                 'toolbar-btn--desktop-only',
                 'toolbar-btn--desktop-wide',
-                { 'is-active': editor.isActive('strike') },
+                { 'is-active': props.state.strike },
               ]"
               title="删除线"
-              @click="toggleStrike"
+              @click="runCommand('strike')"
             >
               <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M6 10c0-2 2-4 6-4s6 2 6 4-2 4-6 4-6 2-6 4 2 4 6 4 6-2 6-4" />
@@ -182,10 +182,10 @@
                 'toolbar-btn--compact',
                 'toolbar-btn--desktop-only',
                 'toolbar-btn--desktop-regular',
-                { 'is-active': editor.isActive('orderedList') },
+                { 'is-active': props.state.orderedList },
               ]"
               title="有序列表"
-              @click="toggleOrderedList"
+              @click="runCommand('ordered-list')"
             >
               <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="10" y1="6" x2="21" y2="6" />
@@ -205,7 +205,7 @@
                 'toolbar-btn--compact',
                 'toolbar-btn--desktop-only',
                 'toolbar-btn--desktop-regular',
-                { 'is-active': editor.isActive('link') },
+                { 'is-active': props.state.link },
               ]"
               title="链接"
               @click="setLinkFromPrompt"
@@ -224,10 +224,10 @@
                 'toolbar-btn--compact',
                 'toolbar-btn--desktop-only',
                 'toolbar-btn--desktop-regular',
-                { 'is-active': editor.isActive('table') },
+                { 'is-active': props.state.table },
               ]"
               title="插入表格"
-              @click="insertTable"
+              @click="runCommand('table')"
             >
               <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="3" y="5" width="18" height="14" rx="1.5" />
@@ -242,7 +242,7 @@
               type="button"
               class="toolbar-btn toolbar-btn--compact toolbar-btn--desktop-only toolbar-btn--desktop-regular"
               title="分割线"
-              @click="insertRule"
+              @click="runCommand('horizontal-rule')"
             >
               <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                 <line x1="4" y1="12" x2="20" y2="12" />
@@ -254,7 +254,7 @@
               type="button"
               class="toolbar-btn toolbar-btn--compact toolbar-btn--desktop-only toolbar-btn--desktop-regular"
               title="清空格式"
-              @click="clearFormatting"
+              @click="runCommand('clear-formatting')"
             >
               <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M4 20h7" />
@@ -306,9 +306,9 @@
                 :class="[
                   'toolbar-more__item',
                   'toolbar-more__item--mobile-shortcut',
-                  { 'toolbar-more__item--active': editor.isActive('strike') },
+                  { 'toolbar-more__item--active': props.state.strike },
                 ]"
-                @click="runMoreAction(toggleStrike)"
+                @click="runMoreAction('strike')"
               >
                 <span>删除线</span>
               </button>
@@ -318,9 +318,9 @@
                 :class="[
                   'toolbar-more__item',
                   'toolbar-more__item--mobile-shortcut',
-                  { 'toolbar-more__item--active': editor.isActive('orderedList') },
+                  { 'toolbar-more__item--active': props.state.orderedList },
                 ]"
-                @click="runMoreAction(toggleOrderedList)"
+                @click="runMoreAction('ordered-list')"
               >
                 <span>有序列表</span>
               </button>
@@ -336,7 +336,7 @@
                 type="button"
                 role="menuitem"
                 class="toolbar-more__item toolbar-more__item--mobile-shortcut"
-                @click="runMoreAction(insertTable)"
+                @click="runMoreAction('table')"
               >
                 <span>插入表格</span>
               </button>
@@ -344,8 +344,8 @@
                 type="button"
                 role="menuitem"
                 class="toolbar-more__item"
-                :disabled="!editor.can().addRowAfter()"
-                @click="runMoreAction(addRowAfter)"
+                :disabled="!props.state.table"
+                @click="runMoreAction('add-row')"
               >
                 <span>新增一行</span>
               </button>
@@ -353,8 +353,8 @@
                 type="button"
                 role="menuitem"
                 class="toolbar-more__item"
-                :disabled="!editor.can().addColumnAfter()"
-                @click="runMoreAction(addColumnAfter)"
+                :disabled="!props.state.table"
+                @click="runMoreAction('add-column')"
               >
                 <span>新增一列</span>
               </button>
@@ -362,8 +362,8 @@
                 type="button"
                 role="menuitem"
                 class="toolbar-more__item"
-                :disabled="!editor.can().deleteRow()"
-                @click="runMoreAction(deleteRow)"
+                :disabled="!props.state.table"
+                @click="runMoreAction('delete-row')"
               >
                 <span>删除当前行</span>
               </button>
@@ -371,8 +371,8 @@
                 type="button"
                 role="menuitem"
                 class="toolbar-more__item"
-                :disabled="!editor.can().deleteColumn()"
-                @click="runMoreAction(deleteColumn)"
+                :disabled="!props.state.table"
+                @click="runMoreAction('delete-column')"
               >
                 <span>删除当前列</span>
               </button>
@@ -380,8 +380,8 @@
                 type="button"
                 role="menuitem"
                 class="toolbar-more__item"
-                :disabled="!editor.can().deleteTable()"
-                @click="runMoreAction(deleteTable)"
+                :disabled="!props.state.table"
+                @click="runMoreAction('delete-table')"
               >
                 <span>删除表格</span>
               </button>
@@ -389,7 +389,7 @@
                 type="button"
                 role="menuitem"
                 class="toolbar-more__item toolbar-more__item--mobile-shortcut"
-                @click="runMoreAction(insertRule)"
+                @click="runMoreAction('horizontal-rule')"
               >
                 <span>分割线</span>
               </button>
@@ -397,7 +397,7 @@
                 type="button"
                 role="menuitem"
                 class="toolbar-more__item toolbar-more__item--mobile-shortcut"
-                @click="runMoreAction(clearFormatting)"
+                @click="runMoreAction('clear-formatting')"
               >
                 <span>清空格式</span>
               </button>
@@ -410,11 +410,17 @@
 </template>
 
 <script setup lang="ts">
-import { Editor } from '@tiptap/vue-3'
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 
+import type { MarkdownCommand } from '@/features/post/editor/markdownCommands'
+import type { MarkdownToolbarState } from '@/features/post/editor/markdownEditorTypes'
+
 const props = defineProps<{
-  editor: Editor | null
+  state: MarkdownToolbarState
+}>()
+
+const emit = defineEmits<{
+  command: [command: MarkdownCommand, payload?: string]
 }>()
 
 const menuOpen = ref(false)
@@ -434,80 +440,28 @@ function onClickOutside(event: MouseEvent) {
   }
 }
 
-function runMoreAction(action: () => void) {
-  action()
+function runCommand(command: MarkdownCommand, payload?: string) {
+  if (payload === undefined) {
+    emit('command', command)
+  } else {
+    emit('command', command, payload)
+  }
   closeMoreMenu()
 }
 
-function clearFormatting() {
-  props.editor?.chain().focus().clearNodes().unsetAllMarks().run()
-}
-
-function toggleStrike() {
-  props.editor?.chain().focus().toggleStrike().run()
-}
-
-function toggleOrderedList() {
-  props.editor?.chain().focus().toggleOrderedList().run()
-}
-
-function insertTable() {
-  props.editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
-}
-
-function addRowAfter() {
-  props.editor?.chain().focus().addRowAfter().run()
-}
-
-function addColumnAfter() {
-  props.editor?.chain().focus().addColumnAfter().run()
-}
-
-function deleteRow() {
-  props.editor?.chain().focus().deleteRow().run()
-}
-
-function deleteColumn() {
-  props.editor?.chain().focus().deleteColumn().run()
-}
-
-function deleteTable() {
-  props.editor?.chain().focus().deleteTable().run()
-}
-
-function insertRule() {
-  props.editor?.chain().focus().setHorizontalRule().run()
+function runMoreAction(command: MarkdownCommand) {
+  runCommand(command)
 }
 
 function setLinkFromPrompt() {
-  if (!props.editor) return
-
-  const previousUrl = props.editor.getAttributes('link').href
-  const url = window.prompt('URL', previousUrl)
+  const url = window.prompt('URL', '')
 
   if (url === null) {
     closeMoreMenu()
     return
   }
 
-  if (url === '') {
-    props.editor
-      .chain()
-      .focus()
-      .extendMarkRange('link')
-      .unsetLink()
-      .run()
-    closeMoreMenu()
-    return
-  }
-
-  props.editor
-    .chain()
-    .focus()
-    .extendMarkRange('link')
-    .setLink({ href: url })
-    .run()
-  closeMoreMenu()
+  runCommand('link', url)
 }
 
 onMounted(() => {
@@ -528,7 +482,7 @@ onBeforeUnmount(() => {
 
 .editor-toolbar__surface {
   border: 1px solid var(--write-toolbar-border, var(--write-panel-border));
-  border-radius: 20px;
+  border-radius: var(--radius-lg);
   background: var(--write-toolbar-bg, var(--write-panel-bg));
   box-shadow: var(--write-toolbar-shadow, var(--write-panel-shadow)), var(--write-panel-inset-shadow);
   overflow: visible;
@@ -574,7 +528,7 @@ onBeforeUnmount(() => {
   min-height: 42px;
   padding: 8px 10px;
   border: 1px solid transparent;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   background: transparent;
   color: var(--ink-muted);
   cursor: pointer;
@@ -595,7 +549,7 @@ onBeforeUnmount(() => {
   background: var(--write-panel-inline-hover);
   border-color: color-mix(in srgb, var(--write-panel-inline-border) 76%, var(--brand-100) 24%);
   color: var(--ink-strong);
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 2px 8px rgba(28, 24, 21, 0.06);
 }
 
 .toolbar-btn.is-active,
@@ -626,7 +580,7 @@ onBeforeUnmount(() => {
 }
 
 .toolbar-icon-text {
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-body);
   font-size: 15px;
   font-weight: 800;
   line-height: 1;
@@ -636,7 +590,7 @@ onBeforeUnmount(() => {
   font-size: 0.68rem;
   font-weight: 700;
   line-height: 1;
-  letter-spacing: 0.01em;
+  letter-spacing: 0;
   text-align: center;
 }
 
@@ -652,7 +606,7 @@ onBeforeUnmount(() => {
     min-width: 0;
     min-height: 38px;
     padding: 0 10px;
-    border-radius: 11px;
+    border-radius: var(--radius-lg);
   }
 
   .toolbar-btn svg,
@@ -736,10 +690,9 @@ onBeforeUnmount(() => {
   min-width: 176px;
   padding: 6px;
   border: 1px solid var(--write-panel-border);
-  border-radius: 14px;
+  border-radius: var(--radius-lg);
   background: var(--write-panel-bg);
   box-shadow: var(--write-panel-shadow);
-  backdrop-filter: blur(16px);
   z-index: 20;
 }
 
@@ -750,7 +703,7 @@ onBeforeUnmount(() => {
   width: 100%;
   padding: 10px 12px;
   border: 1px solid transparent;
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--ink-main);
   cursor: pointer;
@@ -795,7 +748,7 @@ onBeforeUnmount(() => {
   }
 
   .editor-toolbar__surface {
-    border-radius: 18px;
+    border-radius: var(--radius-lg);
   }
 
   .editor-toolbar__layout {

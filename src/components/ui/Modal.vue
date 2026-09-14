@@ -102,8 +102,6 @@ onUnmounted(() => {
   justify-content: center;
   padding: 1rem;
   background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
 }
 
 .modal {

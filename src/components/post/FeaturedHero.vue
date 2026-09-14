@@ -57,7 +57,7 @@ function formatDate(dateString: string) {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(circle at 20% 30%, color-mix(in srgb, var(--brand-100) 80%, transparent), transparent 50%),
+    linear-gradient(135deg, color-mix(in srgb, var(--brand-100) 72%, transparent), transparent 52%),
     linear-gradient(135deg, var(--write-panel-bg));
   z-index: 0;
 }
@@ -73,19 +73,19 @@ function formatDate(dateString: string) {
   font-size: var(--text-xs, 0.78rem);
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0;
   color: var(--brand-500);
   margin-bottom: 0.75rem;
   padding: 0.2rem 0.6rem;
   border: 1px solid color-mix(in srgb, var(--brand-500) 30%, transparent);
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
 }
 
 .featured-hero__title {
   font-size: var(--text-display, 2.75rem);
   font-weight: 800;
   line-height: 1.08;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
   color: var(--ink-strong);
   margin: 0 0 1rem;
 }
@@ -118,9 +118,9 @@ function formatDate(dateString: string) {
   display: inline-flex;
   align-items: center;
   padding: 0.6rem 1.4rem;
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   background: var(--brand-500);
-  color: #fff;
+  color: var(--on-accent);
   font-weight: 700;
   font-size: var(--text-sm, 0.88rem);
   text-decoration: none;

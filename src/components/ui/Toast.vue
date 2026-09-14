@@ -97,7 +97,6 @@ defineExpose({ addToast })
   box-shadow: var(--shadow-md);
   border: 1px solid var(--line-soft);
   pointer-events: auto;
-  backdrop-filter: blur(20px);
 }
 
 .toast__icon {

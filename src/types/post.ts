@@ -20,7 +20,8 @@ export interface Post {
   title: string
   excerpt: string        // 摘要
   coverImage?: string    // 封面图
-  content?: string       // 正文 HTML（详情时返回）
+  content?: string       // 正文 HTML（历史数据或服务端渲染结果）
+  markdown?: string      // 正文 Markdown 源码（编辑和扩展渲染的唯一来源）
   tags: string[]         // 标签列表
   author: Author
   publishedAt: string    // ISO 日期字符串

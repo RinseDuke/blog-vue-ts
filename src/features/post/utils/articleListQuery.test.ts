@@ -9,6 +9,14 @@ import {
 describe('article list query state utils', () => {
   const pageSizeOptions = [6, 9, 12, 18]
 
+  it('round-trips a tag with popularity and pagination and accepts old keyword links', () => {
+    const query = { tag: 'Vue', sort: 'popular', page: '2' }
+    const state = parseArticleListQueryState(query, { pageSizeOptions })
+    expect(state).toMatchObject({ tag: 'Vue', sortMode: 'popular', currentPage: 2 })
+    expect(buildArticleListQuery(state)).toEqual(query)
+    expect(parseArticleListQueryState({ keyword: 'Vue' }, { pageSizeOptions }).keyword).toBe('Vue')
+  })
+
   it('parseArticleListQueryState returns defaults for empty query', () => {
     const state = parseArticleListQueryState({}, { pageSizeOptions })
 

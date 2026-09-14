@@ -71,13 +71,16 @@ defineEmits<{
 }
 
 .btn--primary {
-  background: linear-gradient(135deg, var(--brand-500), var(--brand-400));
+  background:
+    linear-gradient(135deg, var(--brand-500), var(--brand-400) 64%, var(--signal-amber));
   color: white;
-  box-shadow: 0 4px 12px rgba(0, 113, 227, 0.24);
+  box-shadow:
+    0 8px 22px color-mix(in srgb, var(--brand-500) 24%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.24);
 }
 
 .btn--primary:hover:not(:disabled) {
-  box-shadow: 0 6px 20px rgba(0, 113, 227, 0.32);
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--brand-500) 32%, transparent);
   transform: translateY(-1px);
 }
 

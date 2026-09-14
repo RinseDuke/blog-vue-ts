@@ -43,9 +43,7 @@ onUnmounted(() => {
   justify-content: center;
   padding: 0 1rem;
   background: var(--nav-backdrop);
-  backdrop-filter: blur(20px) saturate(1.8);
-  -webkit-backdrop-filter: blur(20px) saturate(1.8);
-  border-bottom: 1px solid transparent;
+  border-bottom: 1px solid var(--line-soft);
   color: var(--ink-main);
   position: fixed;
   top: 0;
@@ -66,13 +64,13 @@ onUnmounted(() => {
 }
 
 .topbar__inner {
-  width: min(1360px, 100%);
+  width: min(1320px, 100%);
   display: flex;
   align-items: center;
   gap: 0.72rem;
   min-width: 0;
   min-height: 68px;
-  padding: 0.7rem 0;
+  padding: 0.62rem 0;
   transition:
     min-height 0.22s var(--ease-standard),
     padding 0.22s var(--ease-standard);
@@ -84,7 +82,7 @@ onUnmounted(() => {
 
 .topbar.condensed .topbar__inner {
   min-height: 56px;
-  padding: 0.5rem 0;
+  padding: 0.44rem 0;
 }
 
 @media (max-width: 768px) {

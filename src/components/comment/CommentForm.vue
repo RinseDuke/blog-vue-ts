@@ -55,7 +55,7 @@ function handleBlur() {
         v-model="content"
         class="comment-form__input"
         :class="{ 'comment-form__input--error': validationError }"
-        :placeholder="parentId ? '写下你的回复...' : '写下你的评论...'"
+        :placeholder="parentId ? '回复这位用户...' : '写下你的回复...'"
         :maxlength="MAX_COMMENT_LENGTH + 50"
         rows="3"
         @blur="handleBlur"
@@ -81,7 +81,7 @@ function handleBlur() {
         class="comment-form__btn comment-form__btn--submit"
         :disabled="isEmpty || isTooLong || submitting"
       >
-        {{ submitting ? '提交中...' : '发表评论' }}
+        {{ submitting ? '发布中...' : '发布回复' }}
       </button>
     </div>
   </form>
@@ -104,8 +104,8 @@ function handleBlur() {
   width: 100%;
   padding: 0.75rem 0.9rem;
   border: 1px solid var(--line-soft);
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.88);
+  border-radius: var(--radius-md);
+  background: var(--surface-strong);
   color: var(--ink-strong);
   font-size: 0.92rem;
   line-height: 1.6;
@@ -117,8 +117,8 @@ function handleBlur() {
 
 .comment-form__input:focus {
   outline: none;
-  border-color: rgba(0, 113, 227, 0.35);
-  box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.1);
+  border-color: color-mix(in srgb, var(--brand-500) 42%, transparent);
+  box-shadow: var(--focus-ring);
 }
 
 .comment-form__input--error {
@@ -167,7 +167,7 @@ function handleBlur() {
 
 .comment-form__btn {
   padding: 0.5rem 1.1rem;
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   font-weight: 700;
   font-size: 0.88rem;
   cursor: pointer;
@@ -177,22 +177,21 @@ function handleBlur() {
 .comment-form__btn--submit {
   border: none;
   background: var(--brand-500);
-  color: #fff;
+  color: var(--on-accent);
 }
 
 .comment-form__btn--submit:hover:enabled {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(0, 113, 227, 0.24);
+  background: var(--brand-400);
 }
 
 .comment-form__btn--submit:disabled {
   cursor: not-allowed;
-  background: #9ca3af;
+  background: var(--disabled-bg);
 }
 
 .comment-form__btn--cancel {
   border: 1px solid var(--line-soft);
-  background: #fff;
+  background: var(--surface-strong);
   color: var(--ink-muted);
 }
 

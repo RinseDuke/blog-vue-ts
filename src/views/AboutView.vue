@@ -48,7 +48,7 @@ const activityFeed = computed(() => {
     .filter((post) => post.author.id === userId)
     .slice(0, 5)
     .map((post) => ({
-      type: post.status === 'draft' ? '更新草稿' : '发布文章',
+      type: post.status === 'draft' ? '更新草稿' : '发布主题',
       title: post.title,
       detail: post.excerpt || '暂无摘要',
       time: formatPostDate(post.publishedAt),
@@ -56,8 +56,8 @@ const activityFeed = computed(() => {
 })
 
 const creatorShortcuts = [
-  { label: '开始创作', to: '/write', accent: true },
-  { label: '管理文章', to: '/about/articles', accent: false },
+  { label: '继续写作', to: '/write', accent: true },
+  { label: '管理主题', to: '/about/articles', accent: false },
 ]
 
 const draftCount = computed(() => (currentDraft.value ? 1 : 0))
@@ -187,12 +187,12 @@ function enterEditMode() {
                 </span>
               </div>
 
-              <p class="profile-hero__caption">创作者档案</p>
+              <p class="profile-hero__caption">社区成员</p>
             </div>
           </div>
 
           <div class="profile-hero__actions">
-            <RouterLink to="/write" class="hero-btn hero-btn--primary">开始创作</RouterLink>
+            <RouterLink to="/write" class="hero-btn hero-btn--primary">发起主题</RouterLink>
             <button v-if="isLoggedIn" type="button" class="hero-btn hero-btn--secondary" @click="handleLogout">
               退出登录
             </button>
@@ -204,7 +204,7 @@ function enterEditMode() {
       <nav class="profile-tabs">
         <button
           v-for="tab in [
-            { key: 'articles', label: '文章' },
+            { key: 'articles', label: '主题' },
             { key: 'likes', label: '喜欢' },
             { key: 'comments', label: '评论' }
           ]"
@@ -221,10 +221,10 @@ function enterEditMode() {
           <article class="panel section-card">
             <header class="section-card__head">
               <div>
-                <p class="section-card__eyebrow">动态</p>
-                <h2>我的动态</h2>
+                <p class="section-card__eyebrow">社区动态</p>
+                <h2>发布记录</h2>
               </div>
-              <span class="section-card__hint">最近更新</span>
+              <span class="section-card__hint">最近动态</span>
             </header>
 
             <div class="activity-list">
@@ -237,7 +237,7 @@ function enterEditMode() {
                 <p>{{ item.detail }}</p>
               </article>
               <div v-if="activityFeed.length === 0" class="draft-empty">
-                <p>还没有发布过文章，去写一篇吧。</p>
+                <p>还没有发布过主题，发起一次讨论吧。</p>
               </div>
             </div>
           </article>
@@ -245,8 +245,8 @@ function enterEditMode() {
           <article class="panel section-card">
             <header class="section-card__head">
               <div>
-                <p class="section-card__eyebrow">创作</p>
-                <h2>草稿进度</h2>
+                <p class="section-card__eyebrow">草稿</p>
+                <h2>草稿箱</h2>
               </div>
               <RouterLink to="/write" class="section-card__link">继续编辑</RouterLink>
             </header>
@@ -299,13 +299,13 @@ function enterEditMode() {
           <article class="panel side-card side-card--creator">
             <header class="side-card__head">
               <div>
-                <p class="section-card__eyebrow">创作中心</p>
-                <h3>保持输出节奏</h3>
+                <p class="section-card__eyebrow">创作空间</p>
+                <h3>继续写作</h3>
               </div>
               <span class="side-card__tag">草稿 {{ draftCount }}</span>
             </header>
 
-            <p class="side-card__text">把灵感、草稿和已发布内容收口在一个工作台里，继续完成下一篇文章。</p>
+            <p class="side-card__text">把灵感、草稿和已发布的主题放在一起，继续整理下一次分享。</p>
 
             <div class="side-card__actions">
               <RouterLink
@@ -323,8 +323,8 @@ function enterEditMode() {
           <article class="panel side-card">
             <header class="side-card__head side-card__head--tight">
               <div>
-                <p class="section-card__eyebrow">资料</p>
-                <h3>个人简介</h3>
+                <p class="section-card__eyebrow">个人资料</p>
+                <h3>个人节点</h3>
               </div>
               <button v-if="isLoggedIn && !isEditingBio" type="button" class="edit-btn" @click="enterEditMode">
                 编辑个人资料
@@ -366,7 +366,7 @@ function enterEditMode() {
 <style scoped lang="less">
 .profile-page {
   width: 100%;
-  padding: 64px 20px 48px;
+  padding: 54px 20px 48px;
   color: var(--ink-strong);
 }
 
@@ -376,11 +376,10 @@ function enterEditMode() {
 }
 
 .panel {
-  border: 1px solid var(--line-soft);
+  border: 1px solid var(--line-strong);
   border-radius: var(--radius-lg);
-  background: linear-gradient(180deg, var(--card-top), var(--card-bottom));
+  background: var(--surface);
   box-shadow: var(--shadow-sm);
-  backdrop-filter: blur(12px);
 }
 
 .profile-hero {
@@ -388,26 +387,21 @@ function enterEditMode() {
 }
 
 .profile-hero__banner {
-  min-height: 200px;
+  min-height: 190px;
   padding: 1.25rem 1.5rem;
   display: flex;
   justify-content: flex-end;
   align-items: flex-start;
   background:
-    radial-gradient(circle at 16% 22%, rgba(47, 143, 255, 0.28), transparent 35%),
-    radial-gradient(circle at 84% 18%, rgba(255, 255, 255, 0.2), transparent 28%),
-    linear-gradient(135deg, var(--brand-400), var(--brand-500));
+    linear-gradient(90deg, rgba(28, 24, 21, 0.55), transparent 62%),
+    linear-gradient(135deg, var(--auth-panel-bg), var(--brand-500) 165%);
   position: relative;
   border-bottom: 1px solid var(--line-soft);
 }
 
 .profile-hero__banner::before,
 .profile-hero__banner::after {
-  content: '';
-  position: absolute;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(40px);
+  display: none;
 }
 
 .profile-hero__banner::before {
@@ -428,13 +422,13 @@ function enterEditMode() {
   position: relative;
   z-index: 1;
   padding: 0.48rem 0.82rem;
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   border: 1px solid var(--line-soft);
   background: var(--surface-strong);
   color: var(--ink-main);
   font-size: 0.82rem;
   font-weight: 700;
-  letter-spacing: 0.01em;
+  letter-spacing: 0;
 }
 
 .profile-hero__body {
@@ -443,7 +437,6 @@ function enterEditMode() {
   align-items: flex-end;
   gap: 1.2rem;
   padding: 0 1.75rem 1.5rem;
-  margin-top: -70px;
   position: relative;
   z-index: 1;
   flex-wrap: wrap;
@@ -451,7 +444,7 @@ function enterEditMode() {
 
 .profile-hero__identity {
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start;
   gap: 1.35rem;
   min-width: 280px;
 }
@@ -459,29 +452,29 @@ function enterEditMode() {
 .profile-avatar {
   width: 120px;
   height: 120px;
-  border-radius: 50%;
+  margin-top: -70px; /* 只有头像与 banner 重叠，文字保持在 banner 下方 */
+  border-radius: var(--radius-lg);
   border: 4px solid var(--surface-strong);
-  background:
-    radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.35), transparent 32%),
-    linear-gradient(145deg, var(--brand-400) 0%, var(--brand-500) 100%);
+  background: linear-gradient(145deg, #3a2d24 0%, var(--brand-500) 130%);
   display: grid;
   place-items: center;
-  color: #fff;
+  color: var(--on-accent);
   font-size: 2.5rem;
   font-weight: 800;
-  box-shadow: 0 20px 40px rgba(0, 113, 227, 0.3);
+  box-shadow: 0 20px 40px rgba(21, 38, 41, 0.22);
   flex-shrink: 0;
 }
 
 .profile-hero__meta {
-  padding-bottom: 0.25rem;
+  padding: 0.85rem 0 0.25rem;
 }
 
 .profile-hero__meta h1 {
   margin: 0;
+  font-family: var(--font-display);
   font-size: clamp(2rem, 4vw, 2.7rem);
   line-height: 1.05;
-  letter-spacing: -0.03em;
+  letter-spacing: 0;
 }
 
 .profile-hero__account {
@@ -519,7 +512,7 @@ function enterEditMode() {
   align-items: center;
   gap: 0.42rem;
   padding: 0.42rem 0.72rem;
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   border: 1px solid var(--line-soft);
   background: var(--surface-strong);
   color: var(--ink-muted);
@@ -545,7 +538,7 @@ function enterEditMode() {
 
 .hero-btn {
   padding: 0.78rem 1.3rem;
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   border: 1px solid var(--line-soft);
   text-decoration: none;
   font-weight: 700;
@@ -559,7 +552,7 @@ function enterEditMode() {
 
 .hero-btn--primary {
   background: var(--brand-500);
-  color: #fff;
+  color: var(--on-accent);
   border-color: var(--brand-500);
 }
 
@@ -569,7 +562,7 @@ function enterEditMode() {
 }
 
 .hero-btn--secondary:hover {
-  border-color: rgba(0, 113, 227, 0.26);
+  border-color: color-mix(in srgb, var(--brand-500) 30%, transparent);
   background: var(--surface-hover);
 }
 
@@ -578,7 +571,7 @@ function enterEditMode() {
   gap: 0.5rem;
   padding: 0 1.75rem;
   margin-top: 1.5rem;
-  border-bottom: 2px solid var(--line-soft);
+  border-bottom: 1px solid var(--line-strong);
 }
 
 .profile-tab {
@@ -610,7 +603,7 @@ function enterEditMode() {
 }
 
 .profile-tab--active {
-  color: var(--brand-500);
+  color: var(--ink-strong);
 }
 
 .profile-tab--active::after {
@@ -651,10 +644,11 @@ function enterEditMode() {
 
 .section-card__eyebrow {
   margin: 0;
-  color: var(--brand-500);
+  color: var(--accent-500);
+  font-family: var(--font-mono);
   font-size: 0.76rem;
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: 0;
   text-transform: uppercase;
 }
 
@@ -713,9 +707,9 @@ function enterEditMode() {
 
 .activity-item__badge {
   padding: 0.26rem 0.62rem;
-  border-radius: 999px;
-  background: var(--brand-100);
-  color: var(--brand-500);
+  border-radius: var(--radius-sm);
+  background: var(--accent-100);
+  color: var(--accent-500);
   font-size: 0.78rem;
   font-weight: 700;
 }
@@ -745,7 +739,7 @@ function enterEditMode() {
   margin-top: 0.9rem;
   width: 100%;
   height: 10px;
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   background: var(--line-soft);
   overflow: hidden;
 }
@@ -754,19 +748,19 @@ function enterEditMode() {
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, var(--brand-400), var(--brand-500));
+  background: linear-gradient(90deg, var(--accent-500), var(--brand-500));
 }
 
 .draft-item__footer {
   margin-top: 0.58rem;
-  color: var(--brand-500);
+  color: var(--accent-500);
   font-size: 0.84rem;
   font-weight: 700;
 }
 
 .side-card--creator {
   background:
-    radial-gradient(circle at top left, rgba(0, 113, 227, 0.14), transparent 52%),
+    linear-gradient(90deg, color-mix(in srgb, var(--brand-100) 70%, transparent), transparent 58%),
     linear-gradient(180deg, var(--card-top), var(--card-bottom));
 }
 
@@ -787,7 +781,7 @@ function enterEditMode() {
   align-items: center;
   justify-content: center;
   min-height: 46px;
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   border: 1px solid var(--line-soft);
   background: var(--surface-strong);
   color: var(--ink-strong);
@@ -797,7 +791,7 @@ function enterEditMode() {
 
 .side-action--primary {
   background: var(--brand-500);
-  color: #fff;
+  color: var(--on-accent);
   border-color: var(--brand-500);
 }
 
@@ -805,7 +799,7 @@ function enterEditMode() {
   border: 1px solid var(--line-soft);
   background: var(--surface-strong);
   color: var(--brand-500);
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   padding: 0.55rem 0.8rem;
   font-size: 0.82rem;
   font-weight: 700;
@@ -837,8 +831,8 @@ function enterEditMode() {
 
 .bio-textarea:focus {
   outline: none;
-  border-color: rgba(0, 113, 227, 0.35);
-  box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.1);
+  border-color: color-mix(in srgb, var(--brand-500) 42%, transparent);
+  box-shadow: var(--focus-ring);
 }
 
 .bio-edit-actions {
@@ -848,7 +842,7 @@ function enterEditMode() {
 }
 
 .bio-btn {
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   padding: 0.6rem 0.95rem;
   font-size: 0.84rem;
   font-weight: 700;
@@ -863,7 +857,7 @@ function enterEditMode() {
 .bio-btn--save {
   border: none;
   background: var(--brand-500);
-  color: #fff;
+  color: var(--on-accent);
 }
 
 .bio-btn--cancel {
@@ -874,7 +868,7 @@ function enterEditMode() {
 
 .bio-skeleton {
   height: 14px;
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   background: var(--line-soft);
   animation: pulse 1.5s ease-in-out infinite;
 }
@@ -931,7 +925,7 @@ function enterEditMode() {
   }
 
   .profile-hero__identity {
-    align-items: center;
+    align-items: flex-start;
   }
 }
 
@@ -965,14 +959,14 @@ function enterEditMode() {
   }
 
   .profile-hero__body {
-    margin-top: -34px;
+    margin-top: 0;
     padding: 0 0.9rem 0.9rem;
     gap: 0.8rem;
   }
 
   .profile-hero__identity {
     flex-direction: row;
-    align-items: flex-end;
+    align-items: flex-start;
     gap: 0.8rem;
     min-width: 0;
   }
@@ -980,12 +974,13 @@ function enterEditMode() {
   .profile-avatar {
     width: 88px;
     height: 88px;
+    margin-top: -34px;
     border-width: 4px;
     font-size: 1.85rem;
   }
 
   .profile-hero__meta {
-    padding-bottom: 0;
+    padding: 0.5rem 0 0;
   }
 
   .profile-hero__meta h1 {

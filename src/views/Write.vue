@@ -1,9 +1,16 @@
 <template>
-  <section class="write-page">
+  <section class="write-page composer-shell">
+    <header class="composer-heading">
+      <div>
+        <span>社区写作</span>
+        <h1>发起主题</h1>
+      </div>
+      <p>分享一段完整经验，或提出一个值得继续讨论的问题。</p>
+    </header>
     <div class="editor-shell">
       <div class="editor-main">
-        <div v-if="viewMode === 'live'" class="editor-toolbar-wrap">
-          <EditorToolbar :editor="editor || null" />
+        <div v-if="viewMode !== 'read'" class="editor-toolbar-wrap">
+          <EditorToolbar :state="toolbarState" @command="runEditorCommand" />
         </div>
 
         <section class="editor-main-card">
@@ -13,7 +20,7 @@
               class="title-input"
               type="text"
               maxlength="100"
-              placeholder="请输入标题（最多 100 个字）"
+              placeholder="主题标题（最多 100 个字）"
               @input="onDirtyAndAutosave"
             />
             <div class="meta-toggle-row">
@@ -26,30 +33,13 @@
                 >
                   <polyline points="6 9 12 15 18 9" />
                 </svg>
-                文章设置
+                主题设置
                 <span v-if="metaBadge && !showMeta" class="meta-toggle__badge">{{ metaBadge }}</span>
               </button>
             </div>
           </header>
 
           <div v-if="showMeta" class="meta-panel">
-            <div class="meta-panel__section">
-              <h4 class="meta-panel__label">封面图</h4>
-              <div v-if="coverPreviewUrl" class="meta-panel__cover-preview">
-                <img :src="coverPreviewUrl" alt="封面预览" />
-                <button type="button" class="meta-panel__cover-remove" @click="removeCover()">移除封面</button>
-              </div>
-              <button v-else type="button" class="meta-panel__cover-upload" @click="triggerCoverInput">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                  <circle cx="8.5" cy="8.5" r="1.5" />
-                  <polyline points="21 15 16 10 5 21" />
-                </svg>
-                <span>点击上传封面</span>
-                <span class="meta-panel__hint">支持 JPG、PNG</span>
-              </button>
-            </div>
-
             <div class="meta-panel__section">
               <h4 class="meta-panel__label">标签 ({{ selectedTags.length }}/5)</h4>
               <div class="meta-panel__tags">
@@ -79,27 +69,23 @@
           </div>
 
           <div class="editor-main-card__canvas">
-            <template v-if="viewMode === 'live'">
-              <div class="editor-canvas editor-canvas--live">
-                <EditorContent :editor="editor" class="tiptap-editor" />
-              </div>
-            </template>
-
-            <template v-else-if="viewMode === 'source'">
-              <div class="editor-canvas editor-canvas--source">
-                <textarea
+              <div v-show="viewMode !== 'read'" class="editor-canvas editor-canvas--live">
+                <MarkdownLiveEditor
+                  ref="liveEditorRef"
                   v-model="markdown"
-                  class="source-editor"
-                  placeholder="在此输入 Markdown 源码..."
-                  spellcheck="false"
-                  @input="onSourceInput"
-                ></textarea>
+                  :source-mode="viewMode === 'source'"
+                  class="markdown-live-editor-host"
+                  placeholder="请输入正文..."
+                  @change="onDirtyAndAutosave"
+                  @toolbar-state="toolbarState = $event"
+                />
               </div>
-            </template>
 
-            <template v-else-if="viewMode === 'read'">
+            <template v-if="viewMode === 'read'">
               <div class="editor-canvas editor-canvas--read">
-                <div v-if="markdown.trim()" class="read-preview" v-html="renderedHtml"></div>
+                <div v-if="markdown.trim()" class="read-preview">
+                  <MarkdownPreview :source="markdown" />
+                </div>
                 <div v-else class="read-preview read-preview--empty">
                   <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -108,7 +94,7 @@
                     <line x1="16" y1="17" x2="8" y2="17"/>
                     <polyline points="10 9 9 9 8 9"/>
                   </svg>
-                  <p>暂无内容，请先在编辑模式中撰写文章</p>
+                  <p>暂无内容，请先在编辑模式中撰写主题</p>
                 </div>
               </div>
             </template>
@@ -116,13 +102,7 @@
         </section>
       </div>
 
-      <input
-        ref="coverInputRef"
-        type="file"
-        accept="image/jpeg,image/jpg,image/png"
-        class="sr-only"
-        @change="onCoverChange"
-      />
+
     </div>
 
     <p v-if="publishError" class="write-page__feedback write-page__feedback--error">{{ publishError }}</p>
@@ -147,33 +127,21 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
-import { useEditor, EditorContent } from '@tiptap/vue-3'
-import StarterKit from '@tiptap/starter-kit'
-import Placeholder from '@tiptap/extension-placeholder'
-import Underline from '@tiptap/extension-underline'
-import Link from '@tiptap/extension-link'
-import TaskList from '@tiptap/extension-task-list'
-import TaskItem from '@tiptap/extension-task-item'
-import { Table } from '@tiptap/extension-table'
-import { TableRow } from '@tiptap/extension-table-row'
-import { TableHeader } from '@tiptap/extension-table-header'
-import { TableCell } from '@tiptap/extension-table-cell'
 import { useDraft } from '@/features/post/composables/useDraft'
 import { useCoverUpload } from '@/features/post/composables/useCoverUpload'
 import { usePostsStore } from '@/features/post/composables/usePostsStore'
 import { useTagManager } from '@/features/post/composables/useTagManager'
-import {
-  normalizeWriteMarkdown,
-  renderWriteMarkdownToHtml,
-  serializeEditorHtmlToMarkdown,
-} from '@/features/post/utils/writeMarkdown'
+import { normalizeWriteMarkdown, renderWriteMarkdownToHtml } from '@/features/post/utils/writeMarkdown'
+import type { MarkdownCommand } from '@/features/post/editor/markdownCommands'
+import type { MarkdownToolbarState } from '@/features/post/editor/markdownEditorTypes'
 
 import EditorToolbar from '@/components/post/EditorToolbar.vue'
+import MarkdownLiveEditor from '@/components/post/MarkdownLiveEditor.vue'
+import MarkdownPreview from '@/components/post/MarkdownPreview.vue'
 import StatusBar from '@/components/post/StatusBar.vue'
-import { LivePreviewPlugin } from '@/extensions/LivePreviewPlugin'
 import { createPost } from '@/services/postService'
 
 const router = useRouter()
@@ -196,8 +164,7 @@ function onDirtyAndAutosave() {
 }
 
 const {
-  coverInputRef, coverPreviewUrl, triggerCoverInput,
-  handleCoverSelect, removeCover, restoreCoverFromUrl,
+  coverPreviewUrl, removeCover, restoreCoverFromUrl,
 } = useCoverUpload(onDirtyAndAutosave)
 
 const {
@@ -213,41 +180,24 @@ const viewMode = ref<ViewMode>(readViewMode())
 const publishVisibility = ref<'public' | 'private'>(DEFAULT_PUBLISH_VISIBILITY)
 const isPublishing = ref(false)
 const publishError = ref('')
-const isSyncingEditorContent = ref(false)
 const showMeta = ref(false)
 
-
-const editor = useEditor({
-  extensions: [
-    StarterKit,
-    Placeholder.configure({
-      placeholder: '请输入正文...',
-    }),
-    Underline,
-    Link.configure({
-      openOnClick: false,
-    }),
-    TaskList,
-    TaskItem.configure({
-      nested: true,
-    }),
-    Table.configure({
-      resizable: true,
-    }),
-    TableRow,
-    TableHeader,
-    TableCell,
-    LivePreviewPlugin,
-  ],
-  content: '',
-  onUpdate: ({ editor }) => {
-    if (isSyncingEditorContent.value) return
-
-    const html = editor.getHTML()
-    markdown.value = serializeEditorHtmlToMarkdown(html)
-    onDirtyAndAutosave()
-  },
+const toolbarState = ref<MarkdownToolbarState>({
+  canUndo: false,
+  canRedo: false,
+  heading2: false,
+  heading3: false,
+  bold: false,
+  italic: false,
+  strike: false,
+  bulletList: false,
+  orderedList: false,
+  blockquote: false,
+  codeBlock: false,
+  link: false,
+  table: false,
 })
+const liveEditorRef = ref<InstanceType<typeof MarkdownLiveEditor> | null>(null)
 
 const wordCount = computed(() => {
   const zh = (markdown.value.match(/[\u4e00-\u9fff]/g) ?? []).length
@@ -279,49 +229,20 @@ const MODE_LABELS: Record<ViewMode, string> = {
 const currentModeLabel = computed(() => MODE_LABELS[viewMode.value])
 const publishLabel = computed(() => (isPublishing.value ? '发布中...' : '发布'))
 
-const renderedHtml = computed(() => renderWriteMarkdownToHtml(markdown.value))
-
-function syncEditorFromMarkdown(source: string) {
-  if (!editor.value) return
-
-  isSyncingEditorContent.value = true
-  try {
-    editor.value.commands.setContent(renderWriteMarkdownToHtml(source))
-  } finally {
-    isSyncingEditorContent.value = false
-  }
+function runEditorCommand(command: MarkdownCommand, payload?: string) {
+  liveEditorRef.value?.runCommand(command, payload)
 }
 
 function setViewMode(mode: string) {
-  const prevMode = viewMode.value
-  const newMode = mode as ViewMode
-
-  if (prevMode === 'live' && editor.value) {
-    const html = editor.value.getHTML()
-    markdown.value = serializeEditorHtmlToMarkdown(html)
-  }
-
-  if (newMode === 'live') {
-    syncEditorFromMarkdown(markdown.value)
-  }
-
-  viewMode.value = newMode
+  viewMode.value = mode as ViewMode
   localStorage.setItem(VIEW_MODE_KEY, mode)
-}
-
-function onSourceInput() {
-  onDirtyAndAutosave()
+  if (mode !== 'read') void nextTick(() => liveEditorRef.value?.focus())
 }
 
 function handlePublishVisibilityChange(value: 'public' | 'private') {
   if (publishVisibility.value === value) return
   publishVisibility.value = value
   onDirtyAndAutosave()
-}
-
-function onCoverChange(event: Event) {
-  const errMsg = handleCoverSelect(event)
-  if (errMsg) alert(errMsg)
 }
 
 function hasPersistableDraft() {
@@ -352,6 +273,7 @@ function saveDraftNow() {
 
 function onClearDraft() {
   if (!window.confirm('确定要清空当前草稿吗？此操作不可撤销。')) return
+  liveEditorRef.value?.resetHistory()
   publishError.value = ''
   title.value = ''
   markdown.value = ''
@@ -360,7 +282,6 @@ function onClearDraft() {
   removeCover()
   cancelPendingAutosave()
   clearPersistedDraft()
-  syncEditorFromMarkdown('')
 }
 
 function onExportMarkdown() {
@@ -391,7 +312,7 @@ async function onPublish() {
   isPublishing.value = true
 
   try {
-    const html = viewMode.value === 'live' && editor.value ? editor.value.getHTML() : renderedHtml.value
+    const html = renderWriteMarkdownToHtml(markdown.value)
     const createdPost = await createPost({
       title: finalTitle,
       markdown: content,
@@ -433,10 +354,6 @@ onMounted(() => {
     lastSavedAt.value = draft.updatedAt
   }
 
-  if (markdown.value) {
-    syncEditorFromMarkdown(markdown.value)
-  }
-
   window.addEventListener('beforeunload', onBeforeUnload)
 })
 
@@ -457,6 +374,39 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
 </script>
 
 <style scoped lang="less">
+.composer-heading {
+  width: min(100%, var(--write-content-max-width, 980px));
+  margin: 0 auto;
+  padding: 1.4rem 24px 0.4rem;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.composer-heading span {
+  color: var(--brand-500);
+  font-size: 0.72rem;
+  font-weight: 650;
+}
+
+.composer-heading h1 {
+  margin: 0.2rem 0 0;
+  color: var(--ink-strong);
+  font-size: clamp(1.6rem, 3vw, 2.1rem);
+  font-weight: 720;
+  line-height: 1.2;
+}
+
+.composer-heading p {
+  max-width: 360px;
+  margin: 0 0 0.2rem;
+  color: var(--ink-muted);
+  font-size: 0.8rem;
+  line-height: 1.5;
+  text-align: right;
+}
+
 .write-page {
   display: flex;
   flex-direction: column;
@@ -511,10 +461,9 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   flex-direction: column;
   overflow: hidden;
   border: 1px solid var(--write-editor-card-border);
-  border-radius: 22px;
+  border-radius: var(--radius-lg);
   background: var(--write-editor-card-bg);
   box-shadow: var(--write-editor-card-shadow), var(--write-panel-inset-shadow);
-  backdrop-filter: blur(14px);
 }
 
 .editor-main-card__header {
@@ -563,7 +512,7 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
 
 .meta-toggle__badge {
   padding: 2px 8px;
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--brand-100) 60%, transparent);
   color: var(--brand-500);
   font-size: 0.72rem;
@@ -588,69 +537,7 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   font-weight: 700;
   color: var(--ink-muted);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
-.meta-panel__cover-upload {
-  appearance: none;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  width: 100%;
-  min-height: 100px;
-  border: 2px dashed var(--line-strong);
-  border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--surface-strong) 60%, transparent);
-  color: var(--ink-muted);
-  font-size: 0.82rem;
-  cursor: pointer;
-  transition: border-color var(--motion-base) var(--ease-out), color var(--motion-base) var(--ease-out);
-
-  &:hover {
-    border-color: var(--brand-500);
-    color: var(--brand-500);
-  }
-}
-
-.meta-panel__hint {
-  font-size: 0.72rem;
-  opacity: 0.7;
-}
-
-.meta-panel__cover-preview {
-  position: relative;
-  border-radius: var(--radius-md);
-  overflow: hidden;
-
-  img {
-    width: 100%;
-    max-height: 160px;
-    object-fit: cover;
-    display: block;
-  }
-}
-
-.meta-panel__cover-remove {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  appearance: none;
-  border: none;
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.6);
-  color: #fff;
-  font-size: 0.72rem;
-  font-weight: 600;
-  padding: 4px 10px;
-  cursor: pointer;
-  backdrop-filter: blur(4px);
-  transition: background var(--motion-base) var(--ease-out);
-
-  &:hover {
-    background: rgba(0, 0, 0, 0.8);
-  }
+  letter-spacing: 0;
 }
 
 .meta-panel__tags {
@@ -670,7 +557,7 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   align-items: center;
   gap: 4px;
   padding: 3px 8px 3px 10px;
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--brand-100) 66%, transparent);
   color: var(--brand-500);
   font-size: 0.78rem;
@@ -719,7 +606,7 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
 .meta-panel__preset {
   appearance: none;
   border: 1px solid var(--line-soft);
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--ink-muted);
   font-size: 0.72rem;
@@ -759,6 +646,7 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   width: 100%;
   border: none;
   outline: none;
+  font-family: var(--font-display);
   font-size: clamp(1.55rem, 2.55vw, 2.05rem);
   font-weight: 700;
   color: var(--ink-strong);
@@ -772,147 +660,16 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   }
 }
 
-.tiptap-editor {
-  flex: 1;
-  min-height: 100%;
-  padding-bottom: 0;
-}
-
-:deep(.tiptap) {
-  outline: none !important;
+.editor-canvas--live {
   min-height: calc(100vh - 320px);
-  font-size: 16px;
-  line-height: 1.6;
+  font-family: var(--font-body);
   color: var(--ink-main);
-
-  p {
-    margin: 0.1em 0;
-  }
-
-  p.is-editor-empty:first-child::before {
-    color: var(--ink-muted);
-    content: attr(data-placeholder);
-    float: left;
-    height: 0;
-    pointer-events: none;
-  }
-
-  h1, h2, h3, h4, h5, h6 {
-    line-height: 1.3;
-    color: var(--ink-strong);
-    margin-top: 0.8em;
-    margin-bottom: 0.15em;
-  }
-
-  h2 {
-    font-size: 1.5em;
-    border-bottom: none;
-    padding-bottom: 0;
-  }
-
-  h3 { font-size: 1.25em; }
-
-  ul, ol {
-    padding-left: 1.5rem;
-    margin: 0.35em 0;
-  }
-
-  blockquote {
-    border-left: 3px solid var(--brand-500);
-    padding-left: 1rem;
-    color: var(--ink-main);
-    margin: 0.4em 0;
-    background: var(--article-quote-bg);
-    padding: 0.5rem 1rem;
-    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-  }
-
-  pre {
-    background: var(--article-code-block-bg);
-    color: #e6edf3;
-    font-family: inherit;
-    padding: 1rem;
-    border-radius: 8px;
-    margin: 0.5em 0;
-    overflow-x: auto;
-
-    code {
-      color: inherit;
-      padding: 0;
-      background: none;
-      font-size: 0.9em;
-    }
-  }
-
-  code {
-    background-color: var(--bg-canvas-soft);
-    padding: 0.2em 0.4em;
-    border-radius: 4px;
-    font-size: 0.9em;
-    color: #db2777;
-    font-family: monospace;
-  }
-
-  hr {
-    border: none;
-    border-top: 2px solid var(--line-soft);
-    margin: 0.8rem 0;
-  }
-
-  table {
-    border-collapse: collapse;
-    margin: 0;
-    overflow: hidden;
-    table-layout: fixed;
-    width: 100%;
-
-    td, th {
-      border: 1px solid var(--line-strong);
-      box-sizing: border-box;
-      min-width: 1em;
-      padding: 6px 8px;
-      position: relative;
-      vertical-align: top;
-
-      >* { margin-bottom: 0; }
-    }
-
-    th {
-      background-color: var(--bg-canvas-soft);
-      font-weight: 600;
-      text-align: left;
-    }
-  }
 }
 
-:deep(.live-preview-syntax) {
-  display: inline;
-  color: var(--ink-muted);
-  opacity: 0.52;
-  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
-  font-size: 0.82em;
-  font-weight: 400;
-  line-height: inherit;
-  letter-spacing: 0;
-  user-select: none;
-  pointer-events: none;
-  vertical-align: baseline;
-  animation: lpSyntaxIn 0.15s ease-out;
-}
-
-:deep(.live-preview-syntax[data-side='after']) {
-  margin-left: 0;
-}
-
-@keyframes lpSyntaxIn {
-  from {
-    opacity: 0;
-    transform: translateY(-1px);
-  }
-  to {
-    opacity: 0.52;
-    transform: translateY(0);
-  }
+.editor-canvas--live :deep(.markdown-live-editor),
+.editor-canvas--live :deep(.markdown-live-editor-host) {
+  min-height: inherit;
+  font-family: var(--font-body);
 }
 
 .source-editor {
@@ -922,7 +679,7 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   border: none;
   outline: none;
   resize: none;
-  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+  font-family: var(--font-mono);
   font-size: 14px;
   line-height: 1.75;
   color: var(--ink-main);
@@ -947,9 +704,7 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   flex: 1;
   margin-top: 0;
   padding-bottom: 0;
-  font-size: 16px;
-  line-height: 1.6;
-  color: var(--ink-main);
+  font-family: var(--font-body);
 
   &--empty {
     display: flex;
@@ -960,89 +715,6 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
     gap: 16px;
     color: var(--ink-muted);
     font-size: 0.92rem;
-  }
-
-  :deep(p) {
-    margin: 0.1em 0;
-  }
-
-  :deep(h1), :deep(h2), :deep(h3), :deep(h4), :deep(h5), :deep(h6) {
-    line-height: 1.3;
-    color: var(--ink-strong);
-    margin-top: 0.8em;
-    margin-bottom: 0.15em;
-  }
-
-  :deep(h2) {
-    font-size: 1.5em;
-    border-bottom: none;
-    padding-bottom: 0;
-  }
-
-  :deep(h3) { font-size: 1.25em; }
-
-  :deep(ul), :deep(ol) {
-    padding-left: 1.5rem;
-    margin: 0.35em 0;
-  }
-
-  :deep(blockquote) {
-    border-left: 3px solid var(--brand-500);
-    color: var(--ink-main);
-    margin: 0.4em 0;
-    background: var(--article-quote-bg);
-    padding: 0.5rem 1rem;
-    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-  }
-
-  :deep(pre) {
-    background: var(--article-code-block-bg);
-    color: #e6edf3;
-    padding: 1rem;
-    border-radius: 8px;
-    margin: 0.5em 0;
-    overflow-x: auto;
-
-    code {
-      color: inherit;
-      padding: 0;
-      background: none;
-      font-size: 0.9em;
-    }
-  }
-
-  :deep(code) {
-    background-color: var(--bg-canvas-soft);
-    padding: 0.2em 0.4em;
-    border-radius: 4px;
-    font-size: 0.9em;
-    color: #db2777;
-    font-family: monospace;
-  }
-
-  :deep(hr) {
-    border: none;
-    border-top: 2px solid var(--line-soft);
-    margin: 0.8rem 0;
-  }
-
-  :deep(table) {
-    border-collapse: collapse;
-    margin: 0;
-    table-layout: fixed;
-    width: 100%;
-
-    td, th {
-      border: 1px solid var(--line-strong);
-      padding: 6px 8px;
-      vertical-align: top;
-    }
-
-    th {
-      background-color: var(--bg-canvas-soft);
-      font-weight: 600;
-      text-align: left;
-    }
   }
 }
 
@@ -1057,6 +729,22 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
 }
 
 @media (max-width: 768px) {
+  .composer-shell {
+    position: fixed;
+    inset: 52px 0 0;
+    z-index: 30;
+    overflow-y: auto;
+    background: var(--bg-canvas);
+  }
+
+  .composer-heading {
+    padding: 0.85rem 14px 0.2rem;
+  }
+
+  .composer-heading p {
+    display: none;
+  }
+
   .write-page {
     padding-bottom: calc(var(--write-status-bar-height-mobile, 150px) + env(safe-area-inset-bottom, 0px));
   }
@@ -1073,7 +761,7 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   }
 
   .editor-main-card {
-    border-radius: 20px;
+    border-radius: var(--radius-lg);
   }
 
   .editor-main-card__header {
@@ -1105,7 +793,7 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
     padding-bottom: 12px;
   }
 
-  :deep(.tiptap),
+  .editor-canvas--live,
   .source-editor,
   .read-preview--empty {
     min-height: calc(100vh - 370px);

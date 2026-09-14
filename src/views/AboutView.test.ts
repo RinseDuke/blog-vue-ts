@@ -14,12 +14,13 @@ describe('About view source contract', () => {
     expect(source).not.toContain('<h3>关注情况</h3>')
   })
 
-  it('removes the duplicate personal about tab while keeping the sidebar bio editor', () => {
+  it('removes the duplicate personal about tab while keeping the sidebar identity editor', () => {
     expect(source).not.toContain("'about'")
     expect(source).not.toContain("label: '关于'")
     expect(source).not.toContain("activeTab === 'about'")
     expect(source).not.toContain('<p class="section-card__eyebrow">关于</p>')
-    expect(source).toContain('<h3>个人简介</h3>')
+    expect(source).toContain('<h3>个人节点</h3>')
     expect(source).toContain('updateBio')
   })
+
 })

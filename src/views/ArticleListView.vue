@@ -14,6 +14,7 @@ import {
 import { sortPostsByDateDesc } from '@/features/post/utils/post'
 import PostList from '@/components/post/PostList.vue'
 import ArticleFilters from '@/components/post/ArticleFilters.vue'
+import CommunityLayout from '@/components/community/CommunityLayout.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -26,6 +27,7 @@ const datePreset = ref<DatePreset>('all')
 const customStartDate = ref('')
 const customEndDate = ref('')
 const keyword = ref('')
+const selectedTag = ref('')
 const sortMode = ref<SortMode>('newest')
 const pageSize = ref(6)
 const currentPage = ref(1)
@@ -41,6 +43,7 @@ const dateOptions: { label: string; value: DatePreset }[] = [
 
 const sortOptions: { label: string; value: SortMode }[] = [
   { label: '最新优先', value: 'newest' },
+  { label: '热门：点赞最多', value: 'popular' },
   { label: '最早优先', value: 'oldest' },
   { label: '阅读时长：从高到低', value: 'readDesc' },
   { label: '阅读时长：从低到高', value: 'readAsc' },
@@ -56,9 +59,14 @@ const isCustomDateInvalid = computed(() => {
 })
 
 const normalizedKeyword = computed(() => keyword.value.trim().toLowerCase())
+const hasPopularityData = computed(() => posts.value.some((post) => typeof post.likes === 'number' && Number.isFinite(post.likes)))
 
 const filteredPosts = computed(() => {
   let result = posts.value.slice()
+
+  if (selectedTag.value) {
+    result = result.filter((post) => post.tags.some((tag) => tag.toLowerCase() === selectedTag.value.toLowerCase()))
+  }
 
   if (datePreset.value !== 'all') {
     result = result.filter((post) => isPostInDateRange(post.publishedAt))
@@ -66,7 +74,7 @@ const filteredPosts = computed(() => {
 
   if (normalizedKeyword.value) {
     result = result.filter((post) => {
-      const haystack = [post.title, post.excerpt, post.author.name].join(' ').toLowerCase()
+      const haystack = [post.title, post.excerpt, post.author.name, ...post.tags].join(' ').toLowerCase()
       return haystack.includes(normalizedKeyword.value)
     })
   }
@@ -97,11 +105,12 @@ const selectedDateLabel = computed(() => {
 })
 
 const hasActiveFilters = computed(
-  () => datePreset.value !== 'all' || normalizedKeyword.value.length > 0
+  () => datePreset.value !== 'all' || normalizedKeyword.value.length > 0 || Boolean(selectedTag.value)
 )
 
 const activeFiltersSummary = computed(() => {
   const parts: string[] = []
+  if (selectedTag.value) parts.push(`标签: ${selectedTag.value}`)
   if (datePreset.value !== 'all') parts.push(`日期: ${selectedDateLabel.value}`)
   if (normalizedKeyword.value) parts.push(`搜索: "${normalizedKeyword.value}"`)
   return parts.join(', ')
@@ -121,7 +130,7 @@ const visiblePages = computed(() => {
   return pages
 })
 
-watch([datePreset, customStartDate, customEndDate, keyword, sortMode, pageSize], () => {
+watch([datePreset, customStartDate, customEndDate, keyword, selectedTag, sortMode, pageSize], () => {
   if (isApplyingRouteState.value) return
   currentPage.value = 1
 })
@@ -145,7 +154,7 @@ watch(
 )
 
 watch(
-  [datePreset, customStartDate, customEndDate, keyword, sortMode, pageSize, currentPage],
+  [datePreset, customStartDate, customEndDate, keyword, selectedTag, sortMode, pageSize, currentPage],
   () => {
     if (isApplyingRouteState.value) return
     const nextQuery = buildQueryFromState()
@@ -162,6 +171,7 @@ onMounted(() => {
 
 function sortByMode(a: Post, b: Post) {
   if (sortMode.value === 'newest') return sortPostsByDateDesc(a, b)
+  if (sortMode.value === 'popular') return (b.likes ?? 0) - (a.likes ?? 0) || sortPostsByDateDesc(a, b)
   if (sortMode.value === 'oldest') return sortPostsByDateDesc(b, a)
   if (sortMode.value === 'readDesc') return b.readMinutes - a.readMinutes || sortPostsByDateDesc(a, b)
   if (sortMode.value === 'readAsc') return a.readMinutes - b.readMinutes || sortPostsByDateDesc(a, b)
@@ -173,7 +183,7 @@ function clearFilters() {
   customStartDate.value = ''
   customEndDate.value = ''
   keyword.value = ''
-  sortMode.value = 'newest'
+  selectedTag.value = ''
   currentPage.value = 1
 }
 
@@ -188,6 +198,7 @@ function applyQueryState(query: Record<string, unknown>) {
   customStartDate.value = nextState.customStartDate
   customEndDate.value = nextState.customEndDate
   keyword.value = nextState.keyword
+  selectedTag.value = nextState.tag ?? ''
   sortMode.value = nextState.sortMode
   pageSize.value = nextState.pageSize
   currentPage.value = nextState.currentPage
@@ -199,6 +210,7 @@ function buildQueryFromState() {
     customStartDate: customStartDate.value,
     customEndDate: customEndDate.value,
     keyword: keyword.value,
+    tag: selectedTag.value,
     sortMode: sortMode.value,
     pageSize: pageSize.value,
     currentPage: currentPage.value,
@@ -229,287 +241,191 @@ function isPostInDateRange(publishedAt: string) {
 </script>
 
 <template>
-  <section class="article-page">
-    <section class="article-layout">
-      <section class="feed" aria-live="polite">
-        <header class="feed__head">
-          <div class="feed__title">
-            <h2>文章列表</h2>
-            <p class="feed__meta">
-              显示 {{ rangeStart }}-{{ rangeEnd }} / 共 {{ displayCount }} 篇
-              <span v-if="hasActiveFilters">({{ activeFiltersSummary }})</span>
-            </p>
-          </div>
+  <CommunityLayout
+    compact
+    wide-content
+    :title="sortMode === 'popular' ? '热门主题 · 按点赞数' : '全部主题'"
+    :description="`显示 ${rangeStart}-${rangeEnd} / 共 ${displayCount} 篇${hasActiveFilters ? ` · ${activeFiltersSummary}` : ''}`"
+  >
+    <ArticleFilters
+      v-model:date-preset="datePreset"
+      v-model:sort-mode="sortMode"
+      v-model:custom-start-date="customStartDate"
+      v-model:custom-end-date="customEndDate"
+      :date-options="dateOptions"
+      :sort-options="sortOptions"
+      :has-active-filters="hasActiveFilters"
+      :is-custom-date-invalid="isCustomDateInvalid"
+      @clear-filters="clearFilters"
+    />
+    <div v-if="selectedTag" class="tag-filter">
+      <span>标签：{{ selectedTag }}</span>
+      <button type="button" class="empty-reset" @click="selectedTag = ''">移除标签筛选</button>
+    </div>
+    <p v-if="sortMode === 'popular' && !loading && !error && !hasPopularityData" class="archive-notice" role="status">
+      当前数据源尚未提供点赞统计，暂按最新发布展示。
+    </p>
+    <div v-if="loading" class="archive-state">正在加载主题...</div>
+    <div v-else-if="error" class="archive-state archive-state--error" role="alert">{{ error }}</div>
 
-          <div class="feed__toolbar">
-            <label class="control-field control-field--search">
-              <span>搜索</span>
-              <input v-model="keyword" type="search" placeholder="标题、摘要、作者..." />
-            </label>
+    <div v-else-if="!filteredPosts.length" class="archive-state archive-state--empty">
+      <p>没有符合当前条件的主题。</p>
+      <button v-if="hasActiveFilters" type="button" class="empty-reset" @click="clearFilters">清空筛选</button>
+    </div>
 
-            <label class="control-field">
-              <span>排序</span>
-              <select v-model="sortMode">
-                <option v-for="option in sortOptions" :key="option.value" :value="option.value">
-                  {{ option.label }}
-                </option>
-              </select>
-            </label>
+    <template v-else>
+      <PostList :posts="paginatedPosts" />
 
-            <label class="control-field">
-              <span>每页</span>
-              <select v-model.number="pageSize">
-                <option v-for="size in pageSizeOptions" :key="size" :value="size">{{ size }}</option>
-              </select>
-            </label>
-          </div>
-        </header>
-
-        <div v-if="loading" class="feed__state">加载中...</div>
-        <div v-else-if="error" class="feed__state feed__state--error">{{ error }}</div>
-
-        <div v-else>
-          <div v-if="!filteredPosts.length" class="feed__state feed__state--empty">
-            <p>没有符合当前条件的文章。</p>
-            <button v-if="hasActiveFilters" type="button" class="empty-reset" @click="clearFilters">清空筛选</button>
-          </div>
-
-          <template v-else>
-            <PostList class="feed__grid feed__grid--list" :posts="paginatedPosts" />
-
-            <nav v-if="totalPages > 1" class="pagination" aria-label="分页">
-              <button type="button" :disabled="currentPage === 1" @click="goToPage(currentPage - 1)">上一页</button>
-              <button
-                v-for="page in visiblePages"
-                :key="page"
-                type="button"
-                :class="{ 'is-active': page === currentPage }"
-                @click="goToPage(page)"
-              >
-                {{ page }}
-              </button>
-              <button type="button" :disabled="currentPage === totalPages" @click="goToPage(currentPage + 1)">下一页</button>
-            </nav>
-          </template>
-        </div>
-      </section>
-
-      <ArticleFilters
-        v-model:date-preset="datePreset"
-        v-model:sort-mode="sortMode"
-        v-model:page-size="pageSize"
-        v-model:custom-start-date="customStartDate"
-        v-model:custom-end-date="customEndDate"
-        :date-options="dateOptions"
-        :sort-options="sortOptions"
-        :page-size-options="pageSizeOptions"
-        :has-active-filters="hasActiveFilters"
-        :is-custom-date-invalid="isCustomDateInvalid"
-        @clear-filters="clearFilters"
-      />
-    </section>
-  </section>
+      <div class="archive-pagination">
+        <label class="page-size-control">
+          <span>每页</span>
+          <select v-model.number="pageSize" aria-label="每页显示数量">
+            <option v-for="size in pageSizeOptions" :key="size" :value="size">{{ size }} 篇</option>
+          </select>
+        </label>
+        <nav v-if="totalPages > 1" class="pagination" aria-label="分页">
+        <button type="button" :disabled="currentPage === 1" @click="goToPage(currentPage - 1)">上一页</button>
+        <button
+          v-for="page in visiblePages"
+          :key="page"
+          type="button"
+          :class="{ 'is-active': page === currentPage }"
+          :aria-current="page === currentPage ? 'page' : undefined"
+          :aria-label="`第 ${page} 页`"
+          @click="goToPage(page)"
+        >
+          {{ page }}
+        </button>
+        <button type="button" :disabled="currentPage === totalPages" @click="goToPage(currentPage + 1)">下一页</button>
+        </nav>
+        <span v-else class="page-total">共 {{ displayCount }} 篇</span>
+      </div>
+    </template>
+  </CommunityLayout>
 </template>
 
 <style scoped lang="less">
-.article-page {
-  width: 100%;
-  padding: 60px 20px 48px;
+.archive-notice {
+  padding: 0 1rem;
+  color: var(--ink-muted);
+  font-size: 0.875rem;
+}
+
+.tag-filter {
   display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  position: relative;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-bottom: 1px solid var(--line-soft);
 }
-
-.article-page::before {
-  content: '';
-  position: absolute;
-  inset: 8px auto auto 50%;
-  width: min(1040px, 92vw);
-  height: 180px;
-  transform: translateX(-50%);
-  border-radius: 999px;
-  background: radial-gradient(circle, rgba(0, 113, 227, 0.08), transparent 72%);
-  pointer-events: none;
-  filter: blur(12px);
-}
-
-.article-layout {
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
+.archive-state {
+  min-height: 260px;
+  padding: 2rem 1rem;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
-  gap: 1.5rem;
-  align-items: flex-start;
+  place-content: center;
+  justify-items: center;
+  gap: 0.8rem;
+  color: var(--ink-muted);
+  text-align: center;
 }
 
-.feed {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  width: 100%;
-
-  &__head {
-    display: flex;
-    flex-direction: column;
-    gap: 0.9rem;
-    padding: 1.1rem 1.2rem;
-    border: 1px solid var(--line-soft);
-    border-radius: var(--radius-lg);
-    background:
-      radial-gradient(circle at top left, color-mix(in srgb, var(--brand-100) 55%, transparent), transparent 36%),
-      linear-gradient(180deg, color-mix(in srgb, var(--surface-overlay) 98%, transparent), color-mix(in srgb, var(--surface) 96%, transparent));
-    box-shadow: var(--shadow-sm);
-    backdrop-filter: blur(14px);
-  }
-
-  &__title {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 0.75rem;
-
-    h2 {
-      margin: 0;
-      color: var(--ink-strong);
-      font-size: clamp(1.4rem, 2.4vw, 2rem);
-      letter-spacing: -0.01em;
-    }
-  }
-
-  &__meta {
-    margin: 0;
-    color: var(--ink-muted);
-    font-size: 0.9rem;
-  }
-
-  &__toolbar {
-    display: none;
-  }
-
-  &__state {
-    padding: 2rem;
-    text-align: center;
-    border-radius: var(--radius-lg);
-    background:
-      linear-gradient(180deg, color-mix(in srgb, var(--surface-overlay) 98%, transparent), color-mix(in srgb, var(--surface) 96%, transparent));
-    border: 1px solid var(--line-soft);
-    color: var(--ink-muted);
-    box-shadow: var(--shadow-sm);
-
-    p {
-      margin: 0;
-    }
-
-    &--error {
-      background: var(--danger-bg);
-      color: var(--danger-500);
-    }
-
-    &--empty {
-      background: var(--bg-canvas-soft);
-      color: var(--ink-main);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 0.8rem;
-    }
-  }
-
-  &__grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1.25rem;
-  }
+.archive-state p {
+  margin: 0;
 }
 
-.control-field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-
-  span {
-    font-size: 0.82rem;
-    color: var(--ink-muted);
-    font-weight: 600;
-  }
-
-  input,
-  select {
-    width: 100%;
-    border: 1px solid var(--line-soft);
-    border-radius: var(--radius-sm);
-    background: var(--surface);
-    color: var(--ink-strong);
-    padding: 0.55rem 0.65rem;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
-
-    &:focus {
-      outline: none;
-      border-color: rgba(0, 113, 227, 0.35);
-      box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.1);
-    }
-  }
+.archive-state--error {
+  color: var(--danger-500);
 }
 
 .empty-reset {
-  border: 1px solid var(--line-soft);
-  background: linear-gradient(180deg, var(--surface-strong), var(--surface));
-  color: var(--brand-500);
+  min-height: 36px;
+  padding: 0 0.85rem;
+  border: 1px solid var(--line-strong);
   border-radius: var(--radius-sm);
-  padding: 0.45rem 0.8rem;
-  font-weight: 700;
+  background: var(--surface-strong);
+  color: var(--ink-main);
+  font-weight: 620;
   cursor: pointer;
 }
 
+.archive-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--line-soft);
+}
+
+.page-size-control {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--ink-muted);
+  font-size: 0.8rem;
+}
+
+.page-size-control select {
+  min-height: 36px;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-sm);
+  color: var(--ink-main);
+  background: var(--surface-strong);
+  font: inherit;
+  cursor: pointer;
+}
+
+.page-total { color: var(--ink-muted); font-size: 0.8rem; }
+
+.archive-pagination :is(button, select):focus-visible {
+  outline: 2px solid var(--brand-500);
+  outline-offset: 3px;
+}
+
 .pagination {
-  margin-top: 0.75rem;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.45rem;
   align-items: center;
   justify-content: center;
-
-  button {
-    border: 1px solid var(--line-soft);
-    background: linear-gradient(180deg, var(--surface-strong), var(--surface));
-    color: var(--ink-main);
-    border-radius: var(--radius-sm);
-    padding: 0.4rem 0.75rem;
-    cursor: pointer;
-    font-weight: 600;
-    min-width: 40px;
-
-    &:disabled {
-      cursor: not-allowed;
-      color: var(--ink-muted);
-      border-color: var(--line-soft);
-    }
-  }
-
-  .is-active {
-    background: var(--brand-500);
-    color: #fff;
-    border-color: var(--brand-500);
-  }
+  gap: 0.4rem;
 }
 
-@media (max-width: 1100px) {
-  .article-layout {
-    grid-template-columns: 1fr;
-  }
+.pagination button {
+  min-width: 38px;
+  min-height: 36px;
+  padding: 0 0.65rem;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-sm);
+  background: var(--surface-strong);
+  color: var(--ink-main);
+  font-size: 0.8rem;
+  font-weight: 620;
+  cursor: pointer;
 }
 
-@media (max-width: 900px) {
-  .feed__toolbar {
-    grid-template-columns: 1fr;
-  }
-
-  .feed__title {
-    flex-direction: column;
-    align-items: flex-start;
-  }
+.pagination button:hover:enabled {
+  border-color: var(--brand-500);
+  color: var(--brand-500);
 }
 
+.pagination button:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+.pagination .is-active {
+  border-color: var(--brand-500);
+  background: var(--brand-500);
+  color: var(--on-accent);
+}
+
+@media (max-width: 600px) {
+  .archive-pagination { justify-content: center; padding: 0.85rem 0.75rem; }
+  .pagination { flex-basis: 100%; }
+  .pagination button { min-width: 32px; min-height: 40px; padding: 0 0.5rem; }
+  .page-size-control select { font-size: 16px; }
+}
 </style>

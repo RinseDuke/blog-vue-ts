@@ -23,6 +23,7 @@ const isNavHidden = ref(false)
 const isMobileSearchOpen = ref(false)
 
 const isWritePage = computed(() => route.name === 'write')
+const isFocusPage = computed(() => ['write', 'login', 'register'].includes(String(route.name)))
 let lastScrollTop = 0
 
 const { isCondensed } = useScrollCondense()
@@ -179,7 +180,7 @@ onUnmounted(() => {
       <RouterView />
     </main>
 
-    <TopFooter v-if="!isWritePage" />
+    <TopFooter v-if="!isFocusPage" />
     <BackToTop />
   </div>
 </template>
@@ -233,19 +234,14 @@ onUnmounted(() => {
 .mobile-search-trigger {
   width: 38px;
   height: 38px;
-  border: 1px solid var(--line-soft);
-  border-radius: 14px;
-  background:
-    linear-gradient(180deg, var(--surface-strong), var(--surface)),
-    radial-gradient(circle at top left, var(--brand-100), transparent 50%);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface-strong);
   color: var(--ink-main);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   padding: 0;
-  box-shadow:
-    0 10px 22px rgba(15, 23, 42, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.36);
 }
 
 @media (max-width: 768px) {

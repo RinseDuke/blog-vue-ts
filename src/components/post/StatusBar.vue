@@ -177,7 +177,6 @@ onBeforeUnmount(() => {
   z-index: 100;
   padding: 18px 0 16px;
   background: var(--write-status-rail-bg);
-  backdrop-filter: blur(12px);
   pointer-events: none;
   font-size: 0.82rem;
   color: var(--ink-muted);
@@ -202,7 +201,6 @@ onBeforeUnmount(() => {
   border-radius: var(--radius-lg);
   background: var(--write-panel-bg);
   box-shadow: var(--write-panel-shadow), var(--write-panel-inset-shadow);
-  backdrop-filter: blur(16px);
   pointer-events: auto;
 }
 
@@ -228,7 +226,7 @@ onBeforeUnmount(() => {
   align-items: center;
   min-height: 34px;
   padding: 0 13px;
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   border: 1px solid var(--write-panel-inline-border);
   background: var(--write-panel-inline-bg);
   box-shadow: var(--write-panel-inset-shadow);
@@ -252,7 +250,7 @@ onBeforeUnmount(() => {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   transition:
     background 0.16s ease,
     border-color 0.16s ease,
@@ -320,7 +318,6 @@ onBeforeUnmount(() => {
   border-radius: var(--radius-md);
   background: var(--write-panel-bg);
   box-shadow: var(--write-panel-shadow);
-  backdrop-filter: blur(16px);
   z-index: 200;
   pointer-events: auto;
 }
@@ -333,7 +330,7 @@ onBeforeUnmount(() => {
   padding: 10px 12px;
   border: 1px solid transparent;
   background: transparent;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   cursor: pointer;
   font-size: 0.82rem;
   color: var(--ink-main);
@@ -396,7 +393,7 @@ onBeforeUnmount(() => {
   align-items: center;
   min-height: 34px;
   padding: 0 12px;
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   border: 1px dashed var(--write-panel-divider);
   background: color-mix(in srgb, var(--write-panel-inline-bg) 78%, transparent);
   color: var(--ink-muted);
@@ -408,9 +405,9 @@ onBeforeUnmount(() => {
   min-height: 36px;
   padding: 0 16px;
   border: 1px solid color-mix(in srgb, var(--brand-500) 60%, var(--write-panel-inline-border) 40%);
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   background: linear-gradient(180deg, color-mix(in srgb, var(--brand-400) 86%, white 14%), var(--brand-500));
-  color: #fff;
+  color: var(--on-accent);
   box-shadow: 0 14px 24px color-mix(in srgb, var(--brand-100) 42%, transparent);
   font-size: 0.8rem;
   font-weight: 700;
@@ -449,7 +446,7 @@ onBeforeUnmount(() => {
   .status-bar__shell {
     align-items: stretch;
     padding: 10px;
-    border-radius: 20px;
+    border-radius: var(--radius-lg);
   }
 
   .status-bar__left,

@@ -2,7 +2,7 @@
   <div class="search-dropdown" :class="[`search-dropdown--${density}`]">
     <div v-if="!normalizedQuery && recommendedPosts.length" class="search-dropdown__section">
       <div class="search-dropdown__header">
-        <span>推荐文章</span>
+        <span>推荐主题</span>
         <span class="search-dropdown__hint">按预计阅读时长排序</span>
       </div>
       <ol class="search-dropdown__hot-list">
@@ -139,29 +139,28 @@ function formatSuggestionMeta(post: Post) {
   align-items: center;
   gap: 0.6rem;
   padding: 0.62rem 0.72rem;
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   border: 1px solid var(--line-soft);
-  background: linear-gradient(180deg, var(--surface-strong), var(--surface));
+  background: var(--surface-strong);
   cursor: pointer;
   text-align: left;
   min-height: 60px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.32);
-  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
 
   &:hover {
-    transform: translateY(-1px);
-    border-color: rgba(0, 113, 227, 0.32);
-    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+    border-color: var(--rule-ink);
+    background: var(--surface-hover);
   }
 }
 
 .search-dropdown__rank {
   width: 22px;
   height: 22px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   background: var(--bg-canvas-soft);
   color: var(--ink-main);
-  font-weight: 700;
+  font-family: var(--font-mono);
+  font-weight: 800;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -169,8 +168,8 @@ function formatSuggestionMeta(post: Post) {
 }
 
 .search-dropdown__rank[data-top='true'] {
-  background: linear-gradient(135deg, var(--brand-400), var(--brand-500));
-  color: #fff;
+  background: var(--brand-500);
+  color: var(--on-accent);
 }
 
 .search-dropdown__hot-text {
@@ -203,17 +202,17 @@ function formatSuggestionMeta(post: Post) {
 
 .search-dropdown__chip {
   padding: 0.34rem 0.72rem;
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   border: 1px solid var(--line-soft);
-  background: linear-gradient(180deg, var(--surface-strong), var(--surface));
+  background: var(--surface-strong);
   color: var(--ink-main);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease;
 
   &:hover {
-    border-color: rgba(0, 113, 227, 0.35);
+    border-color: var(--brand-500);
     color: var(--brand-500);
-    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+    background: var(--surface-hover);
   }
 }
 
@@ -239,15 +238,15 @@ function formatSuggestionMeta(post: Post) {
   width: 100%;
   padding: 0.6rem 0.72rem;
   border: 1px solid var(--line-soft);
-  border-radius: 12px;
-  background: linear-gradient(180deg, var(--surface-strong), var(--surface));
+  border-radius: var(--radius-sm);
+  background: var(--surface-strong);
   text-align: left;
   cursor: pointer;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
 
   &:hover {
-    border-color: rgba(0, 113, 227, 0.35);
-    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+    border-color: var(--rule-ink);
+    background: var(--surface-hover);
   }
 }
 

@@ -1,6 +1,8 @@
 import appSource from '@/App.vue?raw'
 import mobileTabsSource from './MobileTopTabs.vue?raw'
 import mobileSearchSheetSource from '../search/MobileSearchSheet.vue?raw'
+import brandSource from './TopBrand.vue?raw'
+import navigationSource from './TopNavigation.vue?raw'
 
 describe('mobile topbar source contract', () => {
   it('splits the header into desktop and mobile topbar structures', () => {
@@ -33,14 +35,13 @@ describe('mobile topbar source contract', () => {
     expect(mobileSearchSheetSource).toContain('SearchDropdownContent')
   })
 
-  it('keeps the mobile navigation dropdown on a more solid unified surface', () => {
-    expect(mobileTabsSource).toContain(
-      'linear-gradient(180deg, color-mix(in srgb, var(--surface-overlay) 99%, transparent), color-mix(in srgb, var(--surface-frost) 100%, transparent))'
-    )
-    expect(mobileTabsSource).toContain(
-      'radial-gradient(circle at top left, color-mix(in srgb, var(--brand-100) 32%, transparent), transparent 58%)'
-    )
-    expect(mobileTabsSource).toContain('background: color-mix(in srgb, var(--surface-strong) 90%, transparent);')
-    expect(mobileTabsSource).toContain('overflow: hidden;')
+  it('uses a modern community identity and solid navigation surfaces', () => {
+    expect(brandSource).toContain('墨言社区')
+    expect(brandSource).not.toContain('THE INK GAZETTE')
+    expect(brandSource).not.toContain('brand__seal')
+    expect(navigationSource).toContain('发起主题')
+    expect(mobileTabsSource).toContain('aria-label="打开社区导航"')
+    expect(mobileTabsSource).not.toContain('linear-gradient')
+    expect(mobileTabsSource).not.toContain('backdrop-filter')
   })
 })

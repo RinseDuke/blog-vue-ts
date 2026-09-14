@@ -194,12 +194,12 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   gap: 0.75rem;
   padding: 0.62rem 0.78rem;
-  border: 1px solid var(--line-soft);
+  border: 1px solid var(--line-strong);
   border-radius: var(--radius-sm);
-  background: linear-gradient(180deg, var(--surface-strong), var(--surface));
+  background: var(--surface-strong);
   color: var(--ink-strong);
   cursor: pointer;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  box-shadow: var(--shadow-sm);
   transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
 
   &:disabled {
@@ -210,10 +210,8 @@ onBeforeUnmount(() => {
 
 .date-picker__trigger:hover,
 .date-picker__trigger--open {
-  border-color: color-mix(in srgb, var(--brand-500) 34%, var(--line-soft));
-  box-shadow:
-    0 0 0 3px color-mix(in srgb, var(--brand-100) 70%, transparent),
-    inset 0 1px 0 rgba(255, 255, 255, 0.24);
+  border-color: var(--brand-500);
+  box-shadow: var(--focus-ring);
 }
 
 .date-picker__trigger--placeholder {
@@ -245,12 +243,9 @@ onBeforeUnmount(() => {
   z-index: 70;
   padding: 0.8rem;
   border: 1px solid var(--line-strong);
-  border-radius: 18px;
-  background:
-    radial-gradient(circle at top left, color-mix(in srgb, var(--brand-100) 70%, transparent), transparent 42%),
-    linear-gradient(180deg, var(--surface-overlay), color-mix(in srgb, var(--surface) 98%, transparent));
+  border-radius: var(--radius-lg);
+  background: var(--surface-overlay);
   box-shadow: var(--shadow-md);
-  backdrop-filter: blur(16px);
 }
 
 .date-picker__head {
@@ -279,7 +274,7 @@ onBeforeUnmount(() => {
     align-items: center;
     justify-content: center;
     border: 1px solid var(--line-soft);
-    border-radius: 10px;
+    border-radius: var(--radius-sm);
     background: color-mix(in srgb, var(--surface-strong) 88%, transparent);
     color: var(--ink-main);
     cursor: pointer;
@@ -330,7 +325,7 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   border: 1px solid transparent;
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--ink-main);
   font-weight: 600;
