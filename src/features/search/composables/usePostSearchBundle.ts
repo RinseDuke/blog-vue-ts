@@ -32,7 +32,6 @@ export function usePostSearchBundle(posts: Ref<Post[]>, rawQuery: Ref<string>, o
 
   return {
     normalizedQuery,
-    rankedByRelevance,
     filteredPosts,
     suggestionPosts,
     recommendedPosts,

@@ -1,7 +1,7 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 
-export type ThemeMode = 'light' | 'dark'
+type ThemeMode = 'light' | 'dark'
 
 const THEME_STORAGE_KEY = 'blog_theme_v1'
 
@@ -66,7 +66,6 @@ export const useThemeStore = defineStore('theme', () => {
   return {
     theme,
     isDark,
-    setTheme,
     hydrateTheme,
     toggleTheme,
   }

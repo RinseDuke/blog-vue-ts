@@ -52,14 +52,14 @@ function getCanonicalMarkdown(blog: BackendBlog) {
   return looksLikeHtml(source) ? undefined : source
 }
 
-export interface FetchPostsParams {
+interface FetchPostsParams {
   limit?: number
   featuredOnly?: boolean
   authorId?: string
   search?: string
 }
 
-export interface CreatePostPayload {
+interface CreatePostPayload {
   title: string
   markdown: string
   html: string

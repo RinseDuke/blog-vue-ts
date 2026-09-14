@@ -62,7 +62,6 @@ export function useSearchDropdown(options: UseSearchDropdownOptions) {
     inputEl,
     dropdownEl,
     openDropdown,
-    closeDropdown,
     triggerSearch,
     selectSuggestion,
   }

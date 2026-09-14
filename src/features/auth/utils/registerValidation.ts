@@ -1,4 +1,4 @@
-export interface RegisterFormInput {
+interface RegisterFormInput {
   username: string
   email: string
   password: string
@@ -6,7 +6,7 @@ export interface RegisterFormInput {
   acceptedTerms: boolean
 }
 
-export type RegisterFormErrors = Partial<Record<keyof RegisterFormInput, string>>
+type RegisterFormErrors = Partial<Record<keyof RegisterFormInput, string>>
 
 export function validateRegisterForm(input: RegisterFormInput): RegisterFormErrors {
   const username = input.username.trim()

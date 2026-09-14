@@ -1,14 +1,9 @@
 import type { Post } from '@/types/post'
 export { toPlainText } from '@/utils/text'
 
-export interface ScoredPost {
+interface ScoredPost {
   post: Post
   score: number
-}
-
-export interface PostTagOption {
-  name: string
-  count: number
 }
 
 const ZH_DATE_FORMATTER = new Intl.DateTimeFormat('zh-CN', {
@@ -54,22 +49,6 @@ export function rankPostsByRelevance(posts: Post[], query: string): ScoredPost[]
     .map((post) => ({ post, score: calculatePostRelevance(post, normalized) }))
     .filter((item) => item.score > 0)
     .sort((a, b) => b.score - a.score || sortPostsByDateDesc(a.post, b.post))
-}
-
-export function buildTagOptions(posts: Post[]): PostTagOption[] {
-  const tagCounts = new Map<string, number>()
-
-  posts.forEach((post) => {
-    post.tags.forEach((tag) => {
-      const normalizedTag = tag.trim()
-      if (!normalizedTag) return
-      tagCounts.set(normalizedTag, (tagCounts.get(normalizedTag) ?? 0) + 1)
-    })
-  })
-
-  return Array.from(tagCounts.entries())
-    .map(([name, count]) => ({ name, count }))
-    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'zh-CN'))
 }
 
 // 从阅读量 Top N 池中随机抽取（Fisher-Yates 洗牌）

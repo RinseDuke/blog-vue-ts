@@ -12,7 +12,7 @@ export interface ArticleListQueryState {
   currentPage: number
 }
 
-export interface ParseQueryOptions {
+interface ParseQueryOptions {
   pageSizeOptions: number[]
   defaultPageSize?: number
   defaultSortMode?: SortMode

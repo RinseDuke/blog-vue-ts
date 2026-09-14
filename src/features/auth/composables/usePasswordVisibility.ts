@@ -12,7 +12,6 @@ export function usePasswordVisibility() {
   }
 
   return {
-    isVisible,
     inputType,
     toggleLabel,
     buttonText,

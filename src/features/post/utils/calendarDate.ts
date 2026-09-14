@@ -1,4 +1,4 @@
-export interface CalendarDayCell {
+interface CalendarDayCell {
   value: string
   day: number
   isCurrentMonth: boolean
