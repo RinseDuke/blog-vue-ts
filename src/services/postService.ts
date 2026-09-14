@@ -1,7 +1,6 @@
 import type { Post } from '@/types/post'
-import { toPlainText } from '@/features/post/utils/post'
-import { mockPosts } from '@/mocks/posts'
-import { readStoredAuthSession, requireAuthSession } from '@/features/auth/stores/useAuthStore'
+import { toPlainText } from '@/utils/text'
+import { readStoredAuthSession, requireAuthSession } from './authSession'
 import { apiFetch, apiFetchPaginated, ApiError, isMockMode, networkDelay } from './apiClient'
 
 interface BackendBlogAuthor {
@@ -97,8 +96,14 @@ function mergeMockPosts(storedPosts: Post[], seededPosts: Post[]) {
   return merged.sort(sortByPublishedAtDesc)
 }
 
-function getAllPosts() {
-  return mergeMockPosts(readPublishedPosts(), mockPosts)
+async function getMockPosts() {
+  if (!import.meta.env.DEV) return []
+  const { mockPosts } = await import('@/mocks/posts')
+  return mockPosts
+}
+
+async function getAllPosts() {
+  return mergeMockPosts(readPublishedPosts(), await getMockPosts())
 }
 
 function normalizeAuthorName(email: string) {
@@ -206,9 +211,9 @@ function buildBlogsQuery(params: FetchPostsParams = {}) {
 }
 
 export async function fetchPosts(params: FetchPostsParams = {}): Promise<Post[]> {
-  if (isMockMode()) {
+  if (import.meta.env.DEV && isMockMode()) {
     await networkDelay()
-    let result = getAllPosts().filter(isPublicPublishedPost)
+    let result = (await getAllPosts()).filter(isPublicPublishedPost)
 
     if (params.featuredOnly) {
       result = result.filter((post) => post.featured)
@@ -242,11 +247,11 @@ export async function fetchPosts(params: FetchPostsParams = {}): Promise<Post[]>
 }
 
 export async function fetchUserPosts(userId: string): Promise<Post[]> {
-  if (isMockMode()) {
+  if (import.meta.env.DEV && isMockMode()) {
     await networkDelay()
     const viewerAuthorIds = getMockViewerAuthorIds()
     const authorIds = viewerAuthorIds.has(userId) ? viewerAuthorIds : new Set([userId])
-    const authoredPosts = getAllPosts().filter((post) => authorIds.has(post.author.id))
+    const authoredPosts = (await getAllPosts()).filter((post) => authorIds.has(post.author.id))
     const visiblePosts = viewerAuthorIds.has(userId)
       ? authoredPosts
       : authoredPosts.filter(isPublicPublishedPost)
@@ -262,9 +267,9 @@ export async function fetchUserPosts(userId: string): Promise<Post[]> {
 }
 
 export async function fetchPostById(id: string): Promise<Post | undefined> {
-  if (isMockMode()) {
+  if (import.meta.env.DEV && isMockMode()) {
     await networkDelay()
-    const post = getAllPosts().find((item) => item.id === id || item.slug === id)
+    const post = (await getAllPosts()).find((item) => item.id === id || item.slug === id)
     if (!post || !canReadMockPost(post)) return undefined
     return structuredClone(post)
   }
@@ -285,11 +290,11 @@ export async function fetchPostBySlug(identifier: string): Promise<Post | undefi
 }
 
 export async function setPostLike(postId: string, liked: boolean): Promise<number> {
-  if (isMockMode()) {
+  if (import.meta.env.DEV && isMockMode()) {
     await networkDelay(100)
     requireAuthSession('请先登录后再点赞文章')
 
-    const mockPost = mockPosts.find((post) => post.id === postId)
+    const mockPost = (await getMockPosts()).find((post) => post.id === postId)
     if (mockPost) {
       mockPost.likes = Math.max(0, (mockPost.likes ?? 0) + (liked ? 1 : -1))
       return mockPost.likes
@@ -310,10 +315,10 @@ export async function setPostLike(postId: string, liked: boolean): Promise<numbe
 }
 
 export async function createPost(payload: CreatePostPayload): Promise<Post> {
-  if (isMockMode()) {
+  if (import.meta.env.DEV && isMockMode()) {
     await networkDelay(250)
     const session = requireAuthSession('请先登录后再发布文章')
-    const existingPosts = getAllPosts()
+    const existingPosts = await getAllPosts()
     const storedPosts = readPublishedPosts()
     const publishedAt = new Date().toISOString()
     const excerpt = buildExcerpt(payload.markdown || payload.html)
@@ -354,7 +359,7 @@ export async function createPost(payload: CreatePostPayload): Promise<Post> {
 }
 
 export async function deletePost(postId: string): Promise<void> {
-  if (isMockMode()) {
+  if (import.meta.env.DEV && isMockMode()) {
     await networkDelay(180)
     requireAuthSession('请先登录后再管理文章')
     const publishedPosts = readPublishedPosts()

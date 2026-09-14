@@ -1,15 +1,41 @@
 import MarkdownIt from 'markdown-it'
 import TurndownService from 'turndown'
 
-import { gfm } from 'turndown-plugin-gfm'
-
 type TurndownNode = {
   nodeName: string
   parentNode?: TurndownNode | null
 }
 
-const turndownService = new TurndownService({ headingStyle: 'atx' })
-turndownService.use(gfm)
+const HIGHLIGHT_CLASS_PATTERN = /highlight-(?:text|source)-([a-z0-9]+)/i
+const turndownService = new TurndownService({ headingStyle: 'atx', codeBlockStyle: 'fenced' })
+
+turndownService.addRule('highlightedCodeBlock', {
+  filter(node: HTMLElement) {
+    return (
+      node.nodeName === 'DIV' &&
+      HIGHLIGHT_CLASS_PATTERN.test(node.className) &&
+      node.firstElementChild?.nodeName === 'PRE'
+    )
+  },
+  replacement(_content: string, node: HTMLElement, options: TurndownService.Options) {
+    const language = node.className.match(HIGHLIGHT_CLASS_PATTERN)?.[1] ?? ''
+    const fence = options.fence ?? '```'
+    const code = node.firstElementChild?.textContent ?? ''
+    return `\n\n${fence}${language}\n${code}\n${fence}\n\n`
+  },
+})
+
+turndownService.addRule('tiptapTaskListItem', {
+  filter(node: HTMLElement) {
+    return node.nodeName === 'LI' && node.getAttribute('data-type') === 'taskItem'
+  },
+  replacement(content: string, node: HTMLElement) {
+    const checkbox = node.querySelector<HTMLInputElement>('input[type="checkbox"]')
+    const checked = node.getAttribute('data-checked') === 'true' || checkbox?.checked === true
+    const normalizedContent = content.replace(/\s*\n\s*/g, ' ').replace(/\s+/g, ' ').trim()
+    return `\n- [${checked ? 'x' : ' '}] ${normalizedContent}`
+  },
+})
 // <p> 转为单换行（Obsidian 风格），表格内的 <p> 由 tableCellParagraph 规则处理
 turndownService.addRule('singleNewlineParagraph', {
   filter(node: TurndownNode) {

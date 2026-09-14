@@ -1,6 +1,5 @@
 import { getMockReports, submitReport } from '@/services/reportService'
-
-const AUTH_KEY = 'blog_auth_session_v1'
+import { AUTH_SESSION_KEY } from '@/services/authSession'
 
 interface StorageLike {
   getItem: (key: string) => string | null
@@ -50,7 +49,7 @@ describe('reportService auth guard', () => {
     const initialReportCount = getMockReports().length
 
     localStorage.setItem(
-      AUTH_KEY,
+      AUTH_SESSION_KEY,
       JSON.stringify({
         email: 'tester@example.com',
         rememberMe: true,

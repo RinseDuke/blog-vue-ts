@@ -59,7 +59,7 @@ export default defineConfig(async () => {
               return 'tiptap-vendor'
             }
 
-            if (/[\\/]node_modules[\\/](?:markdown-it|turndown|turndown-plugin-gfm|dompurify)/.test(id)) {
+            if (/[\\/]node_modules[\\/](?:markdown-it|turndown|dompurify)/.test(id)) {
               return 'markdown-vendor'
             }
           },

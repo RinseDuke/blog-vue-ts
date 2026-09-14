@@ -1,136 +1,118 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? ''
-const USE_MOCK = import.meta.env.VITE_USE_MOCK !== 'false'
+import { readStoredAuthSession } from './authSession'
 
 interface ApiEnvelope<T = unknown> {
-    code: number
-    message: string
-    data: T
-    timestamp?: string
-    pagination?: {
-        total: number
-        page: number
-        per_page: number
-        total_pages: number
-    }
+  code: number
+  message: string
+  data: T
+  timestamp?: string
+  pagination?: {
+    total: number
+    page: number
+    per_page: number
+    total_pages: number
+  }
 }
 
 interface ApiErrorBody {
-    code?: number
-    message?: string
-    error_type?: string
-    details?: string
+  code?: number
+  message?: string
+  error_type?: string
+  details?: string
 }
 
 export class ApiError extends Error {
-    constructor(
-        public readonly status: number,
-        public readonly body: string,
-        public readonly errorType?: string,
-    ) {
-        let msg = body || `请求失败：${status}`
-        try {
-            const parsed = JSON.parse(body) as ApiErrorBody
-            if (parsed.message) {
-                msg = parsed.message
-            }
-        } catch {
-            // Non-JSON error bodies are already represented by `body`.
-        }
-        super(msg)
-        this.name = 'ApiError'
+  readonly errorType?: string
+
+  constructor(
+    public readonly status: number,
+    public readonly body: string,
+    errorType?: string,
+  ) {
+    let message = body || `请求失败：${status}`
+    let parsedErrorType = errorType
+
+    try {
+      const parsed = JSON.parse(body) as ApiErrorBody
+      message = parsed.message || parsed.details || message
+      parsedErrorType ??= parsed.error_type
+    } catch {
+      // Non-JSON error bodies are already represented by `body`.
     }
+
+    super(message)
+    this.name = 'ApiError'
+    this.errorType = parsedErrorType
+  }
 }
 
 function getAuthHeaders(): Record<string, string> {
-    try {
-        const raw = localStorage.getItem('blog_auth_session_v1')
-            ?? sessionStorage.getItem('blog_auth_session_v1')
-        if (!raw) return {}
-        const session = JSON.parse(raw) as { token?: string }
-        if (session?.token) {
-            return { Authorization: `Bearer ${session.token}` }
-        }
-    } catch {
-        // Broken stored sessions should not block anonymous requests.
-    }
-    return {}
+  const session = readStoredAuthSession()
+  return session ? { Authorization: `Bearer ${session.token}` } : {}
+}
+
+function getApiBaseUrl() {
+  return import.meta.env.VITE_API_BASE_URL?.trim().replace(/\/$/, '') ?? ''
+}
+
+function buildApiUrl(path: string) {
+  const baseUrl = getApiBaseUrl()
+  if (!baseUrl) {
+    throw new Error('未配置 VITE_API_BASE_URL，真实 API 请求已中止。')
+  }
+  return `${baseUrl}${path.startsWith('/') ? path : `/${path}`}`
+}
+
+async function request(path: string, options: RequestInit) {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...getAuthHeaders(),
+    ...(options.headers as Record<string, string> ?? {}),
+  }
+
+  const response = await fetch(buildApiUrl(path), { ...options, headers })
+
+  if (!response.ok) {
+    const body = await response.text().catch(() => '')
+    throw new ApiError(response.status, body)
+  }
+
+  return response
 }
 
 export async function apiFetch<T>(
     path: string,
     options: RequestInit = {},
 ): Promise<T> {
-    const url = `${API_BASE_URL}${path}`
-    const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-        ...getAuthHeaders(),
-        ...(options.headers as Record<string, string> ?? {}),
-    }
+  const response = await request(path, options)
+  if (response.status === 204) return undefined as T
 
-    const response = await fetch(url, { ...options, headers })
+  const json = await response.json()
+  if (json !== null && typeof json === 'object' && 'code' in json && 'data' in json) {
+    return (json as ApiEnvelope<T>).data
+  }
 
-    if (!response.ok) {
-        const body = await response.text().catch(() => '')
-        throw new ApiError(response.status, body)
-    }
-
-    // 204 无响应体
-    if (response.status === 204) {
-        return undefined as T
-    }
-
-    const json = await response.json()
-
-    // 解包后端信封格式
-    if (
-        json !== null &&
-        typeof json === 'object' &&
-        'code' in json &&
-        'data' in json
-    ) {
-        const envelope = json as ApiEnvelope<T>
-        return envelope.data
-    }
-
-    return json as T
+  return json as T
 }
 
 export async function apiFetchPaginated<T>(
     path: string,
     options: RequestInit = {},
 ): Promise<{ data: T; pagination?: ApiEnvelope['pagination'] }> {
-    const url = `${API_BASE_URL}${path}`
-    const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-        ...getAuthHeaders(),
-        ...(options.headers as Record<string, string> ?? {}),
-    }
+  const response = await request(path, options)
+  if (response.status === 204) return { data: undefined as T }
 
-    const response = await fetch(url, { ...options, headers })
+  const json = await response.json()
+  if (json !== null && typeof json === 'object' && 'code' in json && 'data' in json) {
+    const envelope = json as ApiEnvelope<T>
+    return { data: envelope.data, pagination: envelope.pagination }
+  }
 
-    if (!response.ok) {
-        const body = await response.text().catch(() => '')
-        throw new ApiError(response.status, body)
-    }
-
-    const json = await response.json()
-
-    if (
-        json !== null &&
-        typeof json === 'object' &&
-        'code' in json &&
-        'data' in json
-    ) {
-        const envelope = json as ApiEnvelope<T>
-        return { data: envelope.data, pagination: envelope.pagination }
-    }
-
-    return { data: json as T }
+  return { data: json as T }
 }
 
 export function isMockMode(): boolean {
-    return USE_MOCK || !API_BASE_URL
+  return import.meta.env.DEV && import.meta.env.VITE_USE_MOCK !== 'false'
 }
 
 export const networkDelay = (ms = 300) =>
-    new Promise((resolve) => setTimeout(resolve, ms))
+  new Promise((resolve) => setTimeout(resolve, ms))

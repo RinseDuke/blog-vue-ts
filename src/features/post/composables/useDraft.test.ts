@@ -1,6 +1,6 @@
 import { useDraft, type DraftPayload } from '@/features/post/composables/useDraft'
 
-const AUTH_KEY = 'blog_auth_session_v1'
+import { AUTH_SESSION_KEY } from '@/services/authSession'
 const DRAFT_KEY = 'blog_write_draft_v1'
 
 interface StorageLike {
@@ -29,7 +29,7 @@ function createStorageMock(): StorageLike {
 
 function setSession(email: string) {
   localStorage.setItem(
-    AUTH_KEY,
+    AUTH_SESSION_KEY,
     JSON.stringify({
       email,
       rememberMe: true,

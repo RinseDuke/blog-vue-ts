@@ -1,7 +1,7 @@
 import { createPinia, setActivePinia } from 'pinia'
 import { useAuthStore } from '@/features/auth/stores/useAuthStore'
+import { AUTH_SESSION_KEY } from '@/services/authSession'
 
-const AUTH_KEY = 'blog_auth_session_v1'
 const USERS_KEY = 'blog_auth_users_v1'
 
 interface StorageLike {
@@ -54,16 +54,11 @@ describe('useAuthStore backend-aligned auth flow', () => {
     expect(store.userEmail).toBe('tester@example.com')
     expect(store.userId).toContain('user-')
     expect(store.displayName).toBe('tester_user')
-    expect(localStorage.getItem(AUTH_KEY)).toContain('tester@example.com')
-    expect(JSON.parse(localStorage.getItem(USERS_KEY) ?? '[]')).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          username: 'tester_user',
-          nickname: 'tester_user',
-          email: 'tester@example.com',
-        }),
-      ])
-    )
+    const storedSession = localStorage.getItem(AUTH_SESSION_KEY) ?? ''
+    expect(storedSession).toContain('tester@example.com')
+    expect(storedSession).not.toContain('SecurePass123')
+    expect(localStorage.getItem(USERS_KEY)).toBeNull()
+    expect(sessionStorage.getItem(USERS_KEY)).toBeNull()
   })
 
   it('allows logging in with seeded mock credentials in a fresh environment', async () => {
@@ -78,7 +73,7 @@ describe('useAuthStore backend-aligned auth flow', () => {
     expect(store.isLoggedIn).toBe(true)
     expect(store.username).toBe('demo')
     expect(store.userEmail).toBe('demo@sign.local')
-    expect(localStorage.getItem(AUTH_KEY)).toContain('demo@sign.local')
+    expect(localStorage.getItem(AUTH_SESSION_KEY)).toContain('demo@sign.local')
   })
 
   it('rejects duplicate usernames during registration', async () => {
@@ -101,5 +96,53 @@ describe('useAuthStore backend-aligned auth flow', () => {
         visibility: 'public',
       })
     ).rejects.toThrow('该用户名已存在，请更换后重试。')
+  })
+
+  it('keeps a registered mock credential only for the current store lifetime', async () => {
+    const store = useAuthStore()
+
+    await store.register({
+      username: 'memory_user',
+      email: 'memory@example.com',
+      password: 'MemoryOnly123',
+      rememberMe: false,
+    })
+    store.logout()
+
+    await store.login({
+      username: 'memory_user',
+      password: 'MemoryOnly123',
+      rememberMe: false,
+    })
+
+    expect(store.isLoggedIn).toBe(true)
+    expect(sessionStorage.getItem(AUTH_SESSION_KEY)).not.toContain('MemoryOnly123')
+  })
+
+  it('removes legacy password storage and strips unknown session fields', () => {
+    localStorage.setItem(USERS_KEY, JSON.stringify([{ email: 'legacy@example.com', password: 'Leaked123' }]))
+    localStorage.setItem(
+      AUTH_SESSION_KEY,
+      JSON.stringify({
+        email: 'legacy@example.com',
+        rememberMe: true,
+        loggedAt: '2026-09-14T00:00:00.000Z',
+        token: 'legacy-token',
+        user: {
+          id: 'legacy-user',
+          username: 'legacy',
+          nickname: 'legacy',
+          email: 'legacy@example.com',
+          password: 'Leaked123',
+          visibility: 'public',
+        },
+      }),
+    )
+
+    const store = useAuthStore()
+
+    expect(store.isLoggedIn).toBe(true)
+    expect(localStorage.getItem(USERS_KEY)).toBeNull()
+    expect(localStorage.getItem(AUTH_SESSION_KEY)).not.toContain('Leaked123')
   })
 })

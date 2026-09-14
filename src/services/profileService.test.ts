@@ -1,6 +1,5 @@
 import { profileService } from '@/services/profileService'
-
-const AUTH_KEY = 'blog_auth_session_v1'
+import { AUTH_SESSION_KEY } from '@/services/authSession'
 
 interface StorageLike {
   getItem: (key: string) => string | null
@@ -30,7 +29,7 @@ function setSession(email: string) {
   const username = email.split('@')[0]
 
   localStorage.setItem(
-    AUTH_KEY,
+    AUTH_SESSION_KEY,
     JSON.stringify({
       email,
       rememberMe: true,
@@ -49,7 +48,7 @@ function setSession(email: string) {
 
 function setSessionWithUser(email: string, username: string) {
   localStorage.setItem(
-    AUTH_KEY,
+    AUTH_SESSION_KEY,
     JSON.stringify({
       email,
       rememberMe: true,

@@ -1,4 +1,5 @@
 import type { Post } from '@/types/post'
+export { toPlainText } from '@/utils/text'
 
 export interface ScoredPost {
   post: Post
@@ -8,14 +9,6 @@ export interface ScoredPost {
 export interface PostTagOption {
   name: string
   count: number
-}
-
-export function toPlainText(source: string) {
-  return source
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/[-#>*_`~[\]()!]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
 }
 
 const ZH_DATE_FORMATTER = new Intl.DateTimeFormat('zh-CN', {

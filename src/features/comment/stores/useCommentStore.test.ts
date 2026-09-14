@@ -2,7 +2,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { mockComments } from '@/mocks/comments'
 import { useCommentStore } from '@/features/comment/stores/useCommentStore'
 
-const AUTH_KEY = 'blog_auth_session_v1'
+import { AUTH_SESSION_KEY } from '@/services/authSession'
 
 interface StorageLike {
   getItem: (key: string) => string | null
@@ -56,7 +56,7 @@ describe('useCommentStore like guard', () => {
 
   it('keeps the local like state in sync when toggling', async () => {
     localStorage.setItem(
-      AUTH_KEY,
+      AUTH_SESSION_KEY,
       JSON.stringify({
         email: 'tester@example.com',
         rememberMe: true,

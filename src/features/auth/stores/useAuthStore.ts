@@ -1,27 +1,16 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { apiFetch, isMockMode } from '@/services/apiClient'
+import {
+  clearStoredAuthSession,
+  persistStoredAuthSession,
+  readStoredAuthSession,
+  sanitizeAuthUser,
+  type AuthSession,
+  type AuthUser,
+} from '@/services/authSession'
 
-const AUTH_KEY = 'blog_auth_session_v1'
 const USERS_KEY = 'blog_auth_users_v1'
-
-export interface AuthUser {
-  id: string
-  username: string
-  nickname: string
-  email: string
-  avatar?: string
-  bio?: string
-  visibility: 'public' | 'private'
-}
-
-export interface AuthSession {
-  email: string
-  rememberMe: boolean
-  loggedAt: string
-  token: string
-  user: AuthUser
-}
 
 interface RegisteredUser extends AuthUser {
   password: string
@@ -60,10 +49,10 @@ interface RegisterPayload extends AuthCredentials {
 
 const DEFAULT_MOCK_CREATED_AT = '2026-01-01T00:00:00.000Z'
 
-export const DEFAULT_MOCK_LOGIN = {
-  username: 'demo',
-  password: 'Demo123456',
-  email: 'demo@sign.local',
+const DEFAULT_MOCK_LOGIN = {
+  username: import.meta.env.DEV ? 'demo' : '',
+  password: import.meta.env.DEV ? 'Demo123456' : '',
+  email: import.meta.env.DEV ? 'demo@sign.local' : '',
 } as const
 
 const DEFAULT_MOCK_USERS: RegisteredUser[] = [
@@ -90,18 +79,6 @@ function normalizeUsername(username: string) {
   return username.trim()
 }
 
-function buildLegacyUser(email: string): AuthUser {
-  const fallbackName = email.split('@')[0]?.trim() || 'sign'
-
-  return {
-    id: `user-${email}`,
-    username: fallbackName,
-    nickname: fallbackName,
-    email,
-    visibility: 'public',
-  }
-}
-
 function mapBackendUser(user: BackendUser): AuthUser {
   const normalizedEmail = normalizeEmail(user.email)
   const normalizedUsername = normalizeUsername(user.username)
@@ -117,131 +94,28 @@ function mapBackendUser(user: BackendUser): AuthUser {
   }
 }
 
-function isRegisteredUser(value: unknown): value is RegisteredUser {
-  if (!value || typeof value !== 'object') return false
-
-  const user = value as Partial<RegisteredUser>
-  return (
-    typeof user.email === 'string' &&
-    typeof user.password === 'string' &&
-    typeof user.createdAt === 'string'
-  )
-}
-
-function readRegisteredUsers(): RegisteredUser[] {
-  try {
-    const raw = localStorage.getItem(USERS_KEY)
-    if (!raw) return DEFAULT_MOCK_USERS.map((user) => ({ ...user }))
-
-    const parsed = JSON.parse(raw) as unknown
-    if (!Array.isArray(parsed)) return DEFAULT_MOCK_USERS.map((user) => ({ ...user }))
-
-    const normalizedUsers = parsed.filter(isRegisteredUser).map((user) => {
-      const email = normalizeEmail(user.email)
-      const legacy = buildLegacyUser(email)
-      const username = normalizeUsername(typeof user.username === 'string' ? user.username : legacy.username)
-
-      const normalizedUser: RegisteredUser = {
-        ...legacy,
-        ...user,
-        id: typeof user.id === 'string' ? user.id : legacy.id,
-        username,
-        nickname: username,
-        email,
-        avatar: typeof user.avatar === 'string' ? user.avatar : undefined,
-        bio: typeof user.bio === 'string' ? user.bio : undefined,
-        visibility: user.visibility === 'private' ? 'private' : 'public',
-      }
-
-      return normalizedUser
-    })
-
-    const mergedUsers = DEFAULT_MOCK_USERS.map((user) => ({ ...user }))
-
-    normalizedUsers.forEach((user) => {
-      const existingIndex = mergedUsers.findIndex(
-        (item) => item.username === user.username || item.email === user.email
-      )
-
-      if (existingIndex >= 0) {
-        mergedUsers.splice(existingIndex, 1, user)
-        return
-      }
-
-      mergedUsers.push(user)
-    })
-
-    return mergedUsers
-  } catch {
-    return DEFAULT_MOCK_USERS.map((user) => ({ ...user }))
-  }
-}
-
-function persistRegisteredUsers(users: RegisteredUser[]) {
-  localStorage.setItem(USERS_KEY, JSON.stringify(users))
-}
-
 function buildSession(user: AuthUser, rememberMe: boolean, token?: string): AuthSession {
+  const safeUser = sanitizeAuthUser(user)
+  if (!safeUser) {
+    throw new Error('无法创建无效的登录会话。')
+  }
+
   return {
-    email: user.email,
+    email: safeUser.email,
     rememberMe,
     loggedAt: new Date().toISOString(),
-    token: token ?? `mock-token-${Date.now()}`,
-    user,
+    token: token ?? (import.meta.env.DEV ? `mock-token-${Date.now()}` : ''),
+    user: safeUser,
   }
-}
-
-export function readStoredAuthSession(): AuthSession | null {
-  try {
-    const raw = localStorage.getItem(AUTH_KEY) ?? sessionStorage.getItem(AUTH_KEY)
-    if (!raw) return null
-
-    const parsed = JSON.parse(raw) as Partial<AuthSession> & {
-      email?: string
-      user?: Partial<AuthUser>
-    }
-
-    if (!parsed?.token) return null
-
-    const normalizedEmail = normalizeEmail(parsed.user?.email ?? parsed.email ?? '')
-    if (!normalizedEmail) return null
-
-    const fallbackUser = buildLegacyUser(normalizedEmail)
-    const normalizedUsername = normalizeUsername(parsed.user?.username ?? fallbackUser.username)
-    const user: AuthUser = {
-      ...fallbackUser,
-      ...(parsed.user ?? {}),
-      id: typeof parsed.user?.id === 'string' ? parsed.user.id : fallbackUser.id,
-      username: normalizedUsername,
-      nickname: normalizedUsername,
-      email: normalizedEmail,
-      avatar: typeof parsed.user?.avatar === 'string' ? parsed.user.avatar : undefined,
-      bio: typeof parsed.user?.bio === 'string' ? parsed.user.bio : undefined,
-      visibility: parsed.user?.visibility === 'private' ? 'private' : 'public',
-    }
-
-    return {
-      email: normalizedEmail,
-      rememberMe: Boolean(parsed.rememberMe),
-      loggedAt: typeof parsed.loggedAt === 'string' ? parsed.loggedAt : new Date().toISOString(),
-      token: parsed.token,
-      user,
-    }
-  } catch {
-    return null
-  }
-}
-
-export function requireAuthSession(errorMessage: string) {
-  const session = readStoredAuthSession()
-  if (!session) {
-    throw new Error(errorMessage)
-  }
-  return session
 }
 
 export const useAuthStore = defineStore('auth', () => {
   const session = ref<AuthSession | null>(null)
+  const registeredUsers = DEFAULT_MOCK_USERS.map((user) => ({ ...user }))
+
+  // Older versions persisted mock passwords in browser storage. They are never migrated.
+  localStorage.removeItem(USERS_KEY)
+  sessionStorage.removeItem(USERS_KEY)
 
   const isLoggedIn = computed(() => session.value !== null)
   const userEmail = computed(() => session.value?.email ?? '')
@@ -250,24 +124,19 @@ export const useAuthStore = defineStore('auth', () => {
   const displayName = computed(() => session.value?.user.username ?? '')
 
   function persistSession(nextSession: AuthSession) {
-    localStorage.removeItem(AUTH_KEY)
-    sessionStorage.removeItem(AUTH_KEY)
-
-    const storage = nextSession.rememberMe ? localStorage : sessionStorage
-    storage.setItem(AUTH_KEY, JSON.stringify(nextSession))
-    session.value = nextSession
+    session.value = persistStoredAuthSession(nextSession)
   }
 
   function loadSession() {
     const storedSession = readStoredAuthSession()
     if (storedSession) {
-      session.value = storedSession
+      // Re-persist the sanitized shape to remove fields left by older versions.
+      session.value = persistStoredAuthSession(storedSession)
       return
     }
 
     session.value = null
-    localStorage.removeItem(AUTH_KEY)
-    sessionStorage.removeItem(AUTH_KEY)
+    clearStoredAuthSession()
   }
 
   async function login(payload: AuthCredentials) {
@@ -276,10 +145,9 @@ export const useAuthStore = defineStore('auth', () => {
       throw new Error('请输入用户名。')
     }
 
-    if (isMockMode()) {
+    if (import.meta.env.DEV && isMockMode()) {
       await wait()
 
-      const registeredUsers = readRegisteredUsers()
       const user = registeredUsers.find((item) =>
         item.username === normalizedUsername || item.email === normalizeEmail(normalizedUsername)
       )
@@ -307,10 +175,6 @@ export const useAuthStore = defineStore('auth', () => {
     persistSession(buildSession(mapBackendUser(data.user), payload.rememberMe, data.token))
   }
 
-  async function sendVerificationCode() {
-    throw new Error('当前后端规范未提供邮箱验证码接口。')
-  }
-
   async function register(payload: RegisterPayload) {
     const normalizedUsername = normalizeUsername(payload.username)
     const normalizedEmail = normalizeEmail(payload.email)
@@ -320,15 +184,14 @@ export const useAuthStore = defineStore('auth', () => {
       throw new Error('请输入用户名。')
     }
 
-    if (isMockMode()) {
+    if (import.meta.env.DEV && isMockMode()) {
       await wait(500)
 
-      const users = readRegisteredUsers()
-      if (users.some((item) => item.username === normalizedUsername)) {
+      if (registeredUsers.some((item) => item.username === normalizedUsername)) {
         throw new Error('该用户名已存在，请更换后重试。')
       }
 
-      if (users.some((item) => item.email === normalizedEmail)) {
+      if (registeredUsers.some((item) => item.email === normalizedEmail)) {
         throw new Error('该邮箱已注册，请直接登录。')
       }
 
@@ -344,7 +207,7 @@ export const useAuthStore = defineStore('auth', () => {
         createdAt: new Date().toISOString(),
       }
 
-      persistRegisteredUsers([...users, nextUser])
+      registeredUsers.push(nextUser)
       persistSession(buildSession(nextUser, payload.rememberMe))
       return
     }
@@ -371,8 +234,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   function logout() {
     session.value = null
-    localStorage.removeItem(AUTH_KEY)
-    sessionStorage.removeItem(AUTH_KEY)
+    clearStoredAuthSession()
   }
 
   loadSession()
@@ -386,7 +248,6 @@ export const useAuthStore = defineStore('auth', () => {
     displayName,
     loadSession,
     login,
-    sendVerificationCode,
     register,
     logout,
   }

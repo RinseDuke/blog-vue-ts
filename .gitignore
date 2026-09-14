@@ -14,6 +14,7 @@ dist
 dist-ssr
 coverage
 *.local
+.env
 
 /cypress/videos/
 /cypress/screenshots/
@@ -37,6 +38,8 @@ coverage
 .claude/
 .gemini/
 .aider*
+.qoder/
+memory.md
 .review-*.png
 .review-*.jpg
 .review-*.jpeg
