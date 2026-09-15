@@ -1,6 +1,6 @@
 # blog-vue-ts
 
-一个基于 Vue 3 + Vite + TypeScript 的现代博客前端单页应用，包含首页、文章列表、文章详情、全局搜索、富文本写作和个人主页。
+一个基于 Vue 3 + Vite + TypeScript 的现代博客前端单页应用，包含首页、文章列表、文章详情、全局搜索、Markdown 写作和个人主页。
 
 ## 技术栈
 
@@ -11,7 +11,7 @@
 | 语言 | TypeScript | ~5.8.0 |
 | 路由 | Vue Router (HTML5 History) | ^4.5.1 |
 | 状态管理 | Pinia (Setup Store 语法) | ^3.0.4 |
-| 富文本编辑器 | TipTap | ^3.20.0 |
+| Markdown 编辑器 | CodeMirror 6 | 6.x |
 | Markdown | markdown-it + turndown（内建 GFM 规则） | 14.1 / 7.2 |
 | HTML 净化 | DOMPurify | ^3.3.0 |
 | CSS 预处理器 | Less | ^4.4.2 |
@@ -22,10 +22,10 @@
 
 - **首页展示** -- 最新文章列表，支持加载/错误/重试状态
 - **文章列表** -- 标签筛选、日期预设（7d/30d/90d/365d/自定义）、多种排序（最新/最早/阅读量/标题）、分页，全部与 URL query 双向同步
-- **文章详情** -- 文章渲染（DOMPurify 净化 HTML）
-- **评论系统（预留）** -- 代码尚未接入当前文章详情界面
+- **文章详情** -- 文章渲染（DOMPurify 净化 HTML）、阅读进度、评论与回复
+- **评论系统** -- 文章详情页支持评论、回复、点赞与举报
 - **全局搜索** -- 实时建议、相关性排序（标题/摘要/作者/标签多维评分）、搜索历史持久化、推荐文章
-- **富文本写作** -- 基于 TipTap 的 WYSIWYG 编辑器 + Markdown 源码模式双切换，支持图片/链接/表格/任务列表/下划线，草稿自动保存（500ms 防抖）、封面上传、标签管理（预设 + 自定义，最多 5 个）
+- **Markdown 写作** -- 基于 CodeMirror 6 的实时预览编辑器，支持标题、链接、列表、任务项、表格、代码高亮、数学公式与 Mermaid 图表，提供草稿自动保存（500ms 防抖）、封面上传和标签管理（预设 + 自定义，最多 5 个）
 - **认证系统** -- 登录/登出，会话持久化（localStorage / sessionStorage），路由守卫保护写作页
 - **Mock / 真实 API 无缝切换** -- 通过环境变量控制，Mock 模式带模拟网络延迟
 - **统一数据层** -- Posts Store 支持缓存与并发请求去重
@@ -87,7 +87,7 @@ src/
 │   ├── navigation/                  #   顶部导航（品牌、搜索框、导航栏、页脚）
 │   ├── post/                        #   文章相关（卡片、列表、编辑器工具栏、发布面板、筛选器、状态栏）
 │   ├── search/                      #   搜索下拉内容、搜索框
-│   └── ui/                          #   通用 UI 组件（骨架屏加载器）
+│   └── ui/                          #   通用 UI 组件（骨架屏、空状态等）
 ├── features/                        # 按领域组织的功能模块
 │   ├── auth/stores/                 #   认证 Store（会话管理、登录/登出）
 │   ├── comment/stores/              #   评论 Store（加载、新增、点赞、举报）
@@ -123,7 +123,7 @@ src/
 |---|---|---|---|
 | `/` | `home` | HomeView | 否 |
 | `/article` | `article-list` | ArticleListView | 否 |
-| `/article/:slug` | `article-detail` | ArticleDetailView | 否 |
+| `/article/:id` | `article-detail` | ArticleDetailView | 否 |
 | `/search` | `search` | Search | 否 |
 | `/write` | `write` | Write | 是 |
 | `/login` | `login` | LoginView | 否 |
