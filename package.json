@@ -24,7 +24,6 @@
     "@codemirror/language": "^6.12.4",
     "@codemirror/state": "^6.7.2",
     "@codemirror/view": "^6.43.10",
-    "@lezer/highlight": "^1.2.3",
     "@tiptap/extension-link": "^3.20.0",
     "@tiptap/extension-placeholder": "^3.20.0",
     "@tiptap/extension-table": "^3.20.0",
