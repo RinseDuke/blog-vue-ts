@@ -51,14 +51,6 @@ export default defineConfig(async () => {
       rollupOptions: {
         output: {
           manualChunks(id: string) {
-            if (/[\\/]node_modules[\\/]@tiptap[\\/]pm/.test(id) || /[\\/]node_modules[\\/]prosemirror-/.test(id)) {
-              return 'prosemirror-vendor'
-            }
-
-            if (/[\\/]node_modules[\\/]@tiptap/.test(id)) {
-              return 'tiptap-vendor'
-            }
-
             if (/[\\/]node_modules[\\/](?:markdown-it|turndown|dompurify)/.test(id)) {
               return 'markdown-vendor'
             }

@@ -200,8 +200,11 @@ const safeHtml = computed(() => {
 
 const likeCount = computed(() => post.value?.likes ?? 0)
 const authorInitial = computed(() => post.value?.author.name.trim().slice(0, 1) || '墨')
+let latestLoadRequest = 0
 
 async function loadPostById(id: string) {
+  const requestId = ++latestLoadRequest
+
   if (!id) {
     post.value = null
     error.value = '未找到主题'
@@ -214,6 +217,8 @@ async function loadPostById(id: string) {
 
   try {
     const fetchedPost = await fetchPostById(id)
+    if (requestId !== latestLoadRequest) return
+
     if (!fetchedPost) {
       post.value = null
       error.value = '未找到主题'
@@ -225,10 +230,14 @@ async function loadPostById(id: string) {
     isBookmarked.value = false
     document.title = fetchedPost.title + ' · 墨言'
   } catch (err) {
+    if (requestId !== latestLoadRequest) return
+
     post.value = null
     error.value = err instanceof Error ? err.message : '加载主题失败'
   } finally {
-    loading.value = false
+    if (requestId === latestLoadRequest) {
+      loading.value = false
+    }
   }
 }
 

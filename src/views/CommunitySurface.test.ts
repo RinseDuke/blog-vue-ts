@@ -54,4 +54,9 @@ describe('remaining community surfaces', () => {
     expect(routerSource).toContain('savedPosition')
     expect(routerSource).toContain('{ top: 0 }')
   })
+
+  it('redirects unknown routes to the home page', () => {
+    expect(routerSource).toContain("path: '/:pathMatch(.*)*'")
+    expect(routerSource).toContain("redirect: { name: 'home' }")
+  })
 })

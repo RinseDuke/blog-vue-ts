@@ -14,7 +14,6 @@ type TurndownNode = {
   parentNode?: TurndownNode | null
 }
 
-<<<<<<< HEAD
 type MarkdownRenderRule = NonNullable<MarkdownIt['renderer']['rules'][string]>
 
 const unsafeMarkdownLinkProtocol = /(\]\(\s*<?)(?:javascript|vbscript|file|data)\s*:/giu
@@ -72,9 +71,6 @@ type ParsedHtmlTag = {
   special: boolean
 }
 
-const turndownService = new TurndownService({ headingStyle: 'atx' })
-turndownService.use(gfm)
-=======
 const HIGHLIGHT_CLASS_PATTERN = /highlight-(?:text|source)-([a-z0-9]+)/i
 const turndownService = new TurndownService({ headingStyle: 'atx', codeBlockStyle: 'fenced' })
 
@@ -105,7 +101,6 @@ turndownService.addRule('tiptapTaskListItem', {
     return `\n- [${checked ? 'x' : ' '}] ${normalizedContent}`
   },
 })
->>>>>>> origin/main
 // <p> 转为单换行（Obsidian 风格），表格内的 <p> 由 tableCellParagraph 规则处理
 turndownService.addRule('singleNewlineParagraph', {
   filter(node: TurndownNode) {

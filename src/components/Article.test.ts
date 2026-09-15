@@ -39,6 +39,12 @@ describe('Article source contract', () => {
     expect(articleSource).toContain('const contentMode = computed')
   })
 
+  it('ignores stale article requests after rapid route changes', () => {
+    expect(articleSource).toContain('const requestId = ++latestLoadRequest')
+    expect(articleSource).toContain('if (requestId !== latestLoadRequest) return')
+    expect(articleSource).toContain('if (requestId === latestLoadRequest)')
+  })
+
   it('uses shared typography and editor color tokens without active-line boxes', () => {
     expect(articleSource).toMatch(/\.article-body\s*\{[\s\S]*font-family:\s*var\(--font-body\)/)
     expect(articleSource).toMatch(/\.article-body\s*:deep\(h1\)[\s\S]*font-family:\s*var\(--font-display\)/)
