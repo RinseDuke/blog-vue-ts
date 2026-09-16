@@ -230,4 +230,168 @@
  └── 更新 README.md 技术栈说明
 ```
 
-*(本报告的历史取证已保留；当前状态以顶部“当前权威状态”为准。)*
+*(本报告的历史取证已保留；当前状态以顶部“当前权威状态”及下方第六节最新审查为准。)*
+
+---
+
+## 六、合并更新后的深度审查：包体积优化与代码逻辑一致性评估 (2026-09-15)
+
+**执行者 / 署名**：Antigravity (Google DeepMind Advanced Agentic Coding)
+
+**审查基准**：提交 `51529da` 后的全量工作树，结合 `memory.md` 记忆回溯与全量构建/测试产物实测
+
+**核心原则遵循**：未修改 `memory.md`（无权写入）；涉及 UI 层视觉与组件命名事项一律“只记录、不修改”
+
+---
+
+### 6.1 合并更新后的现状与质量基准实测
+
+在合并更新（commit `51529da`）落地后，先前审查揭示的阻断性缺陷与冗余已全部解决：
+- **`writeMarkdown.ts` 合并冲突与悬空引用**：第 17、77、108 行冲突标记已清除，悬空的 `use(gfm)` 已剔除，内联 Turndown 规则正常生效。
+- **TipTap 遗留体系**：12 个 `@tiptap/*` 依赖包已从 `package.json` 卸载，`LivePreviewPlugin.ts` 已物理删除，`vite.config.ts` 中的陈旧分块配置已清理。
+- **孤儿组件清理**：`DatePickerInput.vue`、`DropdownSelect.vue`、`Modal.vue`、`Toast.vue`、`Button.vue`、`FeaturedHero.vue` 及 `calendarDate.ts` 已被安全清理。
+- **健壮性与路由**：`Article.vue` 的 `loadPostById` 增加了请求序号防竞态保护；`router/index.ts` 补齐了 `path: '/:pathMatch(.*)*'` 404 兜底重定向。
+
+**实测各项验证指标全部全绿**：
+1. `npm run lint`：✅ 0 错误，0 警告。
+2. `npm run type-check`：✅ 0 错误（`vue-tsc --build` 通过）。
+3. `npm run test:run`：✅ **46 个测试套件 / 255 个测试用例全部通过**（耗时 11.16s）。
+4. `npm run test:coverage`：✅ **Statements 79.92% / Branches 68.38% / Functions 82.95% / Lines 82.2%**，全面大幅超过已配置的阈值（60/50/65/60）。
+5. `npm run build`：✅ 构建成功产出 `dist/`，耗时 35.52s。
+
+---
+
+### 6.2 生产包体积深度解构与关键优化建议（降低包体积专项）
+
+虽然生产构建已畅通，但当前产物存在显著的**体积膨胀**与 Rollup 警告（`Some chunks are larger than 500 kB after minification`）。
+
+#### 产物现状数据：
+- `dist/assets/` 下全部 JS 总未压缩体积达到 **5.30 MB**。
+- 前五大产物体积分布：
+  1. `MarkdownPreview-CSCpFhj4.js`: **1,223.90 kB** (gzip: 397.97 kB) —— **单文件超 1.2 MB！**
+  2. `Mermaid 图表生态(~30 个动态分块)`: **~2,850 kB**（`cynefin` 672 kB, `mermaid.core` 638 kB, `cytoscape.esm` 433 kB 等）—— **占全站 JS 体积 53%！**
+  3. `Write-tN1pzqYy.js`: **534.29 kB** (gzip: 189.69 kB)
+  4. `markdown-vendor-Biy1iKRF.js`: **420.93 kB** (gzip: 145.82 kB)
+  5. `index-CN05sLt4.js`: **154.92 kB** (gzip: 59.00 kB)
+
+#### 降低包体积的具体优化方案（按收益排序）：
+
+1. **🔴 方案一：Highlight.js 改为按需语言导入（预计立减 ~800 kB - 900 kB，最高性价比）**
+   - **成因定位**：`src/features/post/utils/writeMarkdown.ts` 第 2 行采用 `import hljs from 'highlight.js'`。该语法会将 highlight.js 支持的全部 **190+ 种编程语言**（在 `node_modules` 中源码达 1.54 MB）无差别打入 `MarkdownPreview` 产物。
+   - **优化实施**：
+     改为使用 `highlight.js/lib/core`，并显式注册博客所需的 12~15 种核心高频语言：
+     ```ts
+     import hljs from 'highlight.js/lib/core'
+     import javascript from 'highlight.js/lib/languages/javascript'
+     import typescript from 'highlight.js/lib/languages/typescript'
+     import python from 'highlight.js/lib/languages/python'
+     import bash from 'highlight.js/lib/languages/bash'
+     import json from 'highlight.js/lib/languages/json'
+     import xml from 'highlight.js/lib/languages/xml' // html/xml
+     import css from 'highlight.js/lib/languages/css'
+     import markdown from 'highlight.js/lib/languages/markdown'
+     import java from 'highlight.js/lib/languages/java'
+     import go from 'highlight.js/lib/languages/go'
+     import rust from 'highlight.js/lib/languages/rust'
+     import sql from 'highlight.js/lib/languages/sql'
+     import yaml from 'highlight.js/lib/languages/yaml'
+     import cpp from 'highlight.js/lib/languages/cpp'
+     ```
+   - **收益**：`highlight.js` 体积由 ~950 kB 压缩至 ~60 kB，`MarkdownPreview` 单文件体积直接跌破 500 kB 警报线。
+
+2. **🟠 方案二：Vite `manualChunks` 细粒度分包（消除大 Chunk 警报，激活长期缓存）**
+   - **成因定位**：当前 `vite.config.ts` 仅配置了 `markdown-vendor`（收纳 markdown-it/turndown/dompurify）。而 CodeMirror 6 依赖族全部堆叠在 `Write.vue` 中（导致 534 kB 警告）；KaTeX 则混杂在预览与写作包中。
+   - **优化实施**：在 `vite.config.ts` 中增强分块规则：
+     ```ts
+     manualChunks(id: string) {
+       if (/[\\/]node_modules[\\/](?:markdown-it|turndown|dompurify)/.test(id)) {
+         return 'markdown-vendor'
+       }
+       if (/[\\/]node_modules[\\/]katex/.test(id)) {
+         return 'katex-vendor'
+       }
+       if (/[\\/]node_modules[\\/]highlight\.js/.test(id)) {
+         return 'hljs-vendor'
+       }
+       if (/[\\/]node_modules[\\/]@codemirror/.test(id)) {
+         return 'codemirror-vendor'
+       }
+     }
+     ```
+   - **收益**：彻底消除 Vite 的 `Some chunks are larger than 500 kB` 警告；公共库在版本不变时获得最大程度的客户端浏览器缓存。
+
+3. **🟡 方案三：KaTeX 与数学公式按需懒加载**
+   - **现状**：KaTeX 模块（~587 kB 未压缩）及其专用 Web Fonts 在文章详情和写作页中被静态打包引入。
+   - **优化实施**：针对绝大部分没有数学公式的博客文章，可在进入 Markdown 渲染前先做低成本正则探测（检测是否存在 `$` 或 `texmath` 定界符）。未出现公式时完全跳过 KaTeX 引擎载入。
+
+4. **🟡 方案四：Mermaid 架构收敛（评估是否需要 30+ 种图表引擎）**
+   - **现状取证**：`MarkdownPreview.vue` 内部已正确实现 `loadMermaid()` 动态加载门禁（仅当 HTML 中出现 `code.language-mermaid` 时才会发起网络请求），普通纯文本文章阅读并不会触发 Mermaid 下载，首屏网络开销控制得当。
+   - **构建瘦身**：Mermaid 及其子依赖（如 `cytoscape.esm` 433 kB、`cynefin` 672 kB）在 `dist/` 中生成了 30 余个微小 js 文件。若需减少部署产物体积，可在打包配置中将 Mermaid 或特定重量级图表（如架构图、Sankey 图）外置或按需引入。
+
+5. **🟢 方案五：引入构建期 Gzip / Brotli 预压缩**
+   - 在 Vite 构建链引入 `vite-plugin-compression`，打包时直接生成 `.gz` 与 `.br` 静态压缩副本，节省部署服务端的实时压缩 CPU 开销，加速 CDN 传输。
+
+---
+
+### 6.3 代码书写逻辑与风格一致性检查（无风格跳跃保障）
+
+本次对全仓业务逻辑、异步处理、文件结构及编码规范进行了全景比对，发现了 5 处明显的“风格与逻辑跳跃”，需要统一规范：
+
+#### 1. 概念与领域模型分叉（Blog/Post 体系 vs Community/Topic 体系）
+- **现象取证**：
+  - 底层与服务层完全沿用**博客模型**：类型为 [`Post`](file:///c:/Users/Rinne/Desktop/Project/blog-vue-ts/src/types/post.ts)；Store 叫 [`usePostsStore`](file:///c:/Users/Rinne/Desktop/Project/blog-vue-ts/src/features/post/composables/usePostsStore.ts)；服务叫 [`postService.ts`](file:///c:/Users/Rinne/Desktop/Project/blog-vue-ts/src/services/postService.ts)；接口为 `POST /blogs`。
+  - 视图层与路由层全面跃升为**社区/论坛模型**：页面包含 [`CommunityLayout.vue`](file:///c:/Users/Rinne/Desktop/Project/blog-vue-ts/src/components/community/CommunityLayout.vue)、[`TopicList.vue`](file:///c:/Users/Rinne/Desktop/Project/blog-vue-ts/src/components/topic/TopicList.vue)、[`TopicRow.vue`](file:///c:/Users/Rinne/Desktop/Project/blog-vue-ts/src/components/topic/TopicRow.vue)；路由 meta 标注为 `全部主题`、`我的主题`；页面按钮叫 `发起主题`、`主题作者`、`回复`。
+  - 甚至在 [`Article.vue`](file:///c:/Users/Rinne/Desktop/Project/blog-vue-ts/src/components/Article.vue) 内部，文件名为 `Article.vue`，但模板根节点与样式名通篇为 `.topic-*`（`.topic-loading`、`.topic-first-post`、`.topic-replies`）。
+- **分析与处置**：
+  - 此项直接关系到 UI 设计与产品定位。依据全局约束“UI 设计未定稿，只记录不修改”，**代码层暂不强行改动视图命名**。
+  - 但需明确：目前由 [`src/features/topic/topic.ts`](file:///c:/Users/Rinne/Desktop/Project/blog-vue-ts/src/features/topic/topic.ts) 充当两者的适配层（`mapPostToTopic`）。后续新增功能必须严格遵循该边界，切勿在底层 service 或 store 中突兀混入 topic 概念。
+
+#### 2. 代码缩进标准割裂（2 空格 vs 4 空格）
+- **现象取证**：
+  - `AGENTS.md` 规范明确指明：`Use 2-space indentation`。
+  - 全仓绝大多数文件（`apiClient.ts`, `authSession.ts`, `useAuthStore.ts`, `usePostsStore.ts`, `postService.ts` 等）均严谨采用 2 空格。
+  - **严重跳跃**：
+    - [`src/features/comment/stores/useCommentStore.ts`](file:///c:/Users/Rinne/Desktop/Project/blog-vue-ts/src/features/comment/stores/useCommentStore.ts)（全部 119 行）通篇为 **4 空格**。
+    - [`src/services/commentService.ts`](file:///c:/Users/Rinne/Desktop/Project/blog-vue-ts/src/services/commentService.ts)（全部 80 行）通篇为 **4 空格**。
+    - [`src/services/reportService.ts`](file:///c:/Users/Rinne/Desktop/Project/blog-vue-ts/src/services/reportService.ts)（全部 44 行）通篇为 **4 空格**。
+- **根因**：ESLint Flat Config（`eslint.config.mjs`）中未配置格式化与缩进规则，导致该历史差异未被 linter 拦截。
+- **建议**：在下一次非 UI 代码卫生 pass 中，将上述 3 个文件统一格式化为 2 空格缩进。
+
+#### 3. 异步调用范式与 Store 目录组织不统一
+- **现象取证**：
+  - 目录不一致：`useAuthStore.ts` 位于 `features/auth/stores/`，`useCommentStore.ts` 位于 `features/comment/stores/`；唯独 `usePostsStore.ts` 位于 `features/post/composables/`。
+  - 编码范式跳跃：`usePostsStore.ts` 的 `ensurePosts` 函数混用了 `async` 和 Promise 链式调用（`.then().catch().finally()`）；而全仓其余 Store 与 Service 均统一使用干净清晰的 `async/await` 与 `try/catch/finally`。
+- **建议**：将 `usePostsStore.ts` 内部改写为标准的 `async/await`，并考虑统一收拢至 `features/post/stores/`。
+
+#### 4. 错误反馈信息的国际化语言混杂（中文 vs 英文）
+- **现象取证**：
+  - 全站面向中文读者，`useAuthStore.ts`、`postService.ts`、`Article.vue` 的错误抛出与展示均为中文（如 `'账号不存在，请先注册。'`, `'请先登录后再点赞文章'`, `'加载主题失败'`）。
+  - 但在 [`usePostsStore.ts:36`](file:///c:/Users/Rinne/Desktop/Project/blog-vue-ts/src/features/post/composables/usePostsStore.ts#L36) 中，错误回退写为 `'Failed to load posts'`；在 [`useCommentStore.ts:28, 50`](file:///c:/Users/Rinne/Desktop/Project/blog-vue-ts/src/features/comment/stores/useCommentStore.ts#L28) 中写为 `'Failed to load comments'` 与 `'Failed to add comment'`。
+- **建议**：统一为一致的中文业务提示。
+
+#### 5. 业务逻辑复杂度断层（平铺业务胶水 vs 高密度底层语法 AST）
+- **现象取证**：
+  - 全仓 90% 的业务代码为经典的 Vue 响应式组合逻辑，易读性强。
+  - 而 [`features/post/editor/markdownCommands.ts`](file:///c:/Users/Rinne/Desktop/Project/blog-vue-ts/src/features/post/editor/markdownCommands.ts)（773 行）与 [`livePreviewDecorations.ts`](file:///c:/Users/Rinne/Desktop/Project/blog-vue-ts/src/features/post/editor/livePreviewDecorations.ts)（509 行）则涉及 CodeMirror 抽象语法树遍历、光标选区几何定位、转义反斜杠计数及表格行列字符串矩阵变换。
+- **评估**：这是支持 CodeMirror 富预览所必需的工程实现，且测试覆盖率高达 90%+；但其与其余业务代码的思维模型差距极大。建议在后续开发中保持该目录为独立原子库，勿将页面状态管理侵入该目录。
+
+---
+
+### 6.5 Codex 复核后的权威状态（2026-09-16）
+
+| 项目 | 复核结论 | 当前状态 |
+| :--- | :--- | :---: |
+| 4 空格缩进 | 问题属实；实际涉及 `useCommentStore`、`commentService`、`reportService`、`profileService` 四个文件 | ✅ 已完成 |
+| `profileService` 结构分叉 | 问题属实；已改为纯函数对象、统一相对导入、复用 `networkDelay()` 并使用 bare catch | ✅ 已完成 |
+| `usePostsStore` Promise 链 | 问题属实；已在原目录内改为 `async/await`，保持缓存与并发去重行为 | ✅ 已完成 |
+| 移动 `usePostsStore` 目录 | 仅为组织偏好，当前路径符合 composable 的职责且移动会制造大范围 import churn | 无需修复 |
+| Highlight.js 按需语言 | 体积事实属实，但裁剪语言会改变 Markdown 代码块渲染能力 | ⏸ UI/编辑器审批 |
+| 英文错误文案本地化 | 文案会直接展示给用户，属于界面反馈内容 | ⏸ UI 审批 |
+| Post/Topic 概念、KaTeX/Mermaid、编辑器助手与 App 样式 | 均会改变 UI、编辑器行为或样式 | ⏸ UI/编辑器审批 |
+| 增加 `manualChunks` | 只会重新分配 chunk，不能降低总体积；Mermaid 的动态块仍可超过 500 kB，因此“彻底消除警告”结论不成立 | 可选性能策略，非缺陷 |
+
+验证：定向测试 5 文件 / 14 用例通过；`npm test -- --run` 与 `npm run test:run` 均为 46 文件 / 255 用例通过；lint、coverage、type-check、build 均通过；官方 npm registry 审计为 0 vulnerabilities。构建仍保留非阻断的大 chunk 警告。
+
+---
+
+*(本章节由 Antigravity 于 2026-09-15 审查并完成署名。)*

@@ -16,6 +16,21 @@ export const usePostsStore = defineStore('posts', () => {
     return err instanceof Error ? err.message : fallback
   }
 
+  async function fetchAndCachePosts() {
+    try {
+      const result = await fetchPosts()
+      posts.value = result
+      hasLoaded = true
+      return posts.value
+    } catch (err: unknown) {
+      error.value = getErrorMessage(err, 'Failed to load posts')
+      throw err
+    } finally {
+      loading.value = false
+      inflight = null
+    }
+  }
+
   // 已加载则返回缓存；有飞行中请求则复用同一 Promise
   async function ensurePosts(options: { force?: boolean } = {}) {
     const { force = false } = options
@@ -26,20 +41,7 @@ export const usePostsStore = defineStore('posts', () => {
     loading.value = true
     error.value = null
 
-    inflight = fetchPosts()
-      .then((result) => {
-        posts.value = result
-        hasLoaded = true
-        return posts.value
-      })
-      .catch((err: unknown) => {
-        error.value = getErrorMessage(err, 'Failed to load posts')
-        throw err
-      })
-      .finally(() => {
-        loading.value = false
-        inflight = null
-      })
+    inflight = fetchAndCachePosts()
 
     return inflight
   }
