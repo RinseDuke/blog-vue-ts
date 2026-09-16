@@ -54,6 +54,14 @@ export default defineConfig(async () => {
             if (/[\\/]node_modules[\\/](?:markdown-it|turndown|dompurify)/.test(id)) {
               return 'markdown-vendor'
             }
+
+            if (/[\\/]node_modules[\\/]katex/.test(id)) {
+              return 'katex-vendor'
+            }
+
+            if (/[\\/]node_modules[\\/]@codemirror/.test(id)) {
+              return 'codemirror-vendor'
+            }
           },
         },
       },

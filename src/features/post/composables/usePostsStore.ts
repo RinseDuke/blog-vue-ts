@@ -23,7 +23,7 @@ export const usePostsStore = defineStore('posts', () => {
       hasLoaded = true
       return posts.value
     } catch (err: unknown) {
-      error.value = getErrorMessage(err, 'Failed to load posts')
+      error.value = getErrorMessage(err, '加载主题失败')
       throw err
     } finally {
       loading.value = false

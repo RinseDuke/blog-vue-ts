@@ -54,4 +54,14 @@ describe('usePostsStore', () => {
     expect(store.loading).toBe(false)
     expect(fetchPosts).toHaveBeenCalledTimes(2)
   })
+
+  it('uses a localized fallback for non-Error failures', async () => {
+    vi.mocked(fetchPosts).mockRejectedValueOnce('offline')
+    const store = usePostsStore()
+
+    await expect(store.ensurePosts()).rejects.toBe('offline')
+
+    expect(store.error).toBe('加载主题失败')
+    expect(store.loading).toBe(false)
+  })
 })

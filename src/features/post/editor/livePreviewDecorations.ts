@@ -1,4 +1,9 @@
 import { markdownLanguage } from '@codemirror/lang-markdown'
+import {
+  getMarkdownLines,
+  isEscapedCharacter as isEscaped,
+  type MarkdownLine,
+} from './markdownText'
 
 /** 使用语法上下文保护代码，不能把代码中的 Markdown 示例当作格式标记。 */
 export function getMarkdownCodeRanges(source: string) {
@@ -25,7 +30,7 @@ export interface MarkdownDecorationRange {
 
 export interface MarkdownDecorationAnalysis {
   source: string
-  lines: SourceLine[]
+  lines: MarkdownLine[]
   rangesByLine: MarkdownDecorationRange[][]
 }
 
@@ -36,55 +41,18 @@ export interface MarkdownDecorationState {
   ranges: MarkdownDecorationRange[]
 }
 
-interface SourceLine {
-  from: number
-  to: number
-  text: string
-}
-
 interface MarkerRange {
   from: number
   to: number
 }
 
-function isEscaped(source: string, position: number) {
-  let backslashes = 0
-
-  for (let index = position - 1; index >= 0 && source[index] === '\\'; index -= 1) {
-    backslashes += 1
-  }
-
-  return backslashes % 2 === 1
-}
-
-function getSourceLines(source: string): SourceLine[] {
-  const lines: SourceLine[] = []
-
-  for (let from = 0; from <= source.length; ) {
-    const lineFeed = source.indexOf('\n', from)
-    const rawTo = lineFeed === -1 ? source.length : lineFeed
-    const to = rawTo > from && source[rawTo - 1] === '\r' ? rawTo - 1 : rawTo
-
-    lines.push({ from, to, text: source.slice(from, to) })
-    if (lineFeed === -1) break
-
-    from = lineFeed + 1
-    if (from === source.length) {
-      lines.push({ from, to: from, text: '' })
-      break
-    }
-  }
-
-  return lines
-}
-
-function getActiveLine(lines: SourceLine[], sourceLength: number, activePosition: number) {
+function getActiveLine(lines: MarkdownLine[], sourceLength: number, activePosition: number) {
   const position = Math.max(0, Math.min(sourceLength, activePosition))
 
   return (
     lines.find((line, index) => {
       const nextLine = lines[index + 1]
-      return position >= line.from && (!nextLine || position < nextLine.from)
+      return position >= line.start && (!nextLine || position < nextLine.start)
     }) ?? lines[lines.length - 1]
   )
 }
@@ -103,25 +71,25 @@ function blockRange(blocked: boolean[], from: number, to: number) {
   }
 }
 
-function scanLineMarkers(line: SourceLine): MarkerRange[] {
+function scanLineMarkers(line: MarkdownLine): MarkerRange[] {
   const markers: MarkerRange[] = []
-  const blocked = Array<boolean>(line.text.length).fill(false)
+  const blocked = Array<boolean>(line.content.length).fill(false)
   const addMarker = (from: number, to: number) => {
     if (from >= to || isBlocked(blocked, from, to)) return
-    markers.push({ from: line.from + from, to: line.from + to })
+    markers.push({ from: line.start + from, to: line.start + to })
   }
   const reserve = (from: number, to: number) => blockRange(blocked, from, to)
 
-  scanBlockPrefix(line.text, addMarker, reserve)
-  scanCodeSpans(line.text, addMarker, reserve, blocked)
-  scanFootnotes(line.text, addMarker, reserve, blocked)
-  scanLinks(line.text, addMarker, reserve, blocked)
-  scanInlineMath(line.text, addMarker, reserve, blocked)
-  scanPairedDelimiter(line.text, '**', addMarker, reserve, blocked)
-  scanPairedDelimiter(line.text, '__', addMarker, reserve, blocked)
-  scanPairedDelimiter(line.text, '~~', addMarker, reserve, blocked)
-  scanPairedDelimiter(line.text, '*', addMarker, reserve, blocked)
-  scanPairedDelimiter(line.text, '_', addMarker, reserve, blocked)
+  scanBlockPrefix(line.content, addMarker, reserve)
+  scanCodeSpans(line.content, addMarker, reserve, blocked)
+  scanFootnotes(line.content, addMarker, reserve, blocked)
+  scanLinks(line.content, addMarker, reserve, blocked)
+  scanInlineMath(line.content, addMarker, reserve, blocked)
+  scanPairedDelimiter(line.content, '**', addMarker, reserve, blocked)
+  scanPairedDelimiter(line.content, '__', addMarker, reserve, blocked)
+  scanPairedDelimiter(line.content, '~~', addMarker, reserve, blocked)
+  scanPairedDelimiter(line.content, '*', addMarker, reserve, blocked)
+  scanPairedDelimiter(line.content, '_', addMarker, reserve, blocked)
 
   return markers
 }
@@ -433,7 +401,7 @@ function classifyAnalysis(
 }
 
 function analyzeMarkdownDecorations(source: string): MarkdownDecorationAnalysis {
-  const lines = getSourceLines(source)
+  const lines = getMarkdownLines(source)
   const codeRanges = getMarkdownCodeRanges(source)
   const seen = new Set<string>()
   const rangesByLine = lines.map((line) =>

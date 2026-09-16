@@ -4,12 +4,13 @@ import katex from 'katex'
 import MarkdownIt from 'markdown-it'
 import texmath from 'markdown-it-texmath'
 import { getMarkdownCodeRanges } from './livePreviewDecorations'
+import { MARKDOWN_KATEX_OPTIONS } from '@/features/post/utils/markdownConfig'
 
 // 这里不接受原始 HTML；样式只能来自公式和表格渲染器，不能来自文章作者。
 const parser = new MarkdownIt({ html: false }).use(texmath, {
   engine: katex,
   delimiters: 'dollars',
-  katexOptions: { throwOnError: false, trust: false, maxExpand: 1000 },
+  katexOptions: MARKDOWN_KATEX_OPTIONS,
 })
 
 export interface RichPreviewRange {

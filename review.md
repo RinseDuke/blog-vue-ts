@@ -8,7 +8,7 @@
 
 ---
 
-## 当前权威状态（2026-09-15，Codex）
+## 当前权威状态（更新至 2026-09-17，Codex）
 
 > 本节覆盖下方保留的历史取证与旧行动建议。标记为 **✅ 已完成** 的事项，除非相关代码再次变化或出现回归证据，否则后续 agent 不应重复查验或重复修复。
 
@@ -385,12 +385,26 @@
 | `profileService` 结构分叉 | 问题属实；已改为纯函数对象、统一相对导入、复用 `networkDelay()` 并使用 bare catch | ✅ 已完成 |
 | `usePostsStore` Promise 链 | 问题属实；已在原目录内改为 `async/await`，保持缓存与并发去重行为 | ✅ 已完成 |
 | 移动 `usePostsStore` 目录 | 仅为组织偏好，当前路径符合 composable 的职责且移动会制造大范围 import churn | 无需修复 |
-| Highlight.js 按需语言 | 体积事实属实，但裁剪语言会改变 Markdown 代码块渲染能力 | ⏸ UI/编辑器审批 |
-| 英文错误文案本地化 | 文案会直接展示给用户，属于界面反馈内容 | ⏸ UI 审批 |
-| Post/Topic 概念、KaTeX/Mermaid、编辑器助手与 App 样式 | 均会改变 UI、编辑器行为或样式 | ⏸ UI/编辑器审批 |
-| 增加 `manualChunks` | 只会重新分配 chunk，不能降低总体积；Mermaid 的动态块仍可超过 500 kB，因此“彻底消除警告”结论不成立 | 可选性能策略，非缺陷 |
+| Highlight.js 按需语言 | 用户已批准；切换为官方 `highlight.js/lib/common`，保留常用语言和未知语言自动检测 | ✅ 已完成 |
+| 英文错误文案本地化 | 用户已批准；posts/comment Store 的非 Error 兜底改为中文并补行为测试 | ✅ 已完成 |
+| KaTeX 配置漂移 | 两套渲染器改为共用安全选项常量 | ✅ 已完成 |
+| 编辑器重复助手 | 行拆分、转义检测、表格行格式化抽入 `markdownText.ts`，现有两个编辑器模块和序列化器共同复用 | ✅ 已完成 |
+| Post/Topic 概念 | `mapPostToTopic` 已形成明确的数据模型→社区视图模型适配边界，全仓重命名会破坏 API/路由兼容 | 已裁定，无需修复 |
+| SFC 块顺序与 LESS/CSS | 仓库没有单一强制顺序，现状无运行错误 | 风格差异，无需修复 |
+| CodeMirror / KaTeX `manualChunks` | 用户已批准并实施；用于缓存边界，不再宣称会降低总体积或彻底消除警告 | ✅ 已完成 |
+| `App.vue` 样式 | 用户在 2026-09-16 明确排除 | ⏸ 保持原样 |
 
-验证：定向测试 5 文件 / 14 用例通过；`npm test -- --run` 与 `npm run test:run` 均为 46 文件 / 255 用例通过；lint、coverage、type-check、build 均通过；官方 npm registry 审计为 0 vulnerabilities。构建仍保留非阻断的大 chunk 警告。
+最新验证：定向测试 8 文件 / 108 用例通过；`npm test -- --run` 与 `npm run test:run` 均为 47 文件 / 260 用例通过；coverage 为 Statements 80.58% / Branches 68.60% / Functions 82.99% / Lines 82.99%；lint、type-check、build 均通过；官方 npm registry 审计为 0 vulnerabilities。
+
+构建实测：`MarkdownPreview` 约 1253→178 kB，`Write` 547→50 kB，`markdown-vendor` 431→167 kB，CodeMirror 独立块约 496 kB。剩余非阻断警告来自 KaTeX 约 526 kB 与 Mermaid 动态块约 654/688 kB；Mermaid 已按需加载，KaTeX 进一步懒加载需要把同步 Markdown 渲染 API 改成异步，未在本轮进行破坏性迁移。
+
+### 6.6 2026-09-17 再复核与发布结论
+
+- 已用当前源码逐项复核 `memory.md` 与本报告的最新权威状态：Highlight.js common 入口、共享 KaTeX 安全配置、Markdown 编辑器共享助手、中文错误兜底、CodeMirror/KaTeX 分块均存在，TipTap 遗留与真实冲突标记均未回归。
+- 本轮没有发现新的、可复现的非 UI 缺陷。历史建议中的构建预压缩、依赖版本范围放宽和 Store 目录移动属于部署或组织选择，不按故障实施；KaTeX 异步懒加载会改变同步 Markdown 渲染接口及编辑器/预览链路，也不在未获 UI 批准时迁移。
+- `App.vue` 的旧编辑器样式选择器仍然存在且确属可清理项，但继续遵守用户审批锁，本轮未修改。
+- 发布前重新验证：`npm test -- --run` 与 `npm run test:run` 均为 47 文件 / 260 用例通过；coverage 为 Statements 80.58% / Branches 68.60% / Functions 82.99% / Lines 82.99%；lint、type-check、build 均通过；官方 npm registry 审计为 0 vulnerabilities。
+- 构建结果稳定为 2423 个模块；剩余警告仍仅来自 KaTeX 约 526 kB、Mermaid core 约 654 kB、cynefin 约 688 kB，属于已记录的非阻断性能预算项。
 
 ---
 

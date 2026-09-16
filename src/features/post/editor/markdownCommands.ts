@@ -1,3 +1,10 @@
+import {
+  formatMarkdownTableRow,
+  getMarkdownLines,
+  isEscapedCharacter,
+  type MarkdownLine,
+} from './markdownText'
+
 export interface MarkdownSelection {
   from: number
   to: number
@@ -38,14 +45,6 @@ interface TextChange {
   from: number
   to: number
   insert: string
-}
-
-interface MarkdownLine {
-  start: number
-  contentEnd: number
-  end: number
-  content: string
-  lineEnding: string
 }
 
 interface ParsedTableRow {
@@ -111,58 +110,6 @@ function getLineContentEnd(value: string, lineStart: number): number {
 
 function detectLineEnding(value: string): '\r\n' | '\n' {
   return value.includes('\r\n') ? '\r\n' : '\n'
-}
-
-function getMarkdownLines(value: string): MarkdownLine[] {
-  const lines: MarkdownLine[] = []
-
-  for (let start = 0; start <= value.length; ) {
-    const lineFeed = value.indexOf('\n', start)
-
-    if (lineFeed === -1) {
-      lines.push({
-        start,
-        contentEnd: value.length,
-        end: value.length,
-        content: value.slice(start),
-        lineEnding: '',
-      })
-      break
-    }
-
-    const contentEnd = lineFeed > start && value[lineFeed - 1] === '\r' ? lineFeed - 1 : lineFeed
-    lines.push({
-      start,
-      contentEnd,
-      end: lineFeed + 1,
-      content: value.slice(start, contentEnd),
-      lineEnding: value.slice(contentEnd, lineFeed + 1),
-    })
-
-    start = lineFeed + 1
-    if (start === value.length) {
-      lines.push({
-        start,
-        contentEnd: start,
-        end: start,
-        content: '',
-        lineEnding: '',
-      })
-      break
-    }
-  }
-
-  return lines
-}
-
-function isEscapedCharacter(value: string, position: number): boolean {
-  let backslashes = 0
-
-  for (let index = position - 1; index >= 0 && value[index] === '\\'; index -= 1) {
-    backslashes += 1
-  }
-
-  return backslashes % 2 === 1
 }
 
 function parseTableRow(line: string): ParsedTableRow | null {
@@ -291,10 +238,6 @@ function findMarkdownTable(
   return null
 }
 
-function formatTableRow(cells: string[]): string {
-  return `| ${cells.join(' | ')} |`
-}
-
 function getFormattedCellPosition(
   rows: string[][],
   rowIndex: number,
@@ -304,7 +247,7 @@ function getFormattedCellPosition(
   let position = 0
 
   for (let index = 0; index < rowIndex; index += 1) {
-    position += formatTableRow(rows[index]).length + lineEnding.length
+    position += formatMarkdownTableRow(rows[index]).length + lineEnding.length
   }
 
   position += 2
@@ -648,7 +591,7 @@ export function mutateMarkdownTable(
     if (targetRow === 1) targetRow = 0
   }
 
-  const formattedTable = rows.map(formatTableRow).join(table.lineEnding)
+  const formattedTable = rows.map((row) => formatMarkdownTableRow(row)).join(table.lineEnding)
   const cursor =
     table.start +
     getFormattedCellPosition(rows, targetRow, targetColumn, table.lineEnding)

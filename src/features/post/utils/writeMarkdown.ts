@@ -1,5 +1,5 @@
 import DOMPurify from 'dompurify'
-import hljs from 'highlight.js'
+import hljs from 'highlight.js/lib/common'
 import katex from 'katex'
 import MarkdownIt from 'markdown-it'
 import anchor from 'markdown-it-anchor'
@@ -8,6 +8,8 @@ import taskLists from 'markdown-it-task-lists'
 import texmath from 'markdown-it-texmath'
 import toc from 'markdown-it-toc-done-right'
 import TurndownService from 'turndown'
+import { formatMarkdownTableRow } from '@/features/post/editor/markdownText'
+import { MARKDOWN_KATEX_OPTIONS } from './markdownConfig'
 
 type TurndownNode = {
   nodeName: string
@@ -163,7 +165,7 @@ const mdParser: MarkdownIt = new MarkdownIt({
   .use(texmath, {
     engine: katex,
     delimiters: 'dollars',
-    katexOptions: { throwOnError: false },
+    katexOptions: MARKDOWN_KATEX_OPTIONS,
   })
 
 const defaultLinkOpenRenderer = mdParser.renderer.rules.link_open
@@ -511,9 +513,9 @@ function convertTableHtmlToMarkdown(tableHtml: string) {
   const separatorRow = Array.from({ length: columnCount }, () => '---')
 
   return [
-    formatMarkdownTableRow(headerRow),
-    formatMarkdownTableRow(separatorRow),
-    ...bodyRows.map(formatMarkdownTableRow),
+    formatMarkdownTableRow(headerRow, ' '),
+    formatMarkdownTableRow(separatorRow, ' '),
+    ...bodyRows.map((row) => formatMarkdownTableRow(row, ' ')),
   ].join('\n')
 }
 
@@ -534,8 +536,4 @@ function serializeTableCell(cellHtml: string) {
 
 function padTableRow(cells: string[], columnCount: number) {
   return [...cells, ...Array.from({ length: Math.max(columnCount - cells.length, 0) }, () => '')]
-}
-
-function formatMarkdownTableRow(cells: string[]) {
-  return `| ${cells.map((cell) => cell || ' ').join(' | ')} |`
 }

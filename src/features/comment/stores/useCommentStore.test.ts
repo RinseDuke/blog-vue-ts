@@ -1,6 +1,7 @@
 import { createPinia, setActivePinia } from 'pinia'
 import { mockComments } from '@/mocks/comments'
 import { useCommentStore } from '@/features/comment/stores/useCommentStore'
+import * as commentService from '@/services/commentService'
 
 import { AUTH_SESSION_KEY } from '@/services/authSession'
 
@@ -39,6 +40,7 @@ describe('useCommentStore like guard', () => {
   })
 
   afterEach(() => {
+    vi.restoreAllMocks()
     vi.unstubAllGlobals()
   })
 
@@ -77,5 +79,17 @@ describe('useCommentStore like guard', () => {
     await store.likeComment('1', 'c1')
     expect(store.isCommentLiked('c1')).toBe(false)
     expect(store.getComments('1').find((comment) => comment.id === 'c1')?.likes).toBe(originalLikes)
+  })
+
+  it('uses localized fallbacks for non-Error service failures', async () => {
+    const store = useCommentStore()
+    vi.spyOn(commentService, 'fetchCommentsByPostId').mockRejectedValueOnce('load-offline')
+
+    await store.loadComments('1')
+    expect(store.error).toBe('加载评论失败')
+
+    vi.spyOn(commentService, 'createComment').mockRejectedValueOnce('submit-offline')
+    await expect(store.addComment({ postId: '1', content: 'test' })).rejects.toBe('submit-offline')
+    expect(store.error).toBe('发表评论失败')
   })
 })

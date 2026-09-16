@@ -25,7 +25,7 @@ export const useCommentStore = defineStore('comments', () => {
       const comments = await fetchCommentsByPostId(postId)
       commentsByPost.value[postId] = comments
     } catch (err: unknown) {
-      error.value = err instanceof Error ? err.message : 'Failed to load comments'
+      error.value = err instanceof Error ? err.message : '加载评论失败'
     } finally {
       loading.value = false
     }
@@ -41,7 +41,7 @@ export const useCommentStore = defineStore('comments', () => {
       commentsByPost.value[payload.postId] = [...existing, newComment]
       return newComment
     } catch (err: unknown) {
-      error.value = err instanceof Error ? err.message : 'Failed to submit comment'
+      error.value = err instanceof Error ? err.message : '发表评论失败'
       throw err
     } finally {
       submitting.value = false
@@ -90,7 +90,7 @@ export const useCommentStore = defineStore('comments', () => {
       if (target) {
         target.likes = Math.max(0, (target.likes ?? 0) - delta)
       }
-      error.value = err instanceof Error ? err.message : 'Failed to update comment like'
+      error.value = err instanceof Error ? err.message : '更新评论点赞失败'
       throw err
     }
   }
