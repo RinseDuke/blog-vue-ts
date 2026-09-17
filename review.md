@@ -406,6 +406,22 @@
 - 发布前重新验证：`npm test -- --run` 与 `npm run test:run` 均为 47 文件 / 260 用例通过；coverage 为 Statements 80.58% / Branches 68.60% / Functions 82.99% / Lines 82.99%；lint、type-check、build 均通过；官方 npm registry 审计为 0 vulnerabilities。
 - 构建结果稳定为 2423 个模块；剩余警告仍仅来自 KaTeX 约 526 kB、Mermaid core 约 654 kB、cynefin 约 688 kB，属于已记录的非阻断性能预算项。
 
+### 6.7 包体积建议 1–6 与编辑器事项最终复核（2026-09-17）
+
+| 项目 | 当前取证与处置 | 状态 |
+| :--- | :--- | :---: |
+| 1. Mermaid 懒加载 | `MarkdownPreview.vue` 仅在发现 Mermaid 代码块后执行 `import('mermaid')` | ✅ 已完成 |
+| 2. KaTeX 按需加载 | 当前 MarkdownIt 插件是同步渲染；真正按需加载需改造同步 API、编辑器富预览和文章预览调用链 | ⏸ UI/交互架构，待审批 |
+| 3. Highlight.js 语言裁剪 | 已使用官方 `highlight.js/lib/common`，不再打包 190+ 全量语言 | ✅ 已完成 |
+| 4. Markdown 插件与 Turndown | anchor、TOC、任务列表、脚注、数学公式和高亮均有行为测试；Turndown 仍承担旧 HTML/TipTap 表格草稿兼容转换，删除会改变现有内容迁移行为 | ✅ 已核实为活跃能力，不删除 |
+| 5. 细粒度分块 | CodeMirror、KaTeX 已独立分块；本轮补齐 `hljs-vendor` 缓存边界 | ✅ 已完成 |
+| 6. Write/CodeMirror 延迟加载 | `/write` 已使用路由动态导入，CodeMirror 已独立为约 496 kB 的按路由加载块；Write 自身约 50 kB | ✅ 已完成 |
+| editor 重复助手 | 行拆分、反斜杠转义和表格格式化已统一到 `markdownText.ts` 并有直接测试 | ✅ 已完成 |
+| KaTeX 配置对齐 | 文章渲染与编辑器富预览共同使用 `MARKDOWN_KATEX_OPTIONS` | ✅ 已完成 |
+| `App.vue` 死选择器 | `.tiptap-editor` / `.source-editor-wrap` 仍可确认无当前节点，但属于样式修改 | ⏸ 待用户 UI 审批 |
+
+本轮唯一新增的非 UI 改动是为 Highlight.js 增加独立 vendor chunk。生产构建中 `MarkdownPreview` 组件块由约 177.82 kB（gzip 60.03 kB）降为约 12.92 kB（gzip 5.40 kB），新增 `hljs-vendor` 约 165.05 kB（gzip 54.87 kB）；总体积基本不变，收益是高亮器可独立长期缓存。构建期 Gzip/Brotli 预压缩依赖实际托管平台的静态文件协商配置，在仓库没有部署目标配置时不盲目引入插件。
+
 ---
 
 *(本章节由 Antigravity 于 2026-09-15 审查并完成署名。)*

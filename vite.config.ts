@@ -59,6 +59,10 @@ export default defineConfig(async () => {
               return 'katex-vendor'
             }
 
+            if (/[\\/]node_modules[\\/]highlight\.js/.test(id)) {
+              return 'hljs-vendor'
+            }
+
             if (/[\\/]node_modules[\\/]@codemirror/.test(id)) {
               return 'codemirror-vendor'
             }
